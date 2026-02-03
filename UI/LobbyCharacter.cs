@@ -1,0 +1,92 @@
+using Cysharp.Threading.Tasks;
+using DG.Tweening;
+using System.Threading;
+using System.Threading.Tasks;
+using TMPro;
+using UnityEngine;
+using UnityEngine.UI;
+
+public class LobbyCharacter : UILobbyUpdate
+{
+    private CancellationTokenSource cancelToken;
+    private CharacterData lobbyCharacterData;
+    [SerializeField] private float m_delayTime = 3f;
+    [SerializeField] private float m_fadeTime = 0.1f;
+    private bool isRunTalk = false;
+
+    enum Images
+    {
+        CharacterImage,
+    }
+
+    enum TextTMP
+    {
+        CharacterText,
+    }
+
+    protected override void Awake()
+    {
+        Bind<Image>(typeof(Images));
+        Bind<TextMeshProUGUI>(typeof(TextTMP));
+    }
+
+    public override void UpdateFormLobby()
+    {
+        lobbyCharacterData = GameMaster.Instance.csvHelper.GetScripteData<CharacterDataList>().GetData(1);
+
+        Get<Image>(0).sprite = lobbyCharacterData.GetCharacterSprite();
+        Get<TextMeshProUGUI>(0).text = $"{lobbyCharacterData.characterName}의 대사";
+
+        RestartChatMessage();
+    }
+
+    public override void CloseFormLobby()
+    {
+        if (cancelToken != null)
+        {
+            cancelToken.Cancel();
+            cancelToken.Dispose();
+            cancelToken = null;
+        }
+
+        DOTween.Kill(this);
+    }
+
+    private async UniTask updateCharacterChatMessage(CancellationToken cancelToken)
+    {
+        while (cancelToken.IsCancellationRequested == false)
+        {
+            await UniTask.WaitForSeconds(m_delayTime, cancellationToken: cancelToken);
+            SayRandom();
+            await UniTask.WaitForSeconds(m_delayTime, cancellationToken: cancelToken);
+            Get<TextMeshProUGUI>(0).DOFade(0, m_fadeTime);
+        }
+    }
+
+    private void RestartChatMessage()
+    {
+        if (cancelToken != null)
+        {
+            cancelToken.Cancel();
+            cancelToken.Dispose();
+            cancelToken = new();
+        }
+        else
+            cancelToken = new();
+
+        updateCharacterChatMessage(cancelToken.Token).Forget();
+    }
+
+    public void OnClickCharacter()
+    {
+        SayRandom();
+        RestartChatMessage();
+    }
+
+    private void SayRandom()
+    {
+        int index = Random.Range(0, 5);
+        Get<TextMeshProUGUI>(0).text = $"{lobbyCharacterData.characterName}의 {index}번째 대사";
+        Get<TextMeshProUGUI>(0).DOFade(1, m_fadeTime);
+    }
+}

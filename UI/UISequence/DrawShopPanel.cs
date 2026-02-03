@@ -1,6 +1,9 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+
+using Random = UnityEngine.Random;
 
 public class DrawShopPanel : UIBase
 {
@@ -24,10 +27,16 @@ public class DrawShopPanel : UIBase
         Character_9
     }
 
+    enum DrawTineLineCom
+    {
+        DrawAction,
+    }
+
     protected override void Awake()
     {
         m_UISequence = UIManager.UISequence.ShopPanel;
         Bind<Button>(typeof(DrawButton));
+        Bind<DrawTimeLine>(typeof(DrawTineLineCom));
         Bind<Image>(typeof(characterCards));
         Init();
 
@@ -42,6 +51,16 @@ public class DrawShopPanel : UIBase
         });
     }
 
+    public override void ShowUI()
+    {
+        base.ShowUI();
+        
+        foreach(var objName in Enum.GetValues(typeof(characterCards)))
+        {
+            Get<Image>((int)objName).gameObject.SetActive(false);
+        }
+    }
+
     private void DrawCharacter(int drawCount)
     {
         List<int> ids = new();
@@ -51,11 +70,17 @@ public class DrawShopPanel : UIBase
         }
 
         int count = 0;
+        List<CharacterData> data = new List<CharacterData>();
+
+        Get<DrawTimeLine>(0).gameObject.SetActive(true);
+
         foreach (int id in ids)
         {
             Get<Image>(count).gameObject.SetActive(true);
             Get<Image>(count).sprite = GameMaster.Instance.csvHelper.GetScripteData<CharacterDataList>().GetData(id).GetCharacterSprite();
             count += 1;
+            data.Add(GameMaster.Instance.csvHelper.GetScripteData<CharacterDataList>().GetData(id));
         }
+        Get<DrawTimeLine>(0).DrawCharacter(data.ToArray());
     }
 }

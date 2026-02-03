@@ -1,6 +1,7 @@
 using Cysharp.Threading.Tasks;
 using DG.Tweening;
 using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -49,6 +50,8 @@ public class AutoUIManager : MonoBehaviour
     /// </summary>
     public Transform CloseCanvas => m_closeCanvas;
 
+    private Action m_lobbyActionOpen;
+    private Action m_lobbyActionClose;
 
     // ----------------------------------------------------------------------
     // ## Initialization and Data Loading
@@ -127,6 +130,12 @@ public class AutoUIManager : MonoBehaviour
         rect.pivot = data.GetPivot();
         rect.anchoredPosition = data.GetAnchorPos();
         rect.sizeDelta = data.GetSizeDetail();
+
+        if(obj.TryGetComponent<UILobbyUpdate>(out var lobbyComponent))
+        {
+            m_lobbyActionOpen += lobbyComponent.UpdateFormLobby;
+            m_lobbyActionClose += lobbyComponent.CloseFormLobby;
+        }
     }
 
     // ----------------------------------------------------------------------
@@ -150,6 +159,7 @@ public class AutoUIManager : MonoBehaviour
         CanvasSetting(m_inGameCanvas, m_currentUIType == UIType.inGame);
         CanvasSetting(m_mainUICanvas, m_currentUIType == UIType.main);
 
+        UIAction();
         // 로컬 함수: 캔버스 그룹을 페이드 인/아웃하고 상호작용 가능 여부를 설정
         void CanvasSetting(CanvasGroup canvas, bool active)
         {
@@ -162,6 +172,21 @@ public class AutoUIManager : MonoBehaviour
 
             canvas.blocksRaycasts = active;
             canvas.interactable = active;
+        }
+
+        void UIAction()
+        {
+            switch (m_currentUIType)
+            {
+                case UIType.main:
+                    if (m_lobbyActionOpen != null)
+                        m_lobbyActionOpen.Invoke();
+                    break;
+                case UIType.inGame:
+                    break;
+            }
+            if (m_currentUIType != UIType.main)
+                m_lobbyActionClose?.Invoke();
         }
     }
 

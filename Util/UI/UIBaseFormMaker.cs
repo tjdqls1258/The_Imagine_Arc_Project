@@ -62,10 +62,14 @@ public class UIBaseFormMaker : UIBase
 {
 }
 
+public class UILobbyUpdate : UIBaseFormMaker
+{
+    public virtual void UpdateFormLobby() { }
+    public virtual void CloseFormLobby() { }
+}
+
 public class BaseUIData
 {
     public Action OnShow;
     public Action OnClose;
-
-
 }

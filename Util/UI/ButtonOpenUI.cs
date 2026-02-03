@@ -8,9 +8,9 @@ public class ButtonOpenUI : UIBaseFormMaker
     [SerializeField] private UIManager.UISequence OpenUI;
     [SerializeField] private UIBaseData.UIType uiType;
 
-    private void Awake()
+    protected override void Awake()
     {
-         m_button = GetComponent<Button>();
+        m_button = GetComponent<Button>();
 
         m_button.onClick.RemoveAllListeners();
         m_button.onClick.AddListener(OnClickButton);

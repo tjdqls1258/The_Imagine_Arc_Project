@@ -50,7 +50,7 @@ public class GameMaster : MonoSingleton<GameMaster>
         if (checkDownl > 0)
         {
             var popup = await popupManager.ShowPopup(PopupManager.PopupType.PopupQ) as PopupQ;
-
+            popup.Mssage = $"{checkDownl}Byte의 게임 진행을 위한 추가 콘텐츠 파일이 존재합니다.\n다운로드 받으시겠습니까?";
             popup.okAction += () =>
             {
                 showDownloadPanel?.Invoke();
