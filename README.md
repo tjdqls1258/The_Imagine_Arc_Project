@@ -1,36 +1,79 @@
-# DefanceGameBase
+🚀 Unity UI & InGame Framework
+유니티 최신 기술 스택을 활용한 데이터 중심(Data-Driven) 및 비동기(Asynchronous) 기반의 UI & 인게임 유닛 배치 프레임워크입니다. 효율적인 리소스 관리와 확장성 있는 UI 생명주기 제어를 목적으로 설계되었습니다.
 
-## 🛡️ 프로젝트 소개
+🛠 Tech Stack
+Engine: Unity 6000.2.7f2 (LTS)
 
-이 레포지토리는 디펜스 게임(Defense Game) 개발을 위한 기본적인 구조와 베이스 코드를 제공합니다. 어떤 디펜스 게임 프로젝트에서든 공통적으로 활용할 수 있도록 모듈화하여 설계되었습니다.
+Async Library: UniTask
 
-  * **목표**: 디펜스 게임의 핵심 요소(매니저, 캐릭터 컨트롤, 데이터, 타일 시스템 등)를 미리 구성하여 빠른 개발 시작을 지원합니다.
-  * **주요 기술**: C\#
+Resource Management: Addressables Asset System
 
-## 🛠️ 주요 구성 요소 (프로젝트 구조)
+Tweening: DOTween
 
-프로젝트는 디펜스 게임 개발에 필요한 핵심 기능들을 다음과 같이 모듈화된 폴더로 나누어 관리합니다.
+Serialization: Newtonsoft.Json
 
-| 폴더명 | 설명 |
-| :--- | :--- |
-| **Manager** | 게임의 전반적인 시스템 관리 로직 (예: 씬 관리, 리소스 관리, 게임 상태 관리 등) |
-| **CharacterController** | 게임 내 유닛 및 캐릭터의 움직임, 공격, 행동 등을 담당하는 로직 |
-| **Data** | 캐릭터 스탯, 아이템 정보 등 게임 데이터 관련 스크립트 및 구조체 |
-| **Tile** | 맵 타일 관련 로직 및 타일 배치 처리 로직 |
-| **MapEditor** | 맵을 제작하거나 수정하는 에디터 기능 관련 요소 (Unity Editor 확장 등) |
-| **UI** | 사용자 인터페이스(HP 바, 메뉴, 인벤토리 등) 관련 스크립트 |
-| **Util** | 공통으로 사용되는 범용 유틸리티 기능 모음 (확장 메소드, 헬퍼 클래스 등) |
+✨ Key Features
+1. Advanced UI Lifecycle Management
+CachObject & Auto-Binding: Enum 기반의 자동 컴포넌트 바인딩 시스템을 통해 GetComponent 호출을 최소화하고 타입 안정성을 확보했습니다.
 
-### 핵심 파일
+UI/Popup Stack: 팝업의 중첩 관리 및 씬 전환 간의 UI 시퀀스를 중앙 집중식 매니저(UIManager, PopupManager)로 제어합니다.
 
-  * `Config.cs`: 게임의 전역 설정 값들을 정의하는 스크립트
-  * `MapData.cs`: 맵의 구조나 경로 정보를 정의하는 데이터 스크립트
-  * `AwakeScene.cs`: 게임 시작 시 초기 설정을 담당하는 스크립트
+Async Workflow: 모든 UI 오픈/클로즈 로직에 UniTask를 적용하여 리소스 로딩 시 발생하는 메인 스레드 병목 현상을 제거했습니다.
 
-UI 에디터
-<img width="2547" height="1015" alt="image" src="https://github.com/user-attachments/assets/af708302-6b00-42f8-bdb5-bde5f380934b" />
+2. Data-Driven System
+JSON/CSV Serialization: 스테이지 구성, 캐릭터 스탯 및 UI 레이아웃 정보를 외부 데이터 파일로 관리하여 코드 수정 없이 콘텐츠를 확장할 수 있습니다.
 
-Map 에디터
-<img width="1775" height="940" alt="image" src="https://github.com/user-attachments/assets/07b49eef-cc93-4eaf-9804-6060226b0fb6" />
-<img width="1772" height="938" alt="image" src="https://github.com/user-attachments/assets/d96237a4-5e0b-4080-a317-8f1c802d54aa" />
+ScriptableObject Integration: 게임 데이터를 유니티 에셋과 결합하여 직관적인 데이터 워크플로우를 제공합니다.
 
+3. Editor Tooling (UIMakerTool)
+UI Layout Tool: 현재 하이어라키의 UI 배치 정보를 실시간으로 추출하여 JSON 데이터로 변환하거나, 데이터로부터 UI를 자동 복구하는 에디터 툴을 포함합니다.
+
+Custom Inspector: 커스텀 에디터를 통해 비개발 직군도 UI 레이아웃을 손쉽게 수정하고 저장할 수 있습니다.
+
+4. InGame Interaction (Drag & Drop)
+Unit Placement System: UI 버튼 드래그를 통해 월드 맵 타일에 유닛을 배치하는 시스템입니다.
+
+Smart Snapping: Raycast2D를 이용한 타일 감지 및 그리드 스냅 기능을 제공합니다.
+
+Cooldown System: 비동기 루프를 활용한 유닛 재배치 쿨타임 UI 연출이 포함되어 있습니다.
+
+🏗 System Architecture
+UI Inheritance Hierarchy
+CachObject: 컴포넌트 캐싱 및 바인딩 엔진.
+
+UIBase: UI의 기본 생명주기(Init, Show, Close) 및 애니메이션 제어.
+
+PopupBase: 팝업 전용 콜백 및 스택 관리 로직 추가.
+
+UIBaseFormMaker: 에디터 툴 연동을 위한 마커 클래스.
+
+💻 Quick Start
+Opening a Popup
+C#
+// 간단한 확인 팝업 호출 예시
+PopupManager.Instance.ShowPopup(PopupManager.PopupType.Message, new object[] { 
+    "알림", 
+    "데이터 로드가 완료되었습니다." 
+}).Forget();
+Unit Deployment
+C#
+// 캐릭터 데이터를 버튼에 할당
+unitButton.SetCharater(characterData, ingameUIManager);
+🔍 Core Logic Preview: Async Component Binding
+C#
+// CachObject.cs 일부
+protected void Bind<T>(Type type) where T : UnityEngine.Object
+{
+    string[] names = Enum.GetNames(type);
+    for (int i = 0; i < names.Length; i++)
+    {
+        // GameUtil을 통해 하위 객체를 검색하고 캐싱
+        T component = GameUtil.FindChild<T>(gameObject, names[i], true);
+        _objects[typeof(T)][i] = component;
+    }
+}
+📄 License
+This project is licensed under the MIT License.
+
+💡 Portfolio Note
+이 프레임워크는 유니티 개발 환경에서 발생할 수 있는 반복적인 UI 작업의 자동화와 런타임 퍼포먼스 최적화를 해결하기 위해 제작되었습니다. 특히 비동기 프로그래밍 기술을 적극 활용하여 대규모 프로젝트에서도 안정적으로 동작하는 구조를 지향합니다.
