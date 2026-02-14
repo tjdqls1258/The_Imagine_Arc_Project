@@ -105,10 +105,3 @@ private void TrySnapToTile(Action hitAction, Action notHitAction)
 ## 📝 License
 
 This project is licensed under the MIT License.
-
----
-
-**다음 단계로 무엇을 도와드릴까요?**
-
-* 프로젝트의 각 클래스를 설명하는 **상세 API 문서(Doxygen 스타일)**가 필요하신가요?
-* 면접을 위한 **기술 면접 예상 질문 및 모범 답안 리스트**를 만들어 드릴까요?
