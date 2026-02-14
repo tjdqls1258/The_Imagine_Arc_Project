@@ -34,6 +34,7 @@ public class AwakeScene : MonoBehaviour
             {
                 await GameMaster.Instance.sceneLoadManager.SceneLoad(SceneInfo.SceneType.HomeScene);
                 GameMaster.Instance.uiManager.AutoUIManager.SetUIType(AutoUIManager.UIType.main, true);
+                SoundManager.Instance.Play(SoundPath.BGM_Title, SoundType.BGM).Forget();
             }
         });
     }

@@ -5,173 +5,174 @@ using UnityEngine;
 
 /// <summary>
 /// 게임 마스터 (GameMaster)
-/// 게임의 초기화 순서(Initialization Pipeline), 주요 관리자 접근, 
-/// 기본 리소스 로드 및 유저 데이터 로드를 책임지는 최상위 MonoSingleton 클래스입니다.
+/// 게임의 최상위 컨트롤러로서 초기화 파이프라인, 어드레서블 다운로드 관리,
+/// 핵심 리소스 및 유저 데이터 로드를 총괄하는 MonoSingleton 클래스입니다.
 /// </summary>
 public class GameMaster : MonoSingleton<GameMaster>
 {
-    readonly string[] ADDRESSABLE_LABEL = { "InGameData", "SpriteAltas", "JsonData", "UI", "CharacterSprite" };
+    // ====== Constants & Labels ======
+    [Header("Addressable Settings")]
+    [Tooltip("다운로드 체크가 필요한 어드레서블 그룹 레이블 목록입니다.")]
+    private readonly string[] ADDRESSABLE_LABEL = { "InGameData", "SpriteAltas", "JsonData", "UI", "CharacterSprite" };
 
+    // ====== Members ======
     private CSVHelper m_csvHelper = new();
 
     // ====== Managers Access (Read-Only Properties) ======
-
-    // 다른 관리자 인스턴스에 접근하기 위한 간결한 속성 정의
+    // 싱글톤 관리자들에 대한 단축 접근 프로퍼티
     public SoundManager soundManager => SoundManager.Instance;
     public AddressableManager addressableManager => AddressableManager.Instance;
     public SceneLoadManager sceneLoadManager => SceneLoadManager.Instance;
     public UIManager uiManager => UIManager.Instance;
     public PopupManager popupManager => PopupManager.Instance;
     public CSVHelper csvHelper => m_csvHelper;
-    // Todo: UserDataManager와 같은 다른 핵심 관리자도 여기에 추가하면 좋습니다.
 
     // ----------------------------------------------------------------------
-    // ## Initialization Pipeline
+    // ## Initialization Phase 1: Basic Boot
     // ----------------------------------------------------------------------
 
     /// <summary>
-    /// GameMaster 초기화 시작점입니다. InitAscy를 비동기로 시작하고 결과를 무시합니다 (Forget).
+    /// 게임 시작 시 가장 먼저 호출되는 동기 초기화 메서드입니다.
     /// </summary>
     public override void Init()
     {
         base.Init();
 
+        // 시스템 필수 팝업 매니저 초기 로드
         popupManager.Init();
         popupManager.SettingPopupData();
     }
 
-    public async UniTask InitAddress(Action showDownloadPanel,Action<string, long, long> downloadAction, Action downloadDoneAction)
+    // ----------------------------------------------------------------------
+    // ## Initialization Phase 2: Content Download
+    // ----------------------------------------------------------------------
+
+    /// <summary>
+    /// 어드레서블 에셋의 업데이트 상태를 확인하고 필요 시 다운로드 팝업을 출력합니다.
+    /// </summary>
+    /// <param name="showDownloadPanel">다운로드 UI를 표시할 콜백</param>
+    /// <param name="downloadAction">다운로드 진행률 업데이트 콜백 (Label, current, total)</param>
+    /// <param name="downloadDoneAction">다운로드 완료 시 실행될 콜백</param>
+    public async UniTask InitAddress(Action showDownloadPanel, Action<string, long, long> downloadAction, Action downloadDoneAction)
     {
-        // Addressables 초기화 및 다운로드 확인
-        // 필수 리소스 다운로드 및 초기화가 완료될 때까지 대기합니다.
+        // 1. 어드레서블 시스템 초기화
         await addressableManager.InitAsync();
 
-        var checkDownl = await addressableManager.DownloadChecdk(ADDRESSABLE_LABEL);
-        if (checkDownl > 0)
+        // 2. 패치 크기 체크
+        long checkDownlSize = await addressableManager.DownloadChecdk(ADDRESSABLE_LABEL);
+
+        if (checkDownlSize > 0)
         {
+            // 3. 다운로드 확인 팝업 출력
             var popup = await popupManager.ShowPopup(PopupManager.PopupType.PopupQ) as PopupQ;
-            popup.Mssage = $"{checkDownl}Byte의 게임 진행을 위한 추가 콘텐츠 파일이 존재합니다.\n다운로드 받으시겠습니까?";
-            popup.okAction += () =>
+            if (popup != null)
             {
-                showDownloadPanel?.Invoke();
-                addressableManager.DownloadAssetsAsync(onDownloading: downloadAction, downloadDoneAction).Forget();
-            };
-            popup.noAction += () =>
-            {
-#if UNITY_EDITOR
-                UnityEditor.EditorApplication.isPlaying = false;
-#else
-                Application.Quit(); // 어플리케이션 종료
-#endif
-            };
+                popup.Mssage = $"{checkDownlSize} Byte의 추가 데이터가 필요합니다.\n다운로드하시겠습니까?";
+
+                // 확인 클릭 시 다운로드 시작
+                popup.okAction += () =>
+                {
+                    showDownloadPanel?.Invoke();
+                    addressableManager.DownloadAssetsAsync(onDownloading: downloadAction, downloadDoneAction).Forget();
+                };
+
+                // 취소 클릭 시 게임 종료
+                popup.noAction += () => ExitGame();
+            }
         }
         else
         {
+            // 다운로드할 내용이 없으면 즉시 완료 콜백 호출
             downloadDoneAction?.Invoke();
         }
-       
     }
 
+    // ----------------------------------------------------------------------
+    // ## Initialization Phase 3: System & Resource Loading
+    // ----------------------------------------------------------------------
+
     /// <summary>
-    /// 게임의 모든 관리자 초기화, 리소스 로드, 데이터 로드, 씬 로드를 순차적으로 처리하는 비동기 초기화 파이프라인입니다.
+    /// 리소스 다운로드 완료 후, 게임 플레이에 필요한 모든 시스템을 비동기로 초기화합니다.
     /// </summary>
     public async UniTask InitAscy()
     {
-        Logger.Log("Do Init GameMaster");
-        // 관리자 초기화 (동기적/빠른 초기화)
+        Logger.Log("Starting GameMaster System Initialization...");
+
+        // 1. 하위 매니저 동기 초기화
         soundManager.Init();
         sceneLoadManager.Init();
         uiManager.Init();
 
+        // 2. 데이터 테이블 및 팝업 에셋 로드
         await popupManager.SettingPopupDataAsync();
         await csvHelper.InitCSVDataAsync();
 
-        // 핵심 리소스 로드 (Master Canvas 등)
+        // 3. UI 최상위 캔버스(Master Canvas) 로드
         await LoadBaseResource();
 
-        //캐릭터 이미지 세팅
-        await csvHelper.GetScripteData<CharacterDataList>().CharacterSpriteSetting();
-
-        // 유저 데이터 로드 및 초기 설정
+        // 4. 유저 데이터(세이브 파일) 로드
         await AsyncLoadUserData();
 
-        // 초기 UI 레이아웃 설정
-        // AutoUIManager가 MasterCanvas 내에서 JSON 기반 UI 배치를 수행합니다.
+        // 5. 초기 UI 레이아웃 배치 (JSON 기반 자동 생성)
         await uiManager.AutoUIManager.LoadJsonAsync();
 
-        
+        Logger.Log("GameMaster Initialization Complete.");
     }
 
-    // ----------------------------------------------------------------------
-    // ## Core Resource Loading
-    // ----------------------------------------------------------------------
-
     /// <summary>
-    /// 게임 시작에 필요한 핵심 리소스(예: MasterCanvas)를 비동기로 로드합니다.
+    /// 게임의 기본 뼈대가 되는 MasterCanvas를 로드합니다.
     /// </summary>
     private async UniTask LoadBaseResource()
     {
         List<UniTask> loadingTasks = new();
 
-        // Master Canvas 로드 및 AutoUIManager 초기화
+        // UI 시스템의 부모가 될 MasterCanvas를 비동기로 로드
         var masterCanvasLoader = uiManager.LoadMasterCanvasAsync(transform);
         loadingTasks.Add(masterCanvasLoader);
 
-        // 모든 핵심 리소스 로드가 완료될 때까지 대기
         await UniTask.WhenAll(loadingTasks);
     }
 
     // ----------------------------------------------------------------------
-    // ## User Data Management
+    // ## Data & Exit Logic
     // ----------------------------------------------------------------------
 
     /// <summary>
-    /// 유저 데이터 관리자 초기화 및 데이터 로드를 비동기로 처리합니다.
-    /// 저장된 데이터가 없으면 기본 데이터를 초기화합니다.
+    /// 세이브 데이터를 로드하거나 신규 유저용 데이터를 생성합니다.
     /// </summary>
     private async UniTask AsyncLoadUserData()
     {
-        // UserDataManager가 MonoSingleton이 아니라고 가정하고 인스턴스 접근 후 Init() 호출
         UserDataManager.Instance.Init();
 
         if (UserDataManager.Instance.hasSaveData)
-            UserDataManager.Instance.LoadUserData(); // 저장된 데이터 로드 (동기 또는 빠른 비동기)
+            UserDataManager.Instance.LoadUserData();
         else
-            UserDataManager.Instance.InitDefaultData(); // 기본 데이터 생성 및 초기화
+            UserDataManager.Instance.InitDefaultData();
 
-        // 필요한 경우, 비동기적으로 추가 유저 데이터를 로드합니다.
         await UserDataManager.Instance.AsyncLoadUserData();
     }
 
-    // ----------------------------------------------------------------------
-    // ## Game Exit Logic
-    // ----------------------------------------------------------------------
-
     /// <summary>
-    /// 게임 종료 확인 팝업을 띄우고, 팝업 닫기 이벤트에 ExitGame 액션을 연결합니다.
+    /// 게임 종료 확인 팝업을 출력합니다.
     /// </summary>
     public async UniTask ExitGamePopup()
     {
-        // 팝업 생성 및 표시 (PopupMsg 타입)
         var popup = await PopupManager.Instance.ShowPopup(PopupManager.PopupType.PopupMsg);
-
-        // 팝업이 닫힐 때(예: 확인 버튼 클릭) 실행할 액션 구독
-        // closeAction은 UIBase/PopupBase에 정의되어 있어야 합니다.
-        popup.closeAction += ExitGame;
+        if (popup != null)
+        {
+            popup.closeAction += ExitGame;
+        }
     }
 
     /// <summary>
-    /// 실제 게임 종료 로직을 실행합니다. (에디터/빌드 환경에 따라 동작)
+    /// 환경에 따라 플랫폼 종료 또는 에디터 플레이 모드 종료를 수행합니다.
     /// </summary>
     private void ExitGame()
     {
         Application.Quit();
 
 #if UNITY_EDITOR
-        // 에디터에서 실행 중인 경우 플레이 모드를 종료합니다.
         UnityEditor.EditorApplication.isPlaying = false;
 #endif
     }
-
-    
 }

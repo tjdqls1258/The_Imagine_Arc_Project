@@ -1,59 +1,105 @@
 using Cysharp.Threading.Tasks;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using UnityEngine;
 
+/// <summary>
+/// 스테이지의 적 생성(Spawn)과 오브젝트 풀링을 관리하는 클래스입니다.
+/// 정해진 시간에 맞춰 적을 생성하고, 사망한 적을 재활용하여 메모리 부하를 줄입니다.
+/// </summary>
 public class EnemySpawnManager : MonoBehaviour
 {
-    private List<EnemySpawnData> m_enemySpawnDatas;
-    private CancellationTokenSource m_cancellationTokenSource = new();
-    private MapData.PathData[] m_pathData;
-    private int m_spawnCount = 0;
-    private float m_currentTime = 0;
+    // ====== Runtime Data ======
+    private List<EnemySpawnData> m_enemySpawnDatas; // 스폰될 적의 정보 및 시간 데이터 리스트
+    private MapData.PathData[] m_pathData;         // 이동 경로(Path) 데이터 배열
+    private int m_spawnCount = 0;                  // 현재까지 스폰된 적의 개수
+    private float m_currentTime = 0;               // 스폰 시작 후 경과 시간
 
+    // ====== Object Pooling & Async ======
+    private CancellationTokenSource m_cancellationTokenSource = new(); // 비동기 루프 취소용 토큰
+
+    /// <summary> [활성 풀] 현재 필드에서 활동 중인 적 리스트 (Key: Enemy ID) </summary>
     private Dictionary<int, List<EnemyController>> m_enemyList = new();
+
+    /// <summary> [비활성 풀] 사망 후 재활용 대기 중인 적 리스트 (Key: Enemy ID) </summary>
     private Dictionary<int, List<EnemyController>> m_disableList = new();
 
+    // ----------------------------------------------------------------------
+    // ## Initialization
+    // ----------------------------------------------------------------------
+
+    /// <summary>
+    /// 스테이지 정보를 주입받아 스폰 준비를 합니다.
+    /// </summary>
     public void SetEnemyData(List<EnemySpawnData> data, MapData.PathData[] pathDatas)
     {
         m_enemySpawnDatas = data;
         m_pathData = pathDatas;
     }
 
+    /// <summary>
+    /// 외부에서 적 생성을 시작하도록 명령합니다.
+    /// </summary>
     public void StartSpawn()
     {
-        SpawnStart().Forget();
+        SpawnStart().Forget(); // 비동기 루프를 별도 대기 없이 실행
     }
 
+    // ----------------------------------------------------------------------
+    // ## Spawn Logic (Async Pipeline)
+    // ----------------------------------------------------------------------
+
+    /// <summary>
+    /// [비동기] 3초 대기 후 매 프레임 스폰 조건을 체크하는 메인 루프입니다.
+    /// </summary>
     private async UniTask SpawnStart()
     {
+        // 1. 게임 시작 전 초기 대기 시간 (예: 준비 시간)
         await UniTask.WaitForSeconds(3f);
+
+        // 2. 캔슬 토큰이 요청되기 전까지 무한 루프
         while (m_cancellationTokenSource.IsCancellationRequested == false)
         {
+            // 물리 업데이트 타이밍 대기 (최적화)
             await UniTask.WaitForFixedUpdate();
+
             m_currentTime += Time.fixedDeltaTime;
             SpawnEnemy();
         }
     }
 
+    /// <summary>
+    /// 경과 시간과 스폰 데이터를 비교하여 적 유닛을 생성 또는 풀에서 꺼내옵니다.
+    /// </summary>
     private void SpawnEnemy()
     {
-        if(m_spawnCount >= m_enemySpawnDatas.Count)
+        // 모든 적 스폰이 완료되었다면 루프 종료
+        if (m_spawnCount >= m_enemySpawnDatas.Count)
         {
             m_cancellationTokenSource.Cancel();
             return;
         }
+
+        // 현재 경과 시간이 다음 적의 스폰 타임에 도달했는지 체크
         if (m_currentTime >= m_enemySpawnDatas[m_spawnCount].spawnTime)
         {
-            //현재는 테스트용 추후 Enemy 모델 데이터를 받아서 로드후 저장
             EnemyController obj;
             int id = m_enemySpawnDatas[m_spawnCount].enemyData.ID;
-            if (m_disableList.ContainsKey(id))
+
+            // --- 오브젝트 풀링 로직 ---
+            // 1. 비활성 풀(재활용 리스트)에 해당 ID의 적이 있는지 확인
+            if (m_disableList.ContainsKey(id) && m_disableList[id].Count > 0)
             {
                 obj = m_disableList[id].First();
                 m_disableList[id].Remove(obj);
+
+                // 활성 리스트에 추가 (딕셔너리 키 검사 포함)
+                if (!m_enemyList.ContainsKey(id)) m_enemyList.Add(id, new());
+                m_enemyList[id].Add(obj);
             }
+            // 2. 풀에 없다면 새로 생성 (Instantiate)
             else
             {
                 obj = Instantiate(m_enemySpawnDatas[m_spawnCount].enemyData.TestObject);
@@ -64,9 +110,11 @@ public class EnemySpawnManager : MonoBehaviour
                 m_enemyList[id].Add(obj);
             }
 
+            // --- 경로 및 데이터 초기화 ---
             var pathindex = m_enemySpawnDatas[m_spawnCount].pathIndex;
             var pathData = m_pathData.FirstOrDefault(x => x.index == pathindex);
 
+            // 해당 인덱스의 경로가 있다면 적용, 없다면 0번 경로를 기본으로 사용
             if (pathData != null)
             {
                 var vectorList = GameUtil.ConvartSerializableVector2IntToVector2Int_List(pathData.path);
@@ -78,21 +126,34 @@ public class EnemySpawnManager : MonoBehaviour
                 obj.InitEnemyData(m_enemySpawnDatas[m_spawnCount].enemyData, vectorList, DieAction);
             }
 
-            m_spawnCount++;
+            m_spawnCount++; // 다음 스폰 순서로 인덱스 증가
         }
     }
 
+    // ----------------------------------------------------------------------
+    // ## Memory Management (Object Pooling)
+    // ----------------------------------------------------------------------
+
+    /// <summary>
+    /// [콜백] 적이 사망하거나 끝점에 도달했을 때 호출되어 오브젝트를 비활성 풀로 보냅니다.
+    /// </summary>
     private void DieAction(int id, EnemyController enemy)
     {
-        m_enemyList[id].Remove(enemy);
+        // 활성 리스트에서 제거
+        if (m_enemyList.ContainsKey(id))
+            m_enemyList[id].Remove(enemy);
 
-        if(m_disableList.ContainsKey(id) == false)
+        // 비활성 풀에 추가하여 나중에 재사용 가능하도록 설정
+        if (m_disableList.ContainsKey(id) == false)
         {
             m_disableList.Add(id, new());
         }
         m_disableList[id].Add(enemy);
     }
 
+    /// <summary>
+    /// 컴포넌트가 비활성화될 때 실행 중인 비동기 작업을 안전하게 중단합니다.
+    /// </summary>
     private void OnDisable()
     {
         m_cancellationTokenSource.Cancel();

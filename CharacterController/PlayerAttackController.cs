@@ -1,22 +1,18 @@
 using Cysharp.Threading.Tasks;
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 using UnityEngine;
-using UnityEngine.Events;
-using static UnityEngine.GraphicsBuffer;
 
 /// <summary>
-/// 플레이어 캐릭터의 공격 로직을 제어하는 컨트롤러입니다.
-/// 공격 사거리 내의 적을 감지하고, 가장 가까운 적을 대상으로 주기적인 자동 공격을 수행합니다.
+/// 플레이어 캐릭터의 공격 로직 및 전투 상태를 제어하는 컨트롤러입니다.
+/// 사거리 내 적 감지, 타겟팅 최적화, 애니메이션 기반 공격 실행 및 HP 관리를 담당합니다.
 /// </summary>
 [RequireComponent(typeof(CircleCollider2D))]
 public class PlayerAttackController : MonoBehaviour, IGamePlayCharacter
 {
-    private readonly string effectName = "EffectPrefabs/Hit_FX01.prefab";
+    // ====== Constants & Settings ======
+    private readonly string effectName = "EffectPrefabs/Hit_FX01.prefab"; // 공격 시 생성될 타격 이펙트 경로
 
-    // ====== Inspector Settings ======
     [Header("Attack Settings")]
     [Tooltip("공격 사거리 (CircleCollider2D의 반지름으로 사용됨).")]
     [SerializeField] private float m_attackDistance = 5f;
@@ -26,112 +22,125 @@ public class PlayerAttackController : MonoBehaviour, IGamePlayCharacter
 
     // ====== Runtime State & Caches ======
 
-    /// <summary> 공격 사거리 내에 들어온 모든 EnemyController 인스턴스 목록입니다. </summary>
+    /// <summary> 사거리 내에 감지된 적 리스트 </summary>
     private List<EnemyController> m_enemyList = new();
 
-    /// <summary> 현재 플레이어가 공격하는 대상입니다. (가장 가까운 적) </summary>
-    private EnemyController m_target; // 단일 타겟 모드에서 사용
+    /// <summary> 현재 공격 대상으로 선정된 적 </summary>
+    private EnemyController m_target;
 
-    /// <summary> 다음 공격까지 경과된 시간입니다. </summary>
+    /// <summary> 공격 쿨타임 계산용 타이머 </summary>
     private float m_currentDelay = 0;
 
-    [SerializeField] private GameObject m_atkRangeObject;
-    private InGameCharacterData m_characterData;
-    private CharacterAnimationController m_characterAnimationController;
+    [Header("Component & Object References")]
+    [SerializeField] private GameObject m_atkRangeObject; // 사거리를 시각적으로 표시할 오브젝트 (범위 표시용)
+    private InGameCharacterData m_characterData;         // 캐릭터 고유 데이터 데이터
+    private CharacterAnimationController m_characterAnimationController; // 애니메이션 제어기
 
-    [SerializeField] private MpHpController m_pHpController;
+    [SerializeField] private MpHpController m_pHpController; // 체력 및 마나 컨트롤러
 
     // ----------------------------------------------------------------------
-    // ## Initialization & Public Interface
+    // ## Initialization
     // ----------------------------------------------------------------------
 
     private void Awake()
     {
-        // 공격 거리를 감지 콜라이더의 반지름으로 설정하고 트리거 모드로 전환합니다.
+        // 1. 트리거 콜라이더를 통한 사거리 설정
         CircleCollider2D collider = GetComponent<CircleCollider2D>();
         if (collider != null)
         {
             collider.isTrigger = true;
             collider.radius = m_attackDistance;
 
-            m_atkRangeObject.transform.localScale = Vector3.one * m_attackDistance * 2;
+            // 사거리 가이드 오브젝트 크기를 반지름에 맞춰 조절 (직경이므로 *2)
+            if (m_atkRangeObject != null)
+                m_atkRangeObject.transform.localScale = Vector3.one * m_attackDistance * 2;
         }
     }
 
+    /// <summary>
+    /// 캐릭터 데이터를 주입하고 전투에 필요한 컴포넌트들을 초기화합니다.
+    /// </summary>
     public void InitCharacterData(InGameCharacterData characterData, CharacterAnimationController animator)
     {
         m_characterData = characterData;
+
+        // 이펙트 프리팹을 오브젝트 풀에 미리 등록 (비동기)
         SetEffect().Forget();
+
+        // 캐릭터 상태 수치(Stat) 설정 및 HP 컨트롤러 초기화
         characterData.characterData.SetCharacterState();
         m_pHpController.InitController(characterData.characterData.characterState, DieAction_PlayerAction);
 
-        if(animator != null)
+        if (animator != null)
             m_characterAnimationController = animator;
 
+        // 애니메이션 컨트롤러에 실제 공격 로직(AtkAction)을 콜백으로 등록
+        // 애니메이션의 '공격 시점' 이벤트 발생 시 AtkAction이 실행됩니다.
         m_characterAnimationController.SetAction(AtkAction, null);
     }
 
+    /// <summary>
+    /// 타격 이펙트를 어드레서블에서 로드하여 오브젝트 풀에 준비시킵니다.
+    /// </summary>
     private async UniTask SetEffect()
     {
         if (ObjectPoolManager.Instance.CheckAddKey(effectName))
             return;
+
         ObjectPoolManager.Instance.AddKey(effectName);
         var effectObject = await AddressableManager.Instance.InstantiateObjectAsync(effectName);
         ObjectPoolManager.Instance.SetPoolObject(effectName, effectObject);
     }
 
     // ----------------------------------------------------------------------
-    // ## Update Logic (Targeting & Attack Timing)
+    // ## Update Logic (Targeting & FSM)
     // ----------------------------------------------------------------------
 
     private void Update()
     {
-        // 1. 적 목록이 비어있는 경우
+        // 1. 감지된 적이 없으면 대기 상태로 전환
         if (m_enemyList.Count <= 0)
         {
-            // 타이머 초기화 및 타겟 해제
             if (m_currentDelay > 0.001f)
                 m_currentDelay = 0;
             m_target = null;
             return;
         }
 
+        // 2. 타겟팅 로직 수행
         SetTarget();
 
-        // 4. 공격 실행
+        // 3. 타겟이 존재하면 공격 프로세스(딜레이 체크) 실행
         if (m_target != null)
             CharacterAction(m_target);
     }
 
+    /// <summary>
+    /// 현재 타겟의 유효성을 검사하고, 필요 시 가장 가까운 적을 새 타겟으로 선정합니다.
+    /// </summary>
     protected virtual void SetTarget()
     {
-        // 2. 현재 타겟 검사 및 목록 정리
         if (m_target == null || m_target.isDie)
         {
-            // 목록에서 죽은 적을 정리합니다.
+            // 죽은 적은 리스트에서 제거
             m_enemyList.RemoveAll(e => e.isDie);
 
-            // 3. 타겟 재탐색 (가장 가까운 적을 m_target으로 설정)
             if (m_enemyList.Count > 0)
             {
+                // LINQ를 사용하여 물리적 거리가 가장 가까운 적을 타겟으로 설정
                 m_target = m_enemyList.OrderBy(e => Vector2.Distance(e.transform.position, transform.position)).FirstOrDefault();
             }
             else
             {
-                // 목록 정리 후 적이 남아있지 않으면 종료
                 m_target = null;
-                return;
             }
         }
     }
 
     // ----------------------------------------------------------------------
-    // ## Collision Detection (Target Management)
+    // ## Detection (Trigger Events)
     // ----------------------------------------------------------------------
 
-    /// <summary>
-    /// 공격 사거리(트리거 콜라이더) 내로 적이 진입했을 때 호출됩니다.
-    /// </summary>
     protected void OnTriggerEnter2D(Collider2D collision)
     {
         EnemyController enemy = collision.gameObject.GetComponent<EnemyController>();
@@ -141,9 +150,6 @@ public class PlayerAttackController : MonoBehaviour, IGamePlayCharacter
         }
     }
 
-    /// <summary>
-    /// 공격 사거리(트리거 콜라이더) 밖으로 적이 벗어났을 때 호출됩니다.
-    /// </summary>
     protected void OnTriggerExit2D(Collider2D collision)
     {
         EnemyController enemy = collision.gameObject.GetComponent<EnemyController>();
@@ -151,45 +157,59 @@ public class PlayerAttackController : MonoBehaviour, IGamePlayCharacter
         {
             m_enemyList.Remove(enemy);
 
-            // 타겟이 이탈했다면 타겟을 null로 설정하여 다음 Update에서 재탐색하도록 유도
             if (enemy == m_target)
                 m_target = null;
         }
     }
 
     // ----------------------------------------------------------------------
-    // ## Attack Execution
+    // ## Attack Execution (Animation Callback)
     // ----------------------------------------------------------------------
 
+    /// <summary>
+    /// [핵심] 애니메이션 이벤트에 의해 호출되는 실제 공격 함수입니다.
+    /// 데미지 적용 및 이펙트 생성을 담당합니다.
+    /// </summary>
     private void AtkAction()
     {
         if (m_target == null)
             return;
-        // TODO: 실제 공격 로직 (데미지 계산, 애니메이션 재생 등)을 여기에 구현
-        m_target.Hit(10);
+
+        // 1. 타겟에게 데미지 전달
+        m_target.Hit(10); // TODO: m_characterData 기반 가변 데미지 적용 필요
+
         Logger.Log($"Action {m_target.gameObject.name}: ATTACK!");
+
+        // 2. 타격 지점에 풀링된 이펙트 생성 및 위치 조정
         var effect = ObjectPoolManager.Instance.AddPoolObject(effectName);
-        effect.transform.position = m_target.transform.position;
+        if (effect != null)
+            effect.transform.position = m_target.transform.position;
     }
 
     /// <summary>
-    /// 공격 딜레이를 계산하고, 딜레이가 충족되면 실제 공격 행동을 실행합니다.
+    /// 공격 애니메이션 재생을 위한 쿨타임 로직입니다.
     /// </summary>
-    /// <param name="target">공격 대상 EnemyController</param>
     private void CharacterAction(EnemyController target)
     {
-        // 딜레이 타이머 업데이트
         if (m_currentDelay <= m_attackDelay)
+        {
             m_currentDelay += Time.deltaTime;
+        }
         else
         {
-            // 딜레이 충족: 공격 실행
-            m_currentDelay = 0; // 딜레이 초기화
-
+            // 쿨타임 완료: 공격 애니메이션 트리거 실행
+            m_currentDelay = 0;
             m_characterAnimationController.PlayAnimation_Trigger(CharacterAnimationController.AnimationTrigger.ATK);
         }
     }
 
+    // ----------------------------------------------------------------------
+    // ## Combat Interaction & Lifecycle
+    // ----------------------------------------------------------------------
+
+    /// <summary>
+    /// 적에게 피격되었을 때 호출됩니다.
+    /// </summary>
     public virtual void Hit(int atk)
     {
         m_pHpController.UpdateHp(-atk);
@@ -199,14 +219,15 @@ public class PlayerAttackController : MonoBehaviour, IGamePlayCharacter
 
     private void OnDestroy()
     {
-        ObjectPoolManager.Instance.RemovePoolObject(effectName);
+        // 객체 파괴 시 등록된 이펙트 풀 정보 제거
+        if (ObjectPoolManager.Instance != null)
+            ObjectPoolManager.Instance.RemovePoolObject(effectName);
     }
 
-    protected virtual void DieAction_PlayerAction()
-    {
+    /// <summary> 플레이어 전용 사망 로직 </summary>
+    protected virtual void DieAction_PlayerAction() { }
 
-    }
-
+    /// <summary> IGamePlayCharacter 인터페이스 구현: 사망 시 처리 </summary>
     public virtual void DieAction()
     {
         DieAction_PlayerAction();

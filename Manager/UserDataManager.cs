@@ -41,14 +41,13 @@ public class UserDataManager : Singleton<UserDataManager>
     public override void Init()
     {
         userDatas.Clear();
-        asyncUserDatas.Clear(); // 안전을 위해 비동기 목록도 초기화하는 것이 좋습니다.
+        asyncUserDatas.Clear(); // 비동기 목록 초기화
 
-        // 동기 데이터 등록 예시 (예: 설정 데이터)
+        // 동기 데이터 등록
         userDatas.Add(new UserSettingData());
 
-        // 비동기 데이터 등록 예시 (예: 재화 데이터, 로드가 오래 걸릴 수 있는 데이터)
-        // UserGoodsData가 IAsyncUserData를 구현한다고 가정합니다.
-        asyncUserDatas.Add(new UserGoodsData());
+        // 비동기 데이터 등록
+        asyncUserDatas.Add(new UserData());
 
         // 저장 데이터 존재 여부 확인 (PlayerPrefs를 이용한 간단한 확인)
         hasSaveData = PlayerPrefasHelper.GetInt(PlayerPrefasHelper.PrefabsKey.HasSettingData, 0) != 0;
