@@ -63,11 +63,11 @@ public class InGameUIManager : UIBaseFormMaker
     /// <summary>
     /// 테스트용 데이터를 기반으로 인게임 UI와 매니저를 초기화합니다.
     /// </summary>
-    public void SetInGameDataTest()
+    public void SetInGameData(List<CharacterData> characterDatas)
     {
         Logger.Log("Game Data Test Setting");
 
-        // CSVHelper를 통해 데이터 시트에서 테스트용 캐릭터 정보 로드
+        // CSVHelper를 통해 데이터 시트에서 테스트용 캐릭터 정보 로드 (characterDatas)
         List<CharacterData> testdatas = new()
         {
             GameMaster.Instance.csvHelper.GetScripteData<CharacterDataList>().GetData(1),
@@ -86,6 +86,8 @@ public class InGameUIManager : UIBaseFormMaker
 
         // 초기 코스트 텍스트 동기화
         ChargeText(m_inGameManager.currentCost);
+
+        Get<OnClickCharacterPaenl>(0).SetInGameManager(m_inGameManager);
 
         // 로컬 함수: 코스트 변화 시 텍스트 갱신 및 버튼들의 상태 업데이트 수행
         void ChargeText(int currentCost)
@@ -129,9 +131,9 @@ public class InGameUIManager : UIBaseFormMaker
     /// <summary>
     /// 맵에 배치된 캐릭터를 클릭했을 때 상세 정보 패널을 엽니다.
     /// </summary>
-    public void OnClickCharacter(InGameCharacterData characterData, Action activeAction = null, Action disableAction = null)
+    public void OnClickCharacter(InGameCharacterData characterData, Action activeAction = null, Action disableAction = null, Action upgrade = null, Action skill = null)
     {
-        Get<OnClickCharacterPaenl>(0).OnClickCharacter(characterData, activeAction, disableAction);
+        Get<OnClickCharacterPaenl>(0).OnClickCharacter(characterData, activeAction, disableAction, upgrade, skill);
     }
 
     // ----------------------------------------------------------------------

@@ -176,7 +176,7 @@ public class PlayerAttackController : MonoBehaviour, IGamePlayCharacter
             return;
 
         // 1. 타겟에게 데미지 전달
-        m_target.Hit(10); // TODO: m_characterData 기반 가변 데미지 적용 필요
+        m_target.Hit(m_characterData.GetAtk());
 
         Logger.Log($"Action {m_target.gameObject.name}: ATTACK!");
 
@@ -231,5 +231,11 @@ public class PlayerAttackController : MonoBehaviour, IGamePlayCharacter
     public virtual void DieAction()
     {
         DieAction_PlayerAction();
+    }
+
+    public void Upgrade()
+    {
+        m_characterData.UpgradeCharacter(1);
+        m_pHpController.UpgradeCharacter(1);
     }
 }

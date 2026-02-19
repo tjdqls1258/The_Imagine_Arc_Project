@@ -26,11 +26,6 @@ public class LobbyCharacter : UILobbyUpdate
         CharacterImage, // 캐릭터 일러스트 Image
     }
 
-    enum TextTMP
-    {
-        CharacterText,  // 캐릭터 대사 표시용 TextMeshProUGUI
-    }
-
     // ----------------------------------------------------------------------
     // ## Initialization (Lifecycle)
     // ----------------------------------------------------------------------
@@ -39,7 +34,7 @@ public class LobbyCharacter : UILobbyUpdate
     {
         // 1. 컴포넌트 자동 바인딩
         Bind<Image>(typeof(Images));
-        Bind<TextMeshProUGUI>(typeof(TextTMP));
+        Bind<TextMeshProUGUI>();
     }
 
     /// <summary>
@@ -54,7 +49,7 @@ public class LobbyCharacter : UILobbyUpdate
         lobbyCharacterData.GetCharacterSprite(targetImage: Get<Image>((int)Images.CharacterImage)).Forget();
 
         // 기본 대사 설정 및 자동 대사 루프 시작
-        Get<TextMeshProUGUI>((int)TextTMP.CharacterText).text = $"{lobbyCharacterData.characterName}의 대사";
+        Get<TextMeshProUGUI>().text = $"{lobbyCharacterData.characterName}의 대사";
         RestartChatMessage();
     }
 
@@ -96,7 +91,7 @@ public class LobbyCharacter : UILobbyUpdate
             await UniTask.WaitForSeconds(m_delayTime, cancellationToken: cancelToken);
 
             // 4. 대사 텍스트 페이드 아웃 (투명하게 만들기)
-            Get<TextMeshProUGUI>((int)TextTMP.CharacterText).DOFade(0, m_fadeTime);
+            Get<TextMeshProUGUI>().DOFade(0, m_fadeTime);
         }
     }
 
@@ -138,9 +133,9 @@ public class LobbyCharacter : UILobbyUpdate
     private void SayRandom()
     {
         int index = Random.Range(0, 5);
-        Get<TextMeshProUGUI>((int)TextTMP.CharacterText).text = $"{lobbyCharacterData.characterName}의 {index}번째 대사";
+        Get<TextMeshProUGUI>().text = $"{lobbyCharacterData.characterName}의 {index}번째 대사";
 
         // 텍스트를 다시 불투명하게 만듦
-        Get<TextMeshProUGUI>((int)TextTMP.CharacterText).DOFade(1, m_fadeTime);
+        Get<TextMeshProUGUI>().DOFade(1, m_fadeTime);
     }
 }

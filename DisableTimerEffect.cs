@@ -7,24 +7,19 @@ using UnityEngine;
 /// </summary>
 public class DisableTimerEffect : MonoBehaviour
 {
-    [Tooltip("수동 비활성화 모드 사용 시 대기 시간 (초)")]
-    [SerializeField] private float m_disableTime = 2f;
-
-    [Tooltip("유니티 자체 Stop Action(Disable) 기능을 사용할지 여부")]
-    [SerializeField] private bool m_useUnityStopAction = true;
-
+    private float m_disableTime = 0f;
     private ParticleSystem[] particleSystems;
     private void Awake()
     {
         particleSystems = transform.GetComponentsInChildren<ParticleSystem>();
-
+        
         if(particleSystems != null )
         {
             foreach(ParticleSystem p in particleSystems)
             {
                 var main = p.main;
-                // 파티클 재생 종료 시 해당 오브젝트를 자동으로 Disable 하도록 설정
-                main.stopAction = ParticleSystemStopAction.Disable;
+
+                m_disableTime = System.Math.Max(main.startLifetime.constantMax + 1, m_disableTime);
             }
         }
     }
@@ -32,10 +27,7 @@ public class DisableTimerEffect : MonoBehaviour
     private void OnEnable()
     {
         // 오브젝트가 활성화될 때마다 실행 (오브젝트 풀링 대응)
-        if (!m_useUnityStopAction)
-        {
-            StartDisableTimer().Forget();
-        }
+        StartDisableTimer().Forget();
     }
 
     /// <summary>

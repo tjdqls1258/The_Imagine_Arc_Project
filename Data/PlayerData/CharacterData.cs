@@ -20,7 +20,18 @@ public class InGameCharacterData
     }
 
     public CharacterData characterData; // 원본 데이터 참조
-    public int upgradeCount;            // 캐릭터 강화 횟수
+    protected int upgradeCount;            // 캐릭터 강화 횟수
+
+    public int GetAtk()
+    {
+        return (int)(characterData.atkPower + (characterData.atkPower * upgradeCount * 0.1f));
+    }
+
+    public void UpgradeCharacter(int count)
+    {
+        upgradeCount = upgradeCount + count;
+    }
+
 }
 
 /// <summary>
@@ -169,5 +180,18 @@ public class CharacterDataList : CSVDataList<CharacterData>
             datas.Add(m_dataList[id]);
 
         return datas;
+    }
+
+    public async UniTask LoadAllCharacterSprite()
+    {
+        var allData = GetAllList();
+        List<UniTask> taskList = new();
+
+        foreach(var data in allData)
+        {
+            taskList.Add(data.LoadSprite());
+        }
+
+        await UniTask.WhenAll(taskList);
     }
 }

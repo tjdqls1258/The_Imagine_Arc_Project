@@ -1,3 +1,4 @@
+using Cysharp.Threading.Tasks;
 using UnityEngine;
 
 /// <summary>
@@ -30,14 +31,21 @@ public class CharacterListPanel : UIBase
         {
             m_characterDetail.OnClickData(index);
         });
+    }
 
-        // ---------------------------------------------------------
-        // ## [테스트 로직] 실제 상용 환경에서는 외부 데이터 매니저에서 호출
-        // ---------------------------------------------------------
+    public override void ShowUI()
+    {
+        base.ShowUI();
+        WaitLoadImage().Forget();
+    }
+
+    private async UniTask WaitLoadImage()
+    {
         // CSV 데이터 헬퍼를 통해 로드된 전체 캐릭터 리스트를 가져와 스크롤 뷰에 채워 넣습니다.
         var characterDataList = GameMaster.Instance.csvHelper.GetScripteData<CharacterDataList>();
         if (characterDataList != null)
         {
+            await characterDataList.LoadAllCharacterSprite();
             m_characterScrollView.UpdateContents(characterDataList.GetDefaultList());
         }
     }

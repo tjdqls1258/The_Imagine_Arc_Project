@@ -87,7 +87,7 @@ public class CharacterDetail : CachObject
     private async UniTask WaitLoadImage()
     {
         // 캐릭터 아틀라스에서 스프라이트를 로드하여 Image 컴포넌트에 할당
-        await m_characterData.GetCharacterSprite(targetImage: Get<Image>((int)Images.CharacterImage));
+        await m_characterData.GetCharacterSprite((sp) => Get<Image>((int)Images.CharacterImage).sprite = sp);
 
         // 이미지 로드 완료 후 다시 한번 페이드 상태를 확인 (부드러운 노출)
         if (gameObject != null && m_group != null)
@@ -107,6 +107,10 @@ public class CharacterDetail : CachObject
     public void Close()
     {
         // 페이드 아웃 연출이 끝난 후 게임 오브젝트를 비활성화하도록 콜백 설정
-        m_group.DOFade(0, m_fadeTime).OnComplete(() => gameObject.SetActive(false));
+        m_group.DOFade(0, m_fadeTime).OnComplete(() =>
+        {
+            m_group.alpha = 0;
+            gameObject.SetActive(false);
+        });
     }
 }

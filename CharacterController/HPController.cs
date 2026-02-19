@@ -58,8 +58,6 @@ public class HPController : MonoBehaviour
     /// <param name="dieAction">사망 시 실행할 함수</param>
     public virtual void InitController(CharacterState characterStateData, Action dieAction)
     {
-        Logger.Log($"Set Hp {characterStateData.maxHp}");
-
         m_maxHP = characterStateData.maxHp;
 
         // 프로퍼티를 통해 현재 체력을 최대치로 설정하고 UI를 갱신
@@ -84,5 +82,12 @@ public class HPController : MonoBehaviour
         {
             m_dieAction.Invoke();
         }
+    }
+
+    public virtual void UpgradeCharacter(int count)
+    {
+        float addValue = m_maxHP * (0.1f * count);
+        m_maxHP = m_maxHP + addValue;
+        currentHp = currentHp + addValue;
     }
 }

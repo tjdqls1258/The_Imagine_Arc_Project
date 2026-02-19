@@ -128,4 +128,10 @@ public class PlayerCharacterContrroller : MonoBehaviour
         m_atkController.enabled = isSpawn;
         m_isSpawn = isSpawn;
     }
+
+    public void UpgradeCharacter()
+    {
+        m_atkController.Upgrade();
+        Logger.Log($"UpgradeCharacter {m_characterData.GetAtk()}");
+    }
 }

@@ -84,12 +84,21 @@ public class CachObject : MonoBehaviour
     }
 
     /// <summary>
+    /// 소지한 모든 컴포넌트 (자식 포함) 바인드
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    protected void Bind<T>() where T : UnityEngine.Object
+    {
+        _objects.Add(typeof(T), gameObject.GetComponentsInChildren(typeof(T), true));
+    }
+
+    /// <summary>
     /// Bind 메서드를 통해 저장된 오브젝트를 인덱스(Enum 순서)를 통해 가져옵니다.
     /// </summary>
     /// <typeparam name="T">가져올 컴포넌트 타입</typeparam>
     /// <param name="idx">Enum의 정수 인덱스 값</param>
     /// <returns>캐싱된 오브젝트 T</returns>
-    protected T Get<T>(int idx) where T : UnityEngine.Object
+    protected T Get<T>(int idx = 0) where T : UnityEngine.Object
     {
         UnityEngine.Object[] objects = null;
 

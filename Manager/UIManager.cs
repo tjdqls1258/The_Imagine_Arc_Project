@@ -135,9 +135,6 @@ public class UIManager : Singleton<UIManager>
 
             // 2. 풀 상태 변경 (Open -> Close)
             ChangeItem(m_openUIPool, m_closeUIPool, type);
-
-            // 3. UI 내부 닫기 로직 호출 (필요 시)
-            ui.GetComponent<UIBase>()?.CloseUI();
         }
         else
         {

@@ -23,7 +23,8 @@ public class SpawnPlayerCharacterTile : TileBase, IPointerDownHandler, IPointerU
             { 
                 m_character.OnPointerUpAction();
                 GameUtil.mainCamera.transform.position = GameData.Instance.DefaulteCameraPos;
-            });
+            },
+            m_character.UpgradeCharacter);
     }
 
     public void OnPointerDown(PointerEventData eventData)

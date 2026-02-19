@@ -34,6 +34,10 @@ public class OnClickCharacterPaenl : CachObject
     private InGameCharacterData m_currentCharaterData; // 현재 선택된 캐릭터의 데이터
     private Action activeAction = null;                // 패널 활성화 시 실행할 추가 로직
     private Action disableAction = null;               // 패널 비활성화(닫기) 시 실행할 추가 로직
+    private Action upgradeAction = null;
+    private Action skillAction = null;
+
+    private InGameManager m_inGameManager;
 
     // ----------------------------------------------------------------------
     // ## Initialization
@@ -52,6 +56,13 @@ public class OnClickCharacterPaenl : CachObject
 
         // 3. 버튼 이벤트 연결 (인덱스 기반 접근)
         Get<Button>((int)Buttons.Back).onClick.AddListener(ClosePanel);
+        Get<Button>((int)Buttons.UpgradButton).onClick.AddListener(UpgradeButtonClick);
+        Get<Button>((int)Buttons.SkillButton).onClick.AddListener(SkillButtonOnClick);
+    }
+
+    public void SetInGameManager(InGameManager inGameManager)
+    {
+        m_inGameManager = inGameManager;
     }
 
     // ----------------------------------------------------------------------
@@ -64,7 +75,7 @@ public class OnClickCharacterPaenl : CachObject
     /// <param name="characterData">클릭된 캐릭터의 데이터</param>
     /// <param name="activeAction">열릴 때 실행할 콜백 (예: 하이라이트 효과)</param>
     /// <param name="disableAction">닫힐 때 실행할 콜백 (예: 하이라이트 해제)</param>
-    public void OnClickCharacter(InGameCharacterData characterData, Action activeAction = null, Action disableAction = null)
+    public void OnClickCharacter(InGameCharacterData characterData, Action activeAction = null, Action disableAction = null, Action upgrade = null, Action skill = null)
     {
         // 패널 활성화
         gameObject.SetActive(true);
@@ -74,10 +85,14 @@ public class OnClickCharacterPaenl : CachObject
         activeAction?.Invoke();
         this.disableAction = disableAction;
 
+        upgradeAction = upgrade;
+        skillAction = skill;
+
         // 게임 로직 일시정지 (전투 중단)
         Time.timeScale = 0f;
 
         // 어드레서블 시스템을 통해 캐릭터 이미지 비동기 로드 및 적용
+        Get<TextMeshProUGUI>((int)TextMeshPros.UpgradText).text = $"UPGRAD\nCost:{characterData.characterData.cost}";
         characterData.characterData.GetCharacterSprite(targetImage: Get<Image>((int)Images.CharacterImage)).Forget();
     }
 
@@ -92,5 +107,24 @@ public class OnClickCharacterPaenl : CachObject
         // 패널 비활성화 및 종료 콜백 실행
         gameObject.SetActive(false);
         disableAction?.Invoke();
+    }
+
+    private void UpgradeButtonClick()
+    {
+        if (m_inGameManager.currentCost < m_currentCharaterData.characterData.cost)
+        {
+            Logger.Log("요구되는 소모치 부족");
+            return;
+        }
+
+        if (upgradeAction == null) return;
+        m_inGameManager.UseCost(m_currentCharaterData.characterData.cost);
+        upgradeAction.Invoke();
+    }
+
+    private void SkillButtonOnClick()
+    {
+        if (skillAction == null) return;
+        skillAction.Invoke();
     }
 }
