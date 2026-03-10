@@ -22,10 +22,7 @@ public class CharacterListPanel : UIBase
 
     protected override void Awake()
     {
-        // 1. UIManager에서 관리할 수 있도록 이 패널의 시퀀스(ID)를 등록합니다.
-        m_UISequence = UIManager.UISequence.CharacterListPanel;
-
-        // 2. [이벤트 연결] 리스트의 셀이 클릭되었을 때 실행될 콜백 등록
+        // [이벤트 연결] 리스트의 셀이 클릭되었을 때 실행될 콜백 등록
         // 셀이 클릭되면 해당 캐릭터의 데이터를 상세 정보창(CharacterDetail)에 전달하여 갱신합니다.
         m_characterScrollView.OnCellClicked(index =>
         {

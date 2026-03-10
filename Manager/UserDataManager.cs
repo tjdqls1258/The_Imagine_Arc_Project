@@ -24,7 +24,7 @@ public class UserDataManager : Singleton<UserDataManager>
     /// 동기적 로드/저장이 가능한 IUserData 인터페이스를 구현한 데이터 목록입니다.
     /// (예: UserSettings, 작은 인벤토리 데이터 등)
     /// </summary>
-    public Dictionary<Type,IUserData> userDatas { get; private set; } = new();
+    public Dictionary<Type, IUserData> userDatas { get; private set; } = new();
 
     /// <summary>
     /// 비동기적 로드/저장이 필요한 IAsyncUserData 인터페이스를 구현한 데이터 목록입니다.
@@ -49,7 +49,6 @@ public class UserDataManager : Singleton<UserDataManager>
 
         // 비동기 데이터 등록
         asyncUserDatas.Add(typeof(UserData), new UserData());
-        asyncUserDatas.Add(typeof(UserCharacterData), new UserCharacterData());
 
         // 저장 데이터 존재 여부 확인 (PlayerPrefs를 이용한 간단한 확인)
         hasSaveData = PlayerPrefasHelper.GetInt(PlayerPrefasHelper.PrefabsKey.HasSettingData, 0) != 0;
@@ -161,17 +160,14 @@ public class UserDataManager : Singleton<UserDataManager>
         await UniTask.WhenAll(tasks);
     }
 
-    public IUserData GetUserData(Type type)
+    public IUserDataBase GetUserData<T>() where T : IUserDataBase
     {
-        if(userDatas.ContainsKey(type))
+        var type = typeof(T);
+
+        if (userDatas.ContainsKey(type))
             return userDatas[type];
 
-        return null;
-    }
-
-    public  IAsyncUserData GetAsyncUserData(Type type)
-    {
-        if(asyncUserDatas.ContainsKey(type)) 
+        else if(asyncUserDatas.ContainsKey(type))
             return asyncUserDatas[type];
 
         return null;

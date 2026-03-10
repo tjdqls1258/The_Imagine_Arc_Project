@@ -43,8 +43,7 @@ public class DrawShopPanel : UIBase
 
     protected override void Awake()
     {
-        // 1. UI 시퀀스 설정 및 컴포넌트 자동 바인딩
-        m_UISequence = UIManager.UISequence.ShopPanel;
+        // 1.컴포넌트 자동 바인딩
         Bind<Button>(typeof(DrawButton));
         Bind<DrawTimeLine>(typeof(DrawTineLineCom));
         Bind<Image>(typeof(characterCards));

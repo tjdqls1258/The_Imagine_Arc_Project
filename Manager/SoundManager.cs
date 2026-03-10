@@ -36,7 +36,7 @@ public class SoundManager : MonoSingleton<SoundManager>
     [Header("Audio Mixer Settings")]
     [Tooltip("Master, BGM, EFFECT 그룹이 포함된 메인 오디오 믹서를 연결합니다.")]
     [SerializeField] private AudioMixerGroup audioMixerGroup;
-    UserSettingData SettingDatat => GameMaster.Instance.dataManager.GetUserData(typeof(UserSettingData)) as UserSettingData;
+    UserSettingData SettingDatat => GameMaster.Instance.dataManager.GetUserData<UserSettingData>() as UserSettingData;
 
     // ====== Runtime State & Caches ======
     private Dictionary<string, AudioClip> m_clipDic = new(); // 효과음 캐시 (Key: 에셋이름)

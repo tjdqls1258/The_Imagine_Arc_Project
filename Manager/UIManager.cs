@@ -24,6 +24,7 @@ public class UIManager : Singleton<UIManager>
         StageSeletePanel,  // 스테이지 선택 패널
         CharacterListPanel, // 캐릭터 목록 패널
         ShopPanel,          // 상점 패널
+        CharacterSelectPanel,//캐릭터 덱 설정 패널
         // Todo: 필요한 UI 패널 타입 상시 추가
     }
 
@@ -114,6 +115,8 @@ public class UIManager : Singleton<UIManager>
 
             // Open Pool에 등록
             m_openUIPool.Add(type, ui);
+
+            ui.GetComponent<UIBase>().SetSequence(type);
         }
 
         // 2. 해당 UI의 내부 활성화 로직(애니메이션 등) 호출

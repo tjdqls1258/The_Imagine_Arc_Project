@@ -68,7 +68,7 @@ public class InGameUIManager : UIBaseFormMaker
     /// <summary>
     /// 테스트용 데이터를 기반으로 인게임 UI와 매니저를 초기화합니다.
     /// </summary>
-    public void SetInGameData(List<UserInfo.UserCharacterData> characterDatas)
+    public void SetInGameData(List<NetExcute.UserCharacterData> characterDatas)
     {
         m_endPanel.gameObject.SetActive(false);
         Logger.Log("Game Data Test Setting");
@@ -101,7 +101,7 @@ public class InGameUIManager : UIBaseFormMaker
             m_updateCostAction?.Invoke(currentCost);
         }
 
-        InGameCharacterData SetCharacterData(UserInfo.UserCharacterData data)
+        InGameCharacterData SetCharacterData(NetExcute.UserCharacterData data)
         {
             var characterData = GameMaster.Instance.csvHelper.GetScripteData<CharacterDataList>().GetData(data.ID);
             InGameCharacterData ingameData = new InGameCharacterData(characterData, data);

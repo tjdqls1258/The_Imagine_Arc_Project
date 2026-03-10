@@ -24,10 +24,7 @@ public class StagePanel : UIBase
 
     protected override void Awake()
     {
-        // 1. UIManager 시퀀스 등록
-        m_UISequence = UIManager.UISequence.StageSeletePanel;
-
-        // 2. 초기화 로직 실행
+        // 초기화 로직 실행
         Init();
     }
 

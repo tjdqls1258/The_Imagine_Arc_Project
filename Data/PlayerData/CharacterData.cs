@@ -7,7 +7,6 @@ using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.U2D;
 using UnityEngine.UI;
-using static NetExcute.UserInfo;
 
 /// <summary>
 /// 인게임에서 실제로 사용되는 캐릭터 데이터 인스턴스입니다.
@@ -15,8 +14,8 @@ using static NetExcute.UserInfo;
 /// </summary>
 public class InGameCharacterData
 {
-    private UserInfo.UserCharacterData userCharacterDatas;
-    public InGameCharacterData(CharacterData data, UserInfo.UserCharacterData userCharacterData)
+    private NetExcute.UserCharacterData userCharacterDatas;
+    public InGameCharacterData(CharacterData data, NetExcute.UserCharacterData userCharacterData)
     {
         characterData = data;
         userCharacterDatas = userCharacterData;
@@ -28,7 +27,7 @@ public class InGameCharacterData
 
     public int GetAtk()
     {
-        //추가 : 공격력 측정 공식
+        //추가 : 공격력 측정 공식 (캐릭터 장비, 강화 수치 등)
         return (int)(characterData.characterState.atkPower + (characterData.characterState.atkPower * upgradeCount * 0.1f));
     }
 
