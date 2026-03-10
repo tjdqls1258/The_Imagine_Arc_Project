@@ -1,4 +1,5 @@
 using Cysharp.Threading.Tasks;
+using NetExcute;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -6,6 +7,7 @@ using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.U2D;
 using UnityEngine.UI;
+using static NetExcute.UserInfo;
 
 /// <summary>
 /// 인게임에서 실제로 사용되는 캐릭터 데이터 인스턴스입니다.
@@ -13,9 +15,11 @@ using UnityEngine.UI;
 /// </summary>
 public class InGameCharacterData
 {
-    public InGameCharacterData(CharacterData data)
+    private UserInfo.UserCharacterData userCharacterDatas;
+    public InGameCharacterData(CharacterData data, UserInfo.UserCharacterData userCharacterData)
     {
         characterData = data;
+        userCharacterDatas = userCharacterData;
         upgradeCount = 0;
     }
 
@@ -24,7 +28,8 @@ public class InGameCharacterData
 
     public int GetAtk()
     {
-        return (int)(characterData.atkPower + (characterData.atkPower * upgradeCount * 0.1f));
+        //추가 : 공격력 측정 공식
+        return (int)(characterData.characterState.atkPower + (characterData.characterState.atkPower * upgradeCount * 0.1f));
     }
 
     public void UpgradeCharacter(int count)
@@ -44,38 +49,18 @@ public class CharacterData : CSVData
     public int cost;                // 배치 비용
     public int rating;              // 등급 (Rarity)
     public string characterName;    // 캐릭터 이름
-    public float maxHp = 1;         // 최대 체력
-    public int atkPower;            // 공격력
-    public int defPower;            // 방어력
-    public int atkSpeed;            // 공격 속도
-    public float maxMp = 1;         // 최대 마나
+    public MpCharacterState characterState;
 
     [Header("Resource Keys")]
     public string modelObjectName;  // 어드레서블 프리팹 경로 키
     public string modelSpriteName;  // 어드레서블 스프라이트 아틀라스 경로 키
 
     [Header("Runtime State")]
-    public MpCharacterState characterState; // 전투 로직에서 사용할 상태 객체
     private Sprite modelSprite;             // 캐싱된 캐릭터 스프라이트
     private SpriteAtlas characterSprite;    // 캐싱된 스프라이트 아틀라스
 
     /// <summary> 어드레서블 시스템에서 사용할 스프라이트 아틀라스의 전체 경로를 반환합니다. </summary>
     private string GetSpriteName => string.Format(Util.CHARACTER_SPRITE_PATH, modelSpriteName);
-
-    /// <summary>
-    /// CSV 필드 값을 바탕으로 실제 전투에서 사용할 상태 객체(characterState)를 생성합니다.
-    /// </summary>
-    public void SetCharacterState()
-    {
-        characterState = new()
-        {
-            maxHp = maxHp,
-            atkPower = atkPower,
-            atkSpeed = atkSpeed,
-            maxMp = maxMp,
-            defPower = defPower
-        };
-    }
 
     public override int GetID() => id;
 

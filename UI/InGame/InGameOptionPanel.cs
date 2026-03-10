@@ -121,12 +121,6 @@ public class InGameOptionPanel : UIBaseFormMaker
         // 1. 인게임 매니저를 통해 게임 종료 로직 수행
         GameMaster.Instance.uiManager.AutoUIManager.GetCompoent<InGameUIManager>(UIBaseData.UIType.InGameUI).ExitGame();
 
-        // 2. 홈 씬 로드 (비동기)
-        SceneLoadManager.Instance.SceneLoad(SceneInfo.SceneType.HomeScene).Forget();
-
-        // 3. 오브젝트 풀링 내의 유효하지 않은(Null) 객체 정리
-        ObjectPoolManager.Instance.ClearNullPoolObject();
-
         // 4. 패널 닫기 (이때 Time.timeScale이 1로 복구됨)
         CanvasAtive(false);
     }

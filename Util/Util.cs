@@ -2,6 +2,11 @@ using UnityEngine;
 
 public static class Util
 {
+    //######### Character Data
     public const string CHARACTER_SPRITE_PATH = "Assets/Sprite/TestCharacterImage/{0}.spriteatlas";
     public const string CHARACTER_IMAGE_NAME = "CharacterImage";
+    public const string CHARACTER_MODLED_PATH = "Character/{0}.prefab";
+
+    //######### Enemy Data
+    public const string ENEMY_MODLED_PATH = "Enemy/{0}.prefab";
 }

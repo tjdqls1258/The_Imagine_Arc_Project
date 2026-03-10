@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using UnityEngine;
 
 /// <summary>
@@ -12,10 +13,14 @@ using UnityEngine;
 public class EnemySpawnManager : MonoBehaviour
 {
     // ====== Runtime Data ======
-    private List<EnemySpawnData> m_enemySpawnDatas; // 스폰될 적의 정보 및 시간 데이터 리스트
+    private EnemySpawnData[] m_enemySpawnDatas; // 스폰될 적의 정보 및 시간 데이터 리스트
     private MapData.PathData[] m_pathData;         // 이동 경로(Path) 데이터 배열
     private int m_spawnCount = 0;                  // 현재까지 스폰된 적의 개수
     private float m_currentTime = 0;               // 스폰 시작 후 경과 시간
+
+    private int m_totalCount = 0;
+    private int m_remmantCount = 0;             // 남은 스폰 개수
+    private int m_currentCount = 0;
 
     // ====== Object Pooling & Async ======
     private CancellationTokenSource m_cancellationTokenSource = new(); // 비동기 루프 취소용 토큰
@@ -26,6 +31,16 @@ public class EnemySpawnManager : MonoBehaviour
     /// <summary> [비활성 풀] 사망 후 재활용 대기 중인 적 리스트 (Key: Enemy ID) </summary>
     private Dictionary<int, List<EnemyController>> m_disableList = new();
 
+    private Dictionary<int, GameObject> m_enemyModelList = new();
+
+    // ====== Action ======
+
+    /// <summary> 몬스터 사망시 액션 </summary>
+    private Action m_enemyDie;
+
+    /// <summary> 몬스터 도착시 액션 </summary>
+    private Action m_enemyArriveAction;
+
     // ----------------------------------------------------------------------
     // ## Initialization
     // ----------------------------------------------------------------------
@@ -33,10 +48,17 @@ public class EnemySpawnManager : MonoBehaviour
     /// <summary>
     /// 스테이지 정보를 주입받아 스폰 준비를 합니다.
     /// </summary>
-    public void SetEnemyData(List<EnemySpawnData> data, MapData.PathData[] pathDatas)
+    public void SetEnemyData(EnemySpawnData[] data, MapData.PathData[] pathDatas, Action enemyDieAction, Action enemyArriveAction)
     {
         m_enemySpawnDatas = data;
         m_pathData = pathDatas;
+
+        m_enemyDie = enemyDieAction;
+        m_enemyArriveAction = enemyArriveAction;
+
+        m_totalCount = m_enemySpawnDatas.Length;
+        m_remmantCount = m_enemySpawnDatas.Length;
+        m_currentCount = m_enemySpawnDatas.Length;
     }
 
     /// <summary>
@@ -47,6 +69,18 @@ public class EnemySpawnManager : MonoBehaviour
         SpawnStart().Forget(); // 비동기 루프를 별도 대기 없이 실행
     }
 
+    public int GetTotalCount()
+    {
+        return m_totalCount;
+    }
+
+    public void EnemyDie()
+    {
+        m_currentCount -= 1;
+    }
+
+    public int GetCurrentCount() => m_currentCount;
+
     // ----------------------------------------------------------------------
     // ## Spawn Logic (Async Pipeline)
     // ----------------------------------------------------------------------
@@ -56,8 +90,26 @@ public class EnemySpawnManager : MonoBehaviour
     /// </summary>
     private async UniTask SpawnStart()
     {
-        // 1. 게임 시작 전 초기 대기 시간 (예: 준비 시간)
-        await UniTask.WaitForSeconds(3f);
+        m_enemyModelList.Clear();
+        float currentTime = Time.realtimeSinceStartup;
+
+        foreach (var enemySpawnData in m_enemySpawnDatas)
+        {
+            if (m_enemyModelList.ContainsKey(enemySpawnData.enemyDataID))
+                continue;
+            var enemyData = GameMaster.Instance.csvHelper.GetScripteData<EnemyDataList>().GetData(enemySpawnData.enemyDataID);
+            var obj = await GameMaster.Instance.addressableManager.LoadAssetAndCacheAsync<GameObject>(string.Format(Util.ENEMY_MODLED_PATH, enemyData.controllObjectKey));
+            obj.gameObject.SetActive(false);
+            m_enemyModelList.Add(enemySpawnData.enemyDataID, obj);
+        }
+
+        currentTime = Time.realtimeSinceStartup - currentTime;
+
+        if (currentTime > 0)
+        {
+            // 1. 게임 시작 전 초기 대기 시간 (예: 준비 시간)
+            await UniTask.WaitForSeconds(currentTime);
+        }
 
         // 2. 캔슬 토큰이 요청되기 전까지 무한 루프
         while (m_cancellationTokenSource.IsCancellationRequested == false)
@@ -76,7 +128,7 @@ public class EnemySpawnManager : MonoBehaviour
     private void SpawnEnemy()
     {
         // 모든 적 스폰이 완료되었다면 루프 종료
-        if (m_spawnCount >= m_enemySpawnDatas.Count)
+        if (m_spawnCount >= m_enemySpawnDatas.Length)
         {
             m_cancellationTokenSource.Cancel();
             return;
@@ -86,7 +138,9 @@ public class EnemySpawnManager : MonoBehaviour
         if (m_currentTime >= m_enemySpawnDatas[m_spawnCount].spawnTime)
         {
             EnemyController obj;
-            int id = m_enemySpawnDatas[m_spawnCount].enemyData.ID;
+            int id = m_enemySpawnDatas[m_spawnCount].enemyDataID;
+
+            m_remmantCount -= 1;
 
             // --- 오브젝트 풀링 로직 ---
             // 1. 비활성 풀(재활용 리스트)에 해당 ID의 적이 있는지 확인
@@ -102,7 +156,7 @@ public class EnemySpawnManager : MonoBehaviour
             // 2. 풀에 없다면 새로 생성 (Instantiate)
             else
             {
-                obj = Instantiate(m_enemySpawnDatas[m_spawnCount].enemyData.TestObject);
+                obj = Instantiate(m_enemyModelList[id]).GetComponent<EnemyController>();
                 if (m_enemyList.ContainsKey(id) == false)
                 {
                     m_enemyList.Add(id, new());
@@ -118,12 +172,12 @@ public class EnemySpawnManager : MonoBehaviour
             if (pathData != null)
             {
                 var vectorList = GameUtil.ConvartSerializableVector2IntToVector2Int_List(pathData.path);
-                obj.InitEnemyData(m_enemySpawnDatas[m_spawnCount].enemyData, vectorList, DieAction);
+                obj.InitEnemyData(GameMaster.Instance.csvHelper.GetScripteData<EnemyDataList>().GetData(m_enemySpawnDatas[m_spawnCount].enemyDataID), vectorList, DieAction, m_enemyDie, m_enemyArriveAction);
             }
             else
             {
                 var vectorList = GameUtil.ConvartSerializableVector2IntToVector2Int_List(m_pathData[0].path);
-                obj.InitEnemyData(m_enemySpawnDatas[m_spawnCount].enemyData, vectorList, DieAction);
+                obj.InitEnemyData(GameMaster.Instance.csvHelper.GetScripteData<EnemyDataList>().GetData(m_enemySpawnDatas[m_spawnCount].enemyDataID), vectorList, DieAction, m_enemyDie, m_enemyArriveAction);
             }
 
             m_spawnCount++; // 다음 스폰 순서로 인덱스 증가

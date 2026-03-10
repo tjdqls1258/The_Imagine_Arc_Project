@@ -1,4 +1,5 @@
 using Cysharp.Threading.Tasks;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using UnityEngine;
@@ -23,13 +24,13 @@ public class UserDataManager : Singleton<UserDataManager>
     /// 동기적 로드/저장이 가능한 IUserData 인터페이스를 구현한 데이터 목록입니다.
     /// (예: UserSettings, 작은 인벤토리 데이터 등)
     /// </summary>
-    public List<IUserData> userDatas { get; private set; } = new();
+    public Dictionary<Type,IUserData> userDatas { get; private set; } = new();
 
     /// <summary>
     /// 비동기적 로드/저장이 필요한 IAsyncUserData 인터페이스를 구현한 데이터 목록입니다.
     /// (예: 큰 인벤토리, 서버 통신이 필요한 재화 데이터 등)
     /// </summary>
-    public List<IAsyncUserData> asyncUserDatas { get; private set; } = new();
+    public Dictionary<Type, IAsyncUserData> asyncUserDatas { get; private set; } = new();
 
     // ----------------------------------------------------------------------
     // ## Initialization
@@ -44,10 +45,11 @@ public class UserDataManager : Singleton<UserDataManager>
         asyncUserDatas.Clear(); // 비동기 목록 초기화
 
         // 동기 데이터 등록
-        userDatas.Add(new UserSettingData());
+        userDatas.Add(typeof(UserSettingData) ,new UserSettingData());
 
         // 비동기 데이터 등록
-        asyncUserDatas.Add(new UserData());
+        asyncUserDatas.Add(typeof(UserData), new UserData());
+        asyncUserDatas.Add(typeof(UserCharacterData), new UserCharacterData());
 
         // 저장 데이터 존재 여부 확인 (PlayerPrefs를 이용한 간단한 확인)
         hasSaveData = PlayerPrefasHelper.GetInt(PlayerPrefasHelper.PrefabsKey.HasSettingData, 0) != 0;
@@ -63,7 +65,7 @@ public class UserDataManager : Singleton<UserDataManager>
     /// </summary>
     public void InitDefaultData()
     {
-        foreach (var item in userDatas)
+        foreach (var item in userDatas.Values)
         {
             item.InitData();
         }
@@ -79,7 +81,7 @@ public class UserDataManager : Singleton<UserDataManager>
 
         if (hasSaveData)
         {
-            foreach (var item in userDatas)
+            foreach (var item in userDatas.Values)
             {
                 // LoadData()의 반환 값(bool)을 통해 로드 성공/실패 여부를 확인합니다.
                 if (item.LoadData() == false) // LoadData()가 true를 반환하면 성공, false를 반환하면 실패라고 가정
@@ -98,7 +100,7 @@ public class UserDataManager : Singleton<UserDataManager>
     {
         bool isSaveFailed = false;
 
-        foreach (var item in userDatas)
+        foreach (var item in userDatas.Values)
         {
             // SaveData()의 반환 값(bool)을 통해 저장 성공/실패 여부를 확인합니다.
             if (item.SaveData() == false)
@@ -131,7 +133,7 @@ public class UserDataManager : Singleton<UserDataManager>
     public async UniTask AsyncLoadUserData()
     {
         List<UniTask> tasks = new();
-        foreach (var item in asyncUserDatas)
+        foreach (var item in asyncUserDatas.Values)
         {
             // 각 항목의 비동기 로드 Task를 리스트에 추가
             tasks.Add(item.LoadData());
@@ -149,7 +151,7 @@ public class UserDataManager : Singleton<UserDataManager>
     {
         List<UniTask> tasks = new();
 
-        foreach (var item in asyncUserDatas)
+        foreach (var item in asyncUserDatas.Values)
         {
             // 각 항목의 비동기 저장 Task를 리스트에 추가
             tasks.Add(item.SaveData());
@@ -157,5 +159,21 @@ public class UserDataManager : Singleton<UserDataManager>
 
         // 모든 저장 Task가 완료될 때까지 비동기적으로 대기
         await UniTask.WhenAll(tasks);
+    }
+
+    public IUserData GetUserData(Type type)
+    {
+        if(userDatas.ContainsKey(type))
+            return userDatas[type];
+
+        return null;
+    }
+
+    public  IAsyncUserData GetAsyncUserData(Type type)
+    {
+        if(asyncUserDatas.ContainsKey(type)) 
+            return asyncUserDatas[type];
+
+        return null;
     }
 }

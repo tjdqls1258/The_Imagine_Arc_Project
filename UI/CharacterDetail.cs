@@ -78,7 +78,7 @@ public class CharacterDetail : CachObject
         // 텍스트 정보 업데이트
         Get<TextMeshProUGUI>((int)Texts.StateLV_Text).text = "LV. 1";
         Get<TextMeshProUGUI>((int)Texts.State_Text).text =
-            $"{m_characterData.characterName} data Not Ready\nCost : {m_characterData.cost}\nRating : {m_characterData.rating}";
+            $"{m_characterData.characterName} data Not Ready\nCost : {m_characterData.cost}\nRating : {m_characterData.rating}\ntest Data : {m_characterData.characterState.maxHp}";
     }
 
     /// <summary>

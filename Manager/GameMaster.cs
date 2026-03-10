@@ -26,7 +26,7 @@ public class GameMaster : MonoSingleton<GameMaster>
     public UIManager uiManager => UIManager.Instance;
     public PopupManager popupManager => PopupManager.Instance;
     public CSVHelper csvHelper => m_csvHelper;
-
+    public UserDataManager dataManager => UserDataManager.Instance;
     // ----------------------------------------------------------------------
     // ## Initialization Phase 1: Basic Boot
     // ----------------------------------------------------------------------
@@ -142,14 +142,14 @@ public class GameMaster : MonoSingleton<GameMaster>
     /// </summary>
     private async UniTask AsyncLoadUserData()
     {
-        UserDataManager.Instance.Init();
+        dataManager.Init();
 
-        if (UserDataManager.Instance.hasSaveData)
-            UserDataManager.Instance.LoadUserData();
+        if (dataManager.hasSaveData)
+            dataManager.LoadUserData();
         else
-            UserDataManager.Instance.InitDefaultData();
+            dataManager.InitDefaultData();
 
-        await UserDataManager.Instance.AsyncLoadUserData();
+        await dataManager.AsyncLoadUserData();
     }
 
     /// <summary>

@@ -19,7 +19,7 @@ public class UnitButton : MonoBehaviour, IEndDragHandler, IDragHandler, IPointer
     [SerializeField] private TextMeshProUGUI m_costText;
 
     [Header("Character Data")]
-    [SerializeField] private CharacterData m_characterData; // 버튼에 할당된 캐릭터 데이터
+    [SerializeField] private InGameCharacterData m_characterData; // 버튼에 할당된 캐릭터 데이터
 
     private InGameUIManager m_inGameUIManager;
 
@@ -45,15 +45,15 @@ public class UnitButton : MonoBehaviour, IEndDragHandler, IDragHandler, IPointer
     /// <summary>
     /// 버튼에 캐릭터 데이터를 할당하고, 해당 캐릭터의 프리뷰 인스턴스를 비동기로 생성합니다.
     /// </summary>
-    public void SetCharater(CharacterData characterData, InGameUIManager ingameManager = null)
+    public void SetCharater(InGameCharacterData characterData, InGameUIManager ingameManager = null)
     {
         m_characterData = characterData;
-        m_characterData.LoadSprite().Forget();
+        m_characterData.characterData.LoadSprite().Forget();
         CreateCharacterPreviewAsync().Forget(); // Addressables 로딩을 비동기로 시작하고 결과를 기다리지 않음
 
         m_inGameUIManager = ingameManager;
 
-        m_costText.text = m_characterData.cost.ToString();
+        m_costText.text = m_characterData.characterData.cost.ToString();
     }
 
     public void OnPointerDown(PointerEventData eventData)
@@ -173,11 +173,10 @@ public class UnitButton : MonoBehaviour, IEndDragHandler, IDragHandler, IPointer
             m_previewCharacter = null;
         }
         // AddressableManager를 통해 객체를 비동기로 인스턴스화
-        //var obj = await AddressableManager.Instance.InstantiateObjectAsync(m_characterData.modelObjectName);
-        var obj = await AddressableManager.Instance.InstantiateObjectAsync("Test");
+        var obj = await AddressableManager.Instance.InstantiateObjectAsync(string.Format(Util.CHARACTER_MODLED_PATH, m_characterData.characterData.modelObjectName));
 
         m_previewCharacter = obj.GetComponent<PlayerCharacterContrroller>();
-        m_previewCharacter.SetCharacter(new(m_characterData));
+        m_previewCharacter.SetCharacter(m_characterData);
         m_previewCharacter.AddDieAction(HandleCharacterDie); // 유닛 사망 시 쿨타임 처리를 위한 액션 등록
         m_previewCharacter.gameObject.SetActive(false); // 생성 직후에는 비활성화 상태
     }
@@ -248,7 +247,7 @@ public class UnitButton : MonoBehaviour, IEndDragHandler, IDragHandler, IPointer
 
     public void DeleteData()
     {
-        m_characterData.UnloadAtlas();
+        m_characterData.characterData.UnloadAtlas();
         Destroy(m_previewCharacter);
         m_previewCharacter = null;
         m_isUnitSpawned = false; // 쿨타임 종료, 스폰 가능 상태로 복귀
@@ -258,7 +257,7 @@ public class UnitButton : MonoBehaviour, IEndDragHandler, IDragHandler, IPointer
 
     private bool CheckCost()
     {
-        if (m_inGameUIManager.m_inGameManager.UseCost(m_characterData.cost) == false)
+        if (m_inGameUIManager.m_inGameManager.UseCost(m_characterData.characterData.cost) == false)
         {
             Logger.Log("코스트 부족!");
             return false;
@@ -272,11 +271,11 @@ public class UnitButton : MonoBehaviour, IEndDragHandler, IDragHandler, IPointer
         if (m_previewCharacter == null || m_previewCharacter.CheckSpawn())
             return;
 
-        if (m_characterData.cost > cost && m_isUnitSpawned == false)
+        if (m_characterData.characterData.cost > cost && m_isUnitSpawned == false)
         {
             ActiveBlockButton(true);
         }
-        else if (m_characterData.cost <= cost)
+        else if (m_characterData.characterData.cost <= cost)
         {
             ActiveBlockButton(false);
         }

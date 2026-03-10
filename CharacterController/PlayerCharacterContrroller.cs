@@ -110,6 +110,7 @@ public class PlayerCharacterContrroller : MonoBehaviour
     /// <param name="Active">활성화 여부</param>
     public void AtkAreaActive(bool Active)
     {
+        if (m_atkController == null) return;
         // 공격 컨트롤러에 저장된 Range Object를 제어
         m_atkController.GetAtkRangeObject().SetActive(Active);
     }

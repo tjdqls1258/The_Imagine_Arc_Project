@@ -36,6 +36,7 @@ public class SoundManager : MonoSingleton<SoundManager>
     [Header("Audio Mixer Settings")]
     [Tooltip("Master, BGM, EFFECT 그룹이 포함된 메인 오디오 믹서를 연결합니다.")]
     [SerializeField] private AudioMixerGroup audioMixerGroup;
+    UserSettingData SettingDatat => GameMaster.Instance.dataManager.GetUserData(typeof(UserSettingData)) as UserSettingData;
 
     // ====== Runtime State & Caches ======
     private Dictionary<string, AudioClip> m_clipDic = new(); // 효과음 캐시 (Key: 에셋이름)
@@ -166,8 +167,9 @@ public class SoundManager : MonoSingleton<SoundManager>
 
         if (!mute)
         {
-            UserSettingData.Instance.userSettingOption.masterSoundValue = value;
-            UserSettingData.Instance.SaveData();
+
+            SettingDatat.userSettingOption.masterSoundValue = value;
+            SettingDatat.SaveData();
         }
     }
 
@@ -175,20 +177,20 @@ public class SoundManager : MonoSingleton<SoundManager>
     public void BGMValue(float bgmValue)
     {
         audioMixerGroup.audioMixer.SetFloat(SoundType.BGM.ToString(), bgmValue);
-        UserSettingData.Instance.userSettingOption.bgmSoundValue = bgmValue;
-        UserSettingData.Instance.SaveData();
+        SettingDatat.userSettingOption.bgmSoundValue = bgmValue;
+        SettingDatat.SaveData();
     }
 
     /// <summary> 효과음 믹서 파라미터 조절 </summary>
     public void EffectValue(float effectValue)
     {
         audioMixerGroup.audioMixer.SetFloat(SoundType.EFFECT.ToString(), effectValue);
-        UserSettingData.Instance.userSettingOption.effectSoundValue = effectValue;
-        UserSettingData.Instance.SaveData();
+        SettingDatat.userSettingOption.effectSoundValue = effectValue;
+        SettingDatat.SaveData();
     }
 
     public void Mute() => MasterValue(0.0f, true);
-    public void UnMute() => MasterValue(UserSettingData.Instance.userSettingOption.masterSoundValue, true);
+    public void UnMute() => MasterValue(SettingDatat.userSettingOption.masterSoundValue, true);
 
     // ----------------------------------------------------------------------
     // ## Cleanup & Resource Release

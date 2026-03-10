@@ -1,11 +1,14 @@
+using Cysharp.Threading.Tasks;
 using Newtonsoft.Json;
 using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 /// <summary>
 /// 사용자의 게임 환경 설정(사운드 온/오프, 볼륨 등)을 관리하는 싱글톤 클래스입니다.
 /// 로컬 저장소에 JSON 형식으로 데이터를 저장하고 불러오는 기능을 담당합니다.
 /// </summary>
-public class UserSettingData : Singleton<UserSettingData>, IUserData
+public class UserSettingData : IUserData
 {
     // ====== Data Structures ======
 

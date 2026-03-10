@@ -68,7 +68,6 @@ public class PlayerAttackController : MonoBehaviour, IGamePlayCharacter
         SetEffect().Forget();
 
         // 캐릭터 상태 수치(Stat) 설정 및 HP 컨트롤러 초기화
-        characterData.characterData.SetCharacterState();
         m_pHpController.InitController(characterData.characterData.characterState, DieAction_PlayerAction);
 
         if (animator != null)

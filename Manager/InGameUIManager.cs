@@ -1,3 +1,5 @@
+using Cysharp.Threading.Tasks;
+using NetExcute;
 using System;
 using System.Collections.Generic;
 using TMPro;
@@ -19,6 +21,9 @@ public class InGameUIManager : UIBaseFormMaker
     private List<UnitButton> m_spawnButton = new();       // 화면에 생성된 유닛 버튼 리스트
     private Camera m_camera;                              // 메인 카메라 캐시용 필드
     private Action<int> m_updateCostAction = null;        // 코스트 변화 시 버튼들의 활성 상태를 갱신하는 멀티캐스트 델리게이트
+
+    // ====== End Game State ======
+    [SerializeField] private GameEndPanel m_endPanel;
 
     // ====== Properties ======
     public InGameManager m_inGameManager { get; private set; }
@@ -63,18 +68,18 @@ public class InGameUIManager : UIBaseFormMaker
     /// <summary>
     /// 테스트용 데이터를 기반으로 인게임 UI와 매니저를 초기화합니다.
     /// </summary>
-    public void SetInGameData(List<CharacterData> characterDatas)
+    public void SetInGameData(List<UserInfo.UserCharacterData> characterDatas)
     {
+        m_endPanel.gameObject.SetActive(false);
         Logger.Log("Game Data Test Setting");
 
         // CSVHelper를 통해 데이터 시트에서 테스트용 캐릭터 정보 로드 (characterDatas)
-        List<CharacterData> testdatas = new()
+        List<InGameCharacterData> testdatas = new();
+
+        foreach (var characterData in characterDatas)
         {
-            GameMaster.Instance.csvHelper.GetScripteData<CharacterDataList>().GetData(1),
-            GameMaster.Instance.csvHelper.GetScripteData<CharacterDataList>().GetData(2),
-            GameMaster.Instance.csvHelper.GetScripteData<CharacterDataList>().GetData(3),
-            GameMaster.Instance.csvHelper.GetScripteData<CharacterDataList>().GetData(4)
-        };
+            testdatas.Add(SetCharacterData(characterData));
+        }
 
         // UI 버튼 생성 및 캐릭터 데이터 주입
         SetCharacterDatas(testdatas.ToArray());
@@ -95,6 +100,13 @@ public class InGameUIManager : UIBaseFormMaker
             m_costText.text = currentCost.ToString();
             m_updateCostAction?.Invoke(currentCost);
         }
+
+        InGameCharacterData SetCharacterData(UserInfo.UserCharacterData data)
+        {
+            var characterData = GameMaster.Instance.csvHelper.GetScripteData<CharacterDataList>().GetData(data.ID);
+            InGameCharacterData ingameData = new InGameCharacterData(characterData, data);
+            return ingameData;
+        }
     }
 
     // ----------------------------------------------------------------------
@@ -105,7 +117,7 @@ public class InGameUIManager : UIBaseFormMaker
     /// 전달받은 캐릭터 데이터 목록을 기반으로 배치 버튼들을 생성하고 설정합니다.
     /// </summary>
     /// <param name="characterDatas">배치 리스트에 포함될 캐릭터 데이터 배열</param>
-    public void SetCharacterDatas(CharacterData[] characterDatas)
+    public void SetCharacterDatas(InGameCharacterData[] characterDatas)
     {
         for (int characterCount = 0; characterCount < GameData.MAX_SETTING_CHARACTERCOUNT; characterCount++)
         {
@@ -136,6 +148,28 @@ public class InGameUIManager : UIBaseFormMaker
         Get<OnClickCharacterPaenl>(0).OnClickCharacter(characterData, activeAction, disableAction, upgrade, skill);
     }
 
+    public void EndGame(bool isWin)
+    {
+        //TODO 결과 관련 Web통신
+        m_endPanel.ResultGame(isWin, new ItemData[]
+        {
+            new()
+            {
+                itemID = 0,
+                count = 1,
+            },
+            new()
+            {
+                itemID = 1,
+                count = 2,
+            },
+            new()
+            {
+                itemID = 2,
+                count = 3,
+            }
+        });
+    }
     // ----------------------------------------------------------------------
     // ## Cleanup
     // ----------------------------------------------------------------------
@@ -154,6 +188,12 @@ public class InGameUIManager : UIBaseFormMaker
         ResetCharacterDatas();
 
         m_inGameManager = null;
+
+        // 홈 씬 로드 (비동기)
+        SceneLoadManager.Instance.SceneLoad(SceneInfo.SceneType.HomeScene).Forget();
+
+        // 오브젝트 풀링 내의 유효하지 않은(Null) 객체 정리
+        ObjectPoolManager.Instance.ClearNullPoolObject();
     }
 
     /// <summary>

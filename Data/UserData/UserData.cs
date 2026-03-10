@@ -1,5 +1,7 @@
 using Cysharp.Threading.Tasks;
+using NetExcute;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 
 /// <summary>
@@ -65,6 +67,99 @@ public class UserData : IAsyncUserData
         {
             // 서버 점검이나 타임아웃 등 저장 실패 시 예외 처리
             Logger.LogError($"Save Error : {e.ToString()}");
+        }
+
+        return UniTask.CompletedTask;
+    }
+}
+
+public class UserCharacterData : IAsyncUserData
+{
+    public Dictionary<int, UserInfo.UserCharacterData> m_oderCharacter = new(); //소지중인 전체 캐릭터 리스트
+    public Dictionary<int, List<UserInfo.UserCharacterData>> m_selecteCharacterList = new(); //덱에 배치한 캐릭터 리스트
+
+    UniTask IAsyncUserData.InitData()
+    {
+        Logger.Log($"{GetType()}::Init Data");
+
+        try
+        {
+            // TODO: API 요청을 통해 서버 DB에 저장된 유저 정보를 가져와 할당
+        }
+        catch (Exception e)
+        {
+            // 데이터 로드 중 발생하는 네트워크 오류나 파싱 에러를 처리
+            Logger.LogError($"Load Error : {e.ToString()}");
+        }
+
+        return UniTask.CompletedTask;
+    }
+
+    UniTask IAsyncUserData.LoadData()
+    {
+        Logger.Log($"{GetType()}::Load Data");
+
+        try
+        {
+            m_selecteCharacterList.Add(1, new());
+            m_selecteCharacterList[1].Add(new()
+            {
+                ID = 1,
+                Enforce = 0,
+                level = 1,
+                Rank = 1
+            });
+            m_selecteCharacterList[1].Add(new()
+            {
+                ID = 2,
+                Enforce = 0,
+                level = 1,
+                Rank = 1
+            });
+            m_selecteCharacterList[1].Add(new()
+            {
+                ID = 3,
+                Enforce = 0,
+                level = 1,
+                Rank = 1
+            });
+            m_selecteCharacterList[1].Add(new()
+            {
+                ID = 4,
+                Enforce = 0,
+                level = 1,
+                Rank = 1
+            });
+            m_selecteCharacterList[1].Add(new()
+            {
+                ID = 5,
+                Enforce = 0,
+                level = 1,
+                Rank = 1
+            });
+            // TODO: API 요청을 통해 서버 DB에 저장된 유저 정보를 가져와 할당
+        }
+        catch (Exception e)
+        {
+            // 데이터 로드 중 발생하는 네트워크 오류나 파싱 에러를 처리
+            Logger.LogError($"Load Error : {e.ToString()}");
+        }
+
+        return UniTask.CompletedTask;
+    }
+
+    UniTask IAsyncUserData.SaveData()
+    {
+        Logger.Log($"{GetType()}::Save Data");
+
+        try
+        {
+            // TODO: API 요청을 통해 서버 DB에 저장된 유저 정보를 가져와 할당
+        }
+        catch (Exception e)
+        {
+            // 데이터 로드 중 발생하는 네트워크 오류나 파싱 에러를 처리
+            Logger.LogError($"Load Error : {e.ToString()}");
         }
 
         return UniTask.CompletedTask;

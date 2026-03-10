@@ -17,10 +17,11 @@ public class InGameManager : MonoBehaviour
     private float m_costAddTime = 1;
     private float m_currentTime = 0;
     private bool m_isStartGame = false;
+    private int m_arriveCount = 0;
 
     // 플레이어 및 적 데이터는 외부에서 설정(SetData)하며, 읽기 전용으로 접근 가능
     public PlayerData PlayerData { get; private set; }
-    public EnemeyData EnemyData { get; private set; }
+    public EnemyData EnemyData { get; private set; }
 
     [Header("Character Selection")]
     [Tooltip("현재 스테이지에서 사용 가능한 캐릭터 데이터 배열")]
@@ -41,8 +42,6 @@ public class InGameManager : MonoBehaviour
 
     private EnemySpawnManager m_enemySpawnManager;
     private Action<int> m_chargeCostAction;
-
-    [SerializeField] private List<EnemySpawnData> m_enemySpawnData;
 
     private void Awake()
     {
@@ -118,7 +117,7 @@ public class InGameManager : MonoBehaviour
 
         GameData.Instance.DefaulteCameraPos = GameUtil.mainCamera.transform.position;
 
-        m_enemySpawnManager.SetEnemyData(m_enemySpawnData, m_mapData.pathDatas);
+        m_enemySpawnManager.SetEnemyData(m_mapData.enemySpawnDatas, m_mapData.pathDatas, EnemyDieAction, EnemyArriveAction);
         m_enemySpawnManager.StartSpawn();
     }
 
@@ -157,7 +156,7 @@ public class InGameManager : MonoBehaviour
     /// <summary>
     /// 인게임에 필요한 플레이어 및 적 데이터를 설정합니다.
     /// </summary>
-    public void SetData(PlayerData playerData, EnemeyData enemyData)
+    public void SetData(PlayerData playerData, EnemyData enemyData)
     {
         PlayerData = playerData;
         EnemyData = enemyData;
@@ -183,6 +182,29 @@ public class InGameManager : MonoBehaviour
 
         if (m_chargeCostAction != null)
             m_chargeCostAction.Invoke(currentCost);
+    }
+
+    private void EnemyDieAction()
+    {
+        m_enemySpawnManager.EnemyDie();
+
+        if (m_enemySpawnManager.GetCurrentCount() <= 0)
+        {
+            GameMaster.Instance.uiManager.AutoUIManager.GetCompoent<InGameUIManager>(UIBaseData.UIType.InGameUI).EndGame(true);
+            Logger.Log("Enemy Clear");
+        }
+    }
+
+    private void EnemyArriveAction()
+    {
+        m_arriveCount++;
+
+        if (m_mapData.m_life <= m_arriveCount)
+            GameMaster.Instance.uiManager.AutoUIManager.GetCompoent<InGameUIManager>(UIBaseData.UIType.InGameUI).EndGame(false);
+        else
+            m_enemySpawnManager.EnemyDie();
+
+        Logger.Log("Enemy Arrive");
     }
 
     // ----------------------------------------------------------------------

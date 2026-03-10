@@ -19,7 +19,7 @@ public class EnemyController : MonoBehaviour, IGamePlayCharacter
 {
     // ====== Inspector Settings & References ======
     [Header("Enemy Settings")]
-    [SerializeField] protected EnemeyData m_enemyData;     // 적의 능력치 및 기본 정보 데이터
+    [SerializeField] protected EnemyData m_enemyData;     // 적의 능력치 및 기본 정보 데이터
     [SerializeField] protected float stopDistance = 0.01f; // 경로 지점에 도착했다고 판단할 거리 임계값
 
     [Header("Component References")]
@@ -35,6 +35,8 @@ public class EnemyController : MonoBehaviour, IGamePlayCharacter
     // ====== Async & Memory Management ======
     private CancellationTokenSource m_cancellation = new(); // 비동기 작업(이동) 취소를 위한 토큰
     protected Action<int, EnemyController> m_disableAction; // 비활성화 시 오브젝트 풀에 반환하기 위한 콜백
+    protected Action m_dieAction;
+    protected Action m_arriveAction;
 
     // ----------------------------------------------------------------------
     // ## Initialization
@@ -53,10 +55,12 @@ public class EnemyController : MonoBehaviour, IGamePlayCharacter
     /// <param name="enemyData">적 기본 데이터</param>
     /// <param name="movePathList">이동할 경로 리스트</param>
     /// <param name="disableAction">비활성화 시 호출될 콜백 함수</param>
-    public virtual void InitEnemyData(EnemeyData enemyData, List<Vector2Int> movePathList, Action<int, EnemyController> disableAction)
+    public virtual void InitEnemyData(EnemyData enemyData, List<Vector2Int> movePathList, Action<int, EnemyController> disableAction, Action dieAction, Action arriveAction)
     {
         m_enemyData = enemyData;
         this.m_disableAction = disableAction;
+        m_dieAction = dieAction;
+        m_arriveAction = arriveAction;
 
         // 1. 상태 및 위치 초기화
         isDie = false;
@@ -164,7 +168,8 @@ public class EnemyController : MonoBehaviour, IGamePlayCharacter
     {
         m_cancellation.Cancel();
         gameObject.SetActive(false);
-        m_disableAction?.Invoke(m_enemyData.ID, this); // 풀에 반환
+        m_disableAction?.Invoke(m_enemyData.id, this); // 풀에 반환
+        m_arriveAction?.Invoke(); //플레이어 라이프 차감 등의 액션
     }
 
     /// <summary>
@@ -174,8 +179,10 @@ public class EnemyController : MonoBehaviour, IGamePlayCharacter
     {
         isDie = true;
         m_cancellation.Cancel(); // 이동 정지
-        m_disableAction?.Invoke(m_enemyData.ID, this); // 풀에 상태 알림
+        m_disableAction?.Invoke(m_enemyData.id, this); // 풀에 상태 알림
         m_characterAnimationController.PlayAnimation_Bool(CharacterAnimationController.AnimationBool.DIE, true);
+
+        m_dieAction?.Invoke();
     }
 
     /// <summary>
