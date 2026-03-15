@@ -1,5 +1,6 @@
 using Cysharp.Threading.Tasks;
 using DG.Tweening;
+using NetExcute;
 using System;
 using System.Threading.Tasks;
 using TMPro;
@@ -35,6 +36,7 @@ public class CharacterDetail : CachObject
     private CanvasGroup m_group;       // 페이드 인/아웃 연출을 위한 컴포넌트
     private float m_fadeTime = 0.3f;   // UI 연출 시간
     private CharacterData m_characterData; // 현재 표시 중인 캐릭터의 원본 데이터
+    private UserCharacterData m_userCharacterData; // 현재 표시 중인 캐릭터의 원본 데이터
 
     // ----------------------------------------------------------------------
     // ## Initialization (Lifecycle)
@@ -64,19 +66,20 @@ public class CharacterDetail : CachObject
     /// 특정 캐릭터 데이터를 전달받아 상세 창을 활성화하고 정보를 갱신합니다.
     /// </summary>
     /// <param name="data">표시할 캐릭터 데이터</param>
-    public void OnClickData(CharacterData data)
+    public void OnClickData(UserCharacterData data)
     {
         // UI 활성화 및 페이드 인 시작
         gameObject.SetActive(true);
         m_group.DOFade(1, m_fadeTime);
 
-        m_characterData = data;
+        m_userCharacterData = data;
+        m_characterData = data.GetCharacterData();
 
         // 비동기로 이미지 로드 시작
         WaitLoadImage().Forget();
 
         // 텍스트 정보 업데이트
-        Get<TextMeshProUGUI>((int)Texts.StateLV_Text).text = "LV. 1";
+        Get<TextMeshProUGUI>((int)Texts.StateLV_Text).text = $"LV. {m_userCharacterData.level}";
         Get<TextMeshProUGUI>((int)Texts.State_Text).text =
             $"{m_characterData.characterName} data Not Ready\nCost : {m_characterData.cost}\nRating : {m_characterData.rating}\ntest Data : {m_characterData.characterState.maxHp}";
     }

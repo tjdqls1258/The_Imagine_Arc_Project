@@ -2,10 +2,33 @@ using UnityEngine;
 using static MapData;
 
 /// <summary>
-/// 인게임의 모든 타일 객체의 최상위 베이스 클래스입니다.
-/// 타일의 위치 설정, 스프라이트 변경 및 배치 가능 구역 판정을 담당합니다.
+/// 타일 클릭 시 발생하는 상호작용(Interaction) 규격을 정의한 인터페이스입니다.
+/// 콜백(Callback) 함수를 무분별하게 넘기는 대신, 이 인터페이스를 UI 매니저에 주입하여
+/// 타일과 UI 시스템 간의 결합도를 낮추고 유지보수성을 확보합니다.
 /// </summary>
-public class TileBase : CachObject
+public interface TileClickEvent
+{
+    /// <summary> 타일(또는 유닛)이 유저에 의해 선택되었을 때 호출됩니다. </summary>
+    public void OnSelect();
+
+    /// <summary> 타일(또는 유닛) 선택이 해제되었을 때 호출됩니다. </summary>
+    public void OnDeselect();
+
+    /// <summary> 타일 위의 유닛을 업그레이드할 때 호출됩니다. 사용 코스트 반환 </summary>
+    public void OnUpgrade();
+
+    /// <summary> 타일 위의 유닛을 스킬을 호출합니다. </summary>
+    public void OnSkill();
+
+    public int GetUpgradeCost();
+}
+
+/// <summary>
+/// 인게임의 모든 타일 객체의 최상위 베이스 클래스입니다.
+/// 타일의 위치 설정, 스프라이트 변경, 배치 가능 구역 판정을 담당하며,
+/// TileClickEvent를 구현하여 하위 타일들이 클릭 이벤트를 재정의(Override)할 수 있도록 지원합니다.
+/// </summary>
+public class TileBase : CachObject, TileClickEvent
 {
     // ====== Protected Fields ======
 
@@ -35,7 +58,7 @@ public class TileBase : CachObject
     }
 
     // ----------------------------------------------------------------------
-    // ## Public Methods
+    // ## Public Methods (Core Logic)
     // ----------------------------------------------------------------------
 
     /// <summary>
@@ -81,5 +104,35 @@ public class TileBase : CachObject
         }
 
         return false;
+    }
+
+    // ----------------------------------------------------------------------
+    // ## Interface Implementation (TileClickEvent)
+    // ----------------------------------------------------------------------
+
+    /// <summary> [TileClickEvent] 타일 선택 시의 기본 동작입니다. 하위 클래스에서 재정의(Override)하여 사용합니다. </summary>
+    public virtual void OnSelect()
+    {
+    }
+
+    /// <summary> [TileClickEvent] 타일 선택 해제 시의 기본 동작입니다. 하위 클래스에서 재정의(Override)하여 사용합니다. </summary>
+    public virtual void OnDeselect()
+    {
+    }
+
+    /// <summary> [TileClickEvent] 타일 업그레이드 시의 코스트 값을 반환합니다. 하위 클래스에서 재정의(Override)하여 사용합니다. </summary>
+    public virtual int GetUpgradeCost()
+    {
+        return 0;
+    }
+
+    /// <summary> [TileClickEvent] 타일 업그레이드 시의 기본 동작입니다. 하위 클래스에서 재정의(Override)하여 사용합니다. </summary>
+    public virtual void OnUpgrade()
+    {
+    }
+
+    /// <summary> [TileClickEvent] 스킬 관련 기본 동작입니다. 하위 클래스에서 재정의(Override)하여 사용합니다. </summary>
+    public virtual void OnSkill()
+    {
     }
 }

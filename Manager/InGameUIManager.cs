@@ -68,21 +68,22 @@ public class InGameUIManager : UIBaseFormMaker
     /// <summary>
     /// 테스트용 데이터를 기반으로 인게임 UI와 매니저를 초기화합니다.
     /// </summary>
-    public void SetInGameData(List<NetExcute.UserCharacterData> characterDatas)
+    public void SetInGameData(UserCharacterData[] characterDatas)
     {
         m_endPanel.gameObject.SetActive(false);
         Logger.Log("Game Data Test Setting");
 
         // CSVHelper를 통해 데이터 시트에서 테스트용 캐릭터 정보 로드 (characterDatas)
-        List<InGameCharacterData> testdatas = new();
+        List<InGameCharacterData> characterDeckList = new();
 
         foreach (var characterData in characterDatas)
         {
-            testdatas.Add(SetCharacterData(characterData));
+            if (characterData == null) continue;
+            characterDeckList.Add(SetCharacterData(characterData));
         }
 
         // UI 버튼 생성 및 캐릭터 데이터 주입
-        SetCharacterDatas(testdatas.ToArray());
+        SetCharacterDatas(characterDeckList.ToArray());
 
         // 인게임 매니저 참조 및 게임 시작 로직 연결
         m_inGameManager = FindAnyObjectByType<InGameManager>();
@@ -103,7 +104,7 @@ public class InGameUIManager : UIBaseFormMaker
 
         InGameCharacterData SetCharacterData(NetExcute.UserCharacterData data)
         {
-            var characterData = GameMaster.Instance.csvHelper.GetScripteData<CharacterDataList>().GetData(data.ID);
+            var characterData = data.GetCharacterData();
             InGameCharacterData ingameData = new InGameCharacterData(characterData, data);
             return ingameData;
         }
@@ -143,14 +144,16 @@ public class InGameUIManager : UIBaseFormMaker
     /// <summary>
     /// 맵에 배치된 캐릭터를 클릭했을 때 상세 정보 패널을 엽니다.
     /// </summary>
-    public void OnClickCharacter(InGameCharacterData characterData, Action activeAction = null, Action disableAction = null, Action upgrade = null, Action skill = null)
+    public void OnClickCharacter(InGameCharacterData characterData, TileClickEvent tileClickActions)
     {
-        Get<OnClickCharacterPaenl>(0).OnClickCharacter(characterData, activeAction, disableAction, upgrade, skill);
+        Get<OnClickCharacterPaenl>(0).OnClickCharacter(characterData, tileClickActions);
     }
 
     public void EndGame(bool isWin)
     {
         //TODO 결과 관련 Web통신
+
+        //임시 데이터
         m_endPanel.ResultGame(isWin, new ItemData[]
         {
             new()

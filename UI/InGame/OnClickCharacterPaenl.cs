@@ -32,10 +32,7 @@ public class OnClickCharacterPaenl : CachObject
 
     // ====== Runtime Data ======
     private InGameCharacterData m_currentCharaterData; // 현재 선택된 캐릭터의 데이터
-    private Action activeAction = null;                // 패널 활성화 시 실행할 추가 로직
-    private Action disableAction = null;               // 패널 비활성화(닫기) 시 실행할 추가 로직
-    private Action upgradeAction = null;
-    private Action skillAction = null;
+    private TileClickEvent m_tileEvents;
 
     private InGameManager m_inGameManager;
 
@@ -75,18 +72,14 @@ public class OnClickCharacterPaenl : CachObject
     /// <param name="characterData">클릭된 캐릭터의 데이터</param>
     /// <param name="activeAction">열릴 때 실행할 콜백 (예: 하이라이트 효과)</param>
     /// <param name="disableAction">닫힐 때 실행할 콜백 (예: 하이라이트 해제)</param>
-    public void OnClickCharacter(InGameCharacterData characterData, Action activeAction = null, Action disableAction = null, Action upgrade = null, Action skill = null)
+    public void OnClickCharacter(InGameCharacterData characterData, TileClickEvent tileClickActions)
     {
         // 패널 활성화
         gameObject.SetActive(true);
         m_currentCharaterData = characterData;
 
         // 콜백 저장 및 실행
-        activeAction?.Invoke();
-        this.disableAction = disableAction;
-
-        upgradeAction = upgrade;
-        skillAction = skill;
+        m_tileEvents = tileClickActions;
 
         // 게임 로직 일시정지 (전투 중단)
         Time.timeScale = 0f;
@@ -106,25 +99,24 @@ public class OnClickCharacterPaenl : CachObject
 
         // 패널 비활성화 및 종료 콜백 실행
         gameObject.SetActive(false);
-        disableAction?.Invoke();
+        m_tileEvents.OnDeselect();
     }
 
     private void UpgradeButtonClick()
     {
-        if (m_inGameManager.currentCost < m_currentCharaterData.characterData.cost)
+        int useCost = m_tileEvents.GetUpgradeCost();
+        if (m_inGameManager.currentCost < m_tileEvents.GetUpgradeCost())
         {
             Logger.Log("요구되는 소모치 부족");
             return;
         }
 
-        if (upgradeAction == null) return;
-        m_inGameManager.UseCost(m_currentCharaterData.characterData.cost);
-        upgradeAction.Invoke();
+        m_tileEvents.OnUpgrade();
+        m_inGameManager.UseCost(useCost);
     }
 
     private void SkillButtonOnClick()
     {
-        if (skillAction == null) return;
-        skillAction.Invoke();
+        m_tileEvents.OnSkill();
     }
 }

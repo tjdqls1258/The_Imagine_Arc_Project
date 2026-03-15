@@ -153,7 +153,7 @@ public class EnemyController : MonoBehaviour, IGamePlayCharacter
     /// 외부(공격 유닛 등)에서 호출하는 피격 메서드입니다.
     /// </summary>
     /// <param name="atk">공격력</param>
-    public virtual void Hit(int atk)
+    public virtual void Hit(float atk)
     {
         if (isDie) return;
 
