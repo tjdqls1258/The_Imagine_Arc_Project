@@ -164,7 +164,8 @@ public class AutoUIManager : MonoBehaviour
         void CanvasSetting(CanvasGroup canvas, bool active)
         {
             // DOTween을 사용하여 알파 값을 m_fadeTime 동안 전환 (페이드 애니메이션)
-            canvas.DOFade(active ? 1f : 0f, m_fadeTime);
+            canvas.alpha = active ? 1f : 0f;
+            //canvas.DOFade(active ? 1f : 0f, m_fadeTime);
 
             // 상호작용 및 레이캐스트 차단 여부 설정
             if (canvas.interactable == active)

@@ -125,5 +125,10 @@ public class InGameOptionPanel : UIBaseFormMaker
         CanvasAtive(false);
     }
 
+    public void ShowSettingPanel()
+    {
+        GameMaster.Instance.uiManager.ShowUI(UIManager.UISequence.SettingPanel, UIBaseData.UIType.Command).Forget();
+    }
+
     #endregion
 }

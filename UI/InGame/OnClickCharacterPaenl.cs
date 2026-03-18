@@ -99,7 +99,11 @@ public class OnClickCharacterPaenl : CachObject
 
         // 패널 비활성화 및 종료 콜백 실행
         gameObject.SetActive(false);
-        m_tileEvents.OnDeselect();
+
+        if(m_tileEvents != null)
+            m_tileEvents.OnDeselect();
+
+        m_tileEvents = null;
     }
 
     private void UpgradeButtonClick()

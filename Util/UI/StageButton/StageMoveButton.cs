@@ -64,13 +64,10 @@ public class StageMoveButton : CachObject
             // [씬 로드 완료 후 실행될 콜백 로직]
             var userCharacterData = GameMaster.Instance.dataManager.GetUserData<UserData>() as UserData;
 
-            // A. 인게임 UI 매니저를 찾아 초기 데이터(테스트용)를 세팅합니다.
+            // 인게임 UI 매니저를 찾아 초기 데이터(테스트용)를 세팅합니다.
             GameMaster.Instance.uiManager.AutoUIManager
                 .GetCompoent<InGameUIManager>(UIBaseData.UIType.InGameUI)
                 .SetInGameData(userCharacterData.characterDeckList[0]);
-
-            // B. 전체 UI 상태를 'InGame' 모드로 전환하여 필요한 UI들을 활성화합니다.
-            GameMaster.Instance.uiManager.AutoUIManager.SetUIType(AutoUIManager.UIType.inGame);
 
         }).Forget();
     }

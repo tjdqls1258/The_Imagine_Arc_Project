@@ -55,11 +55,6 @@ public class CharacterSelectPanel : UIBase
     // ## Initialization (ÃÊ±âÈ­)
     // ----------------------------------------------------------------------
 
-    protected override void Awake()
-    {
-        Init();
-    }
-
     public override void Init(Transform parent = null)
     {
         base.Init(parent);
@@ -164,9 +159,23 @@ public class CharacterSelectPanel : UIBase
     public override void OnClickClosetButton()
     {
         if (isDirtFlag)
-            SavePopup(base.OnClickClosetButton).Forget();
+            SavePopup(()=> 
+            {
+                base.OnClickClosetButton();
+                ResetData();
+            }).Forget();
         else
+        {
             base.OnClickClosetButton();
+            ResetData();
+        }
+            
+    }
+
+    private void ResetData()
+    {
+            m_currentPage = -1;  
+            m_currentindex = -1; 
     }
 
     // ----------------------------------------------------------------------

@@ -36,7 +36,7 @@ public class SoundManager : MonoSingleton<SoundManager>
     [Header("Audio Mixer Settings")]
     [Tooltip("Master, BGM, EFFECT 그룹이 포함된 메인 오디오 믹서를 연결합니다.")]
     [SerializeField] private AudioMixerGroup audioMixerGroup;
-    UserSettingData SettingDatat => GameMaster.Instance.dataManager.GetUserData<UserSettingData>() as UserSettingData;
+    UserSettingData SettingData => GameMaster.Instance.dataManager.GetUserData<UserSettingData>() as UserSettingData;
 
     // ====== Runtime State & Caches ======
     private Dictionary<string, AudioClip> m_clipDic = new(); // 효과음 캐시 (Key: 에셋이름)
@@ -161,36 +161,40 @@ public class SoundManager : MonoSingleton<SoundManager>
     // ----------------------------------------------------------------------
 
     /// <summary> 전체 마스터 볼륨 조절 </summary>
-    public void MasterValue(float value, bool mute = false)
+    public void MasterValue(float value, bool mute)
     {
-        audioMixerGroup.audioMixer.SetFloat("Master", value);
+        SettingData.userSettingOption.muteMasterSound = mute;
+        SettingData.userSettingOption.masterSoundValue = value;
 
-        if (!mute)
-        {
-
-            SettingDatat.userSettingOption.masterSoundValue = value;
-            SettingDatat.SaveData();
-        }
+        if (SettingData.userSettingOption.muteMasterSound)
+            audioMixerGroup.audioMixer.SetFloat("Master", -80f);
+        else
+            audioMixerGroup.audioMixer.SetFloat("Master", SettingData.userSettingOption.masterSoundValue);
     }
 
     /// <summary> BGM 믹서 파라미터 조절 </summary>
-    public void BGMValue(float bgmValue)
+    public void BGMValue(float bgmValue, bool mute)
     {
-        audioMixerGroup.audioMixer.SetFloat(SoundType.BGM.ToString(), bgmValue);
-        SettingDatat.userSettingOption.bgmSoundValue = bgmValue;
-        SettingDatat.SaveData();
+        SettingData.userSettingOption.muteBgmSound = mute;
+        SettingData.userSettingOption.bgmSoundValue = bgmValue;
+
+        if (SettingData.userSettingOption.muteBgmSound)
+            audioMixerGroup.audioMixer.SetFloat(SoundType.BGM.ToString(), -80f);
+        else
+            audioMixerGroup.audioMixer.SetFloat(SoundType.BGM.ToString(), SettingData.userSettingOption.bgmSoundValue);
     }
 
     /// <summary> 효과음 믹서 파라미터 조절 </summary>
-    public void EffectValue(float effectValue)
+    public void EffectValue(float effectValue, bool mute)
     {
-        audioMixerGroup.audioMixer.SetFloat(SoundType.EFFECT.ToString(), effectValue);
-        SettingDatat.userSettingOption.effectSoundValue = effectValue;
-        SettingDatat.SaveData();
-    }
+        SettingData.userSettingOption.muteEffectSound = mute;
+        SettingData.userSettingOption.effectSoundValue = effectValue;
 
-    public void Mute() => MasterValue(0.0f, true);
-    public void UnMute() => MasterValue(SettingDatat.userSettingOption.masterSoundValue, true);
+        if (SettingData.userSettingOption.muteBgmSound)
+            audioMixerGroup.audioMixer.SetFloat(SoundType.EFFECT.ToString(), -80f);
+        else
+            audioMixerGroup.audioMixer.SetFloat(SoundType.EFFECT.ToString(), SettingData.userSettingOption.effectSoundValue);
+    }
 
     // ----------------------------------------------------------------------
     // ## Cleanup & Resource Release

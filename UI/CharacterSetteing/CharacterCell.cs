@@ -96,6 +96,8 @@ public class CharacterCell : FancyGridViewCell<UserCharacterData, CharacterPanel
         }
         if (this == null) return;
 
-        m_blockObjcet.SetActive(false);
+
+        if(m_blockObjcet!= null)
+            m_blockObjcet.SetActive(false);
     }
 }

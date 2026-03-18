@@ -1,8 +1,5 @@
-using Cysharp.Threading.Tasks;
 using Newtonsoft.Json;
 using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 
 /// <summary>
 /// 사용자의 게임 환경 설정(사운드 온/오프, 볼륨 등)을 관리하는 싱글톤 클래스입니다.
@@ -18,13 +15,13 @@ public class UserSettingData : IUserData
     [Serializable]
     public struct UserSettingOption
     {
-        public bool masterSound;       // 마스터 사운드 활성화 여부
+        public bool muteMasterSound;       // 마스터 사운드 활성화 여부
         public float masterSoundValue; // 마스터 사운드 볼륨 크기
 
-        public bool effectSound;       // 효과음 활성화 여부
+        public bool muteEffectSound;       // 효과음 활성화 여부
         public float effectSoundValue; // 효과음 볼륨 크기
 
-        public bool bgmSound;          // 배경음 활성화 여부
+        public bool muteBgmSound;          // 배경음 활성화 여부
         public float bgmSoundValue;    // 배경음 볼륨 크기
 
         /// <summary>
@@ -32,13 +29,13 @@ public class UserSettingData : IUserData
         /// </summary>
         public void SetDefault()
         {
-            masterSound = true;
-            effectSound = true;
-            bgmSound = true;
+            muteMasterSound = true;
+            muteEffectSound = true;
+            muteBgmSound = true;
 
-            masterSoundValue = 0.5f;
-            effectSoundValue = 0.5f;
-            bgmSoundValue = 0.5f;
+            masterSoundValue = 0f;
+            effectSoundValue = 0f;
+            bgmSoundValue = 0f;
         }
     }
 
@@ -85,6 +82,8 @@ public class UserSettingData : IUserData
 
             // 3. JSON 문자열을 구조체 객체로 역직렬화(Deserialize)
             userSettingOption = JsonConvert.DeserializeObject<UserSettingOption>(getDataJson);
+            SetSoundData();
+
             return true;
         }
         catch (Exception e)
@@ -109,6 +108,7 @@ public class UserSettingData : IUserData
 
             // 2. 헬퍼 클래스를 통해 로컬 시스템에 문자열 저장
             PlayerPrefasHelper.SetString(PlayerPrefasHelper.PrefabsKey.UserSettingOption, data);
+            PlayerPrefasHelper.SetInt(PlayerPrefasHelper.PrefabsKey.HasSettingData, 1);
             return true;
         }
         catch (Exception e)
@@ -117,5 +117,12 @@ public class UserSettingData : IUserData
             Logger.LogError($"Save Error : {e.ToString()}");
             return false;
         }
+    }
+
+    private void SetSoundData()
+    {
+        SoundManager.Instance.MasterValue(userSettingOption.masterSoundValue, userSettingOption.muteMasterSound);
+        SoundManager.Instance.BGMValue(userSettingOption.bgmSoundValue, userSettingOption.muteBgmSound);
+        SoundManager.Instance.EffectValue(userSettingOption.effectSoundValue, userSettingOption.muteEffectSound);
     }
 }

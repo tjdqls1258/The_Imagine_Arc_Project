@@ -30,6 +30,7 @@ public class UIBase : CachObject
     protected virtual void Awake()
     {
         // 자식 클래스에서 컴포넌트 바인딩 등을 수행하기 위한 가상 메서드
+        Init();
     }
 
     /// <summary>

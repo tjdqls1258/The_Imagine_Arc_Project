@@ -43,12 +43,13 @@ public class DrawShopPanel : UIBase
 
     protected override void Awake()
     {
+        base.Awake();
+
         // 1.컴포넌트 자동 바인딩
         Bind<Button>(typeof(DrawButton));
         Bind<DrawTimeLine>(typeof(DrawTineLineCom));
         Bind<Image>(typeof(characterCards));
 
-        Init();
 
         // 2. 버튼 클릭 이벤트 리스너 등록
         Get<Button>((int)DrawButton.Draw1).onClick.AddListener(() =>

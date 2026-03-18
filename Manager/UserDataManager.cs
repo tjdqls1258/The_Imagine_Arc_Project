@@ -105,7 +105,6 @@ public class UserDataManager : Singleton<UserDataManager>
         if (isSaveFailed == false)
         {
             hasSaveData = true;
-            PlayerPrefasHelper.SetInt(PlayerPrefasHelper.PrefabsKey.HasSettingData, 1);
         }
     }
 

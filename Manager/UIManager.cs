@@ -25,6 +25,7 @@ public class UIManager : Singleton<UIManager>
         CharacterListPanel, // 캐릭터 목록 패널
         ShopPanel,          // 상점 패널
         CharacterSelectPanel,//캐릭터 덱 설정 패널
+        SettingPanel, //사운드 등 유저 설정 패널
         // Todo: 필요한 UI 패널 타입 상시 추가
     }
 
