@@ -1,107 +1,51 @@
+🎮 Unity Defense Game Base
+유니티를 이용한 확장 가능하고 최적화된 디펜스 게임 프레임워크입니다. 단순한 기능 구현을 넘어, 유지보수가 용이한 모듈형 아키텍처와 성능 최적화에 중점을 두어 설계되었습니다.
 
-# 🚀 Unity 6 Professional UI & InGame Framework
+🚀 Key Features
+1. Architecture & Design Patterns
+Manager Pattern & Centralized Control: InGameManager를 중심으로 웨이브, 상태 관리, 유닛 생성을 중앙 집중식으로 제어하여 게임 흐름의 가독성을 높였습니다.
 
-Unity 6(LTS) 기반의 **데이터 중심(Data-Driven)** 및 **비동기(Asynchronous)** 아키텍처를 지향하는 UI & 인게임 유닛 배치 시스템 프레임워크입니다. 리소스 최적화, 확장성 있는 UI 생명주기 관리, 그리고 에디터 툴을 통한 생산성 향상을 목표로 설계되었습니다.
+Decoupled Design (Interface-driven): TileClickEvent 등의 인터페이스를 활용하여 시스템 간 결합도를 낮추고, 특정 모듈의 수정이 전체 시스템에 미치는 영향을 최소화했습니다.
 
----
+Data-Driven Design: ScriptableObject와 Google Sheet 연동 툴을 통해 기획 데이터를 코드와 분리하여 관리합니다. 수치 밸런싱과 콘텐츠 확장이 용이합니다.
 
-## 🛠 Tech Stack
+2. Performance Optimization
+Advanced Object Pooling: 유닛, 투사체, UI 요소 및 파티클 시스템에 객체 풀링을 적용하여 빈번한 Instantiate/Destroy로 인한 GC(Garbage Collection) 부하와 CPU 피크를 방지했습니다.
 
-* **Engine:** **Unity 6 (LTS)**
-* **Async Library:** [UniTask](https://github.com/Cysharp/UniTask)
-* **Resource Management:** Addressables Asset System
-* **Tweening:** DOTween
-* **Serialization:** Newtonsoft.Json
+Asynchronous Resource Management: Addressables 시스템과 UniTask를 결합하여 에셋 로딩 시 메인 스레드 병목을 제거하고 메모리 점유율을 최적화했습니다.
 
----
+Efficient Targeting: CircleCollider2D와 LINQ를 조합하여 다수의 적 유닛 사이에서 효율적인 타겟팅 로직을 구현했습니다.
 
-## ✨ Key Features
+3. Productivity Tools (Custom Editor)
+Custom Map Editor: 개발 생산성을 높이기 위해 전용 맵 에디터 툴을 내장하여 레벨 디자인 프로세스를 자동화했습니다.
 
-### 1. Advanced UI Lifecycle Management
+Data Converter: Google Spreadsheet 데이터를 게임 내 데이터셋으로 즉시 변환하는 자동화 툴을 포함하고 있습니다.
 
-* **CachObject & Auto-Binding:** `Enum` 기반의 자동 컴포넌트 바인딩 시스템을 구축하여 하이어라키 탐색 비용을 최소화하고 타입 안전성을 확보했습니다.
-* **Async UI Flow:** `UniTask`와 `Addressables`를 결합하여 리소스 로딩 시 메인 스레드 병목 현상을 제거하고 부드러운 화면 전환을 구현했습니다.
-* **UI/Popup Stack:** 중앙 집중형 `UIManager`와 `PopupManager`를 통해 팝업의 중첩 관리 및 씬 전환 간의 상태 동기화를 제어합니다.
+🛠 Tech Stack
+Engine: Unity 2022.3+ (LTS)
 
-### 2. Editor Tooling (UIMakerTool)
+Language: C#
 
-* **UI Layout to JSON:** 하이어라키의 `RectTransform` 데이터를 실시간으로 추출하여 JSON으로 직렬화하거나, 데이터로부터 UI 레이아웃을 자동 복구하는 에디터 기능을 제공합니다.
-* **Visual Debugging:** 커스텀 인스펙터를 통해 비개발 직군도 UI 레이아웃을 데이터화하고 관리할 수 있는 워크플로우를 구축했습니다.
+Libraries:
 
-### 3. InGame Interaction System
+UniTask: 고성능 비동기 처리
 
-* **Drag & Drop Deployment:** UI 버튼 드래그를 통해 월드 맵 타일에 유닛을 배치하는 직관적인 시스템입니다.
-* **Smart Snapping:** `Raycast2D`와 타일 레이어 마스크를 이용한 그리드 스냅 기능을 제공합니다.
-* **Async Cooldowns:** 유닛 사망 후 재배치 대기 시간을 `UniTask` 루프로 처리하여 시각적인 쿨타임 게이지 연출을 구현했습니다.
+Addressables: 효율적인 에셋 관리 및 메모리 최적화
 
----
+LINQ: 데이터 필터링 및 타겟팅 로직 최적화
 
-## 🏗 System Architecture
+📂 Project Structure
+Plaintext
+Assets
+ ┣ 📂 Scripts
+ ┃ ┣ 📂 Core          # 게임 엔진 및 매니저 클래스
+ ┃ ┣ 📂 Units         # 유닛, 타워, 적 베이스 및 상속 클래스
+ ┃ ┣ 📂 UI            # UI 매니저 및 캔버스 최적화 로직
+ ┃ ┣ 📂 Data          # ScriptableObject 및 데이터 로더
+ ┃ ┗ 📂 Editor        # 커스텀 맵 에디터 및 툴
+ ┣ 📂 AddressableAssets # 최적화된 리소스 폴더
+ ┗ 📂 Resources       # 기초 데이터 및 설정 파일
+💡 Implementation Details
+확장성: UnitBase 추상화를 통해 새로운 공격 패턴을 가진 유닛을 코드 수정 없이 추가할 수 있는 OCP(개방-폐쇄 원칙)를 준수했습니다.
 
-### UI Inheritance Hierarchy
-
-1. **CachObject:** 리플렉션과 제네릭을 이용한 컴포넌트 캐싱 엔진.
-2. **UIBase:** UI의 기본 생명주기(`Init`, `Show`, `Close`) 및 오픈 애니메이션 정의.
-3. **UIBaseFormMaker:** 에디터 자동 생성 툴 연동을 위한 마커 클래스.
-4. **UILobbyUpdate:** 로비 전용 동적 데이터 업데이트(캐릭터 대사 루프 등) 지원.
-
----
-
-## 💻 Core Code Preview
-
-### Asynchronous UI Instantiation
-
-`Addressables`를 통해 프리팹을 로드하고 데이터 수치를 즉시 적용하는 병렬 비동기 로직입니다.
-
-```csharp
-public async UniTask InstantiateObjectSetting(UIBaseData data, Transform parent)
-{
-    // 리소스 비동기 인스턴스화
-    var obj = await AddressableManager.Instance.InstantiateObjectAsync(data.dataName, parent);
-    if (obj == null) return;
-
-    RectTransform rect = (RectTransform)obj.transform;
-    
-    // 데이터 기반 레이아웃 복원
-    rect.anchorMin = data.GetAchorMinMax().min;
-    rect.anchorMax = data.GetAchorMinMax().max;
-    rect.anchoredPosition = data.GetAnchorPos();
-    rect.sizeDelta = data.GetSizeDetail();
-}
-
-```
-
-### Unit Deployment Snapping
-
-드래그 시 타일을 감지하여 유닛을 타일 중앙으로 스냅하는 물리 레이캐스트 로직입니다.
-
-```csharp
-private void TrySnapToTile(Action hitAction, Action notHitAction)
-{
-    m_hit2D = Physics2D.Raycast(m_pointerWorldPosition, Vector3.forward, float.MaxValue, m_tileMask);
-
-    if (m_hit2D.transform != null)
-    {
-        var spawnTile = m_hit2D.collider.gameObject.GetComponent<SpawnPlayerCharacterTile>();
-        if (IsValidSpawnTile(spawnTile))
-        {
-            hitAction?.Invoke();
-            return;
-        }
-    }
-    notHitAction?.Invoke();
-}
-
-```
-
----
-
-## 📄 Portfolio Perspective
-
-이 프레임워크는 유니티 개발 환경에서 발생할 수 있는 **반복적인 UI 작업의 자동화**와 **런타임 퍼포먼스 최적화**를 해결하기 위해 제작되었습니다. 특히 **Unity 6**의 최신 환경에 맞춰 비동기 프로그래밍 기술을 적극 활용하여, 유지보수가 용이하고 확장성 있는 구조를 지향합니다.
-
----
-
-## 📝 License
-
-This project is licensed under the MIT License.
+최적화: 캔버스 부하를 줄이기 위한 이중 객체 풀링 기법을 적용하여 다량의 UI 텍스트 출력 시에도 안정적인 프레임을 유지합니다.
