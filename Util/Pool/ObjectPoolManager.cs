@@ -7,7 +7,7 @@ using UnityEngine;
 /// <summary>
 /// 오브젝트의 생성과 파괴 대신 재사용을 관리하여 메모리 및 성능(GC)을 최적화하는 매니저입니다.
 /// </summary>
-public class ObjectPoolManager : MonoSingleton<ObjectPoolManager>
+public class ObjectPoolManager : MonoBehaviour 
 {
     // ====== 풀 데이터 관리 ======
     // Key: 오브젝트의 이름 혹은 식별자
@@ -176,14 +176,14 @@ public class PoolObejct : MonoBehaviour
     private void OnDisable()
     {
         // 매니저가 파괴되는 시점(씬 전환 등)이 아닐 때만 반납 프로세스 실행
-        if (ObjectPoolManager.Instance != null)
-            ObjectPoolManager.Instance.DisablePool(key, gameObject);
+        if (GameMaster.Instance.objectPoolManager != null)
+            GameMaster.Instance.objectPoolManager.DisablePool(key, gameObject);
     }
 
     /// <summary> 오브젝트가 물리적으로 Destroy 될 때 매니저 리스트에서 제거 </summary>
     private void OnDestroy()
     {
-        if (ObjectPoolManager.Instance != null)
-            ObjectPoolManager.Instance.DestroyObject(key, gameObject);
+        if (GameMaster.Instance.objectPoolManager != null)
+            GameMaster.Instance.objectPoolManager.DestroyObject(key, gameObject);
     }
 }

@@ -18,10 +18,12 @@ namespace SettingSpawnEnemyWindows
         private ScrollView m_rightPane;
 
         [MenuItem("Tools/Window/Enemy SpawnData Setting (Window)")]
-        public static void ShowWindow()
+        public static void ShowWindow(MapData mapData = null)
         {
             var window = GetWindow<EnemySpawnSettingWindow>("Enemy Spawn Data");
             window.minSize = new Vector2(600, 400); // 분할 창을 위해 최소 사이즈 지정
+            if (mapData != null)
+                window.m_mapDataField.value = (mapData);
         }
 
         public void CreateGUI()

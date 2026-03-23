@@ -33,7 +33,7 @@ public class AwakeScene : MonoBehaviour
             async UniTask TaskHelp()
             {
                 await GameMaster.Instance.sceneLoadManager.SceneLoad(SceneInfo.SceneType.HomeScene);
-                SoundManager.Instance.Play(SoundPath.BGM_Title, SoundType.BGM).Forget();
+                GameMaster.Instance.soundManager.Play(SoundPath.BGM_Title, SoundType.BGM).Forget();
             }
         });
     }

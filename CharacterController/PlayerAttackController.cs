@@ -83,12 +83,12 @@ public class PlayerAttackController : MonoBehaviour, IGamePlayCharacter
     /// </summary>
     private async UniTask SetEffect()
     {
-        if (ObjectPoolManager.Instance.CheckAddKey(effectName))
+        if (GameMaster.Instance.objectPoolManager.CheckAddKey(effectName))
             return;
 
-        ObjectPoolManager.Instance.AddKey(effectName);
-        var effectObject = await AddressableManager.Instance.InstantiateObjectAsync(effectName);
-        ObjectPoolManager.Instance.SetPoolObject(effectName, effectObject);
+        GameMaster.Instance.objectPoolManager.AddKey(effectName);
+        var effectObject = await GameMaster.Instance.addressableManager.InstantiateObjectAsync(effectName);
+        GameMaster.Instance.objectPoolManager.SetPoolObject(effectName, effectObject);
     }
 
     // ----------------------------------------------------------------------
@@ -180,7 +180,7 @@ public class PlayerAttackController : MonoBehaviour, IGamePlayCharacter
         Logger.Log($"Action {m_target.gameObject.name}: ATTACK!");
 
         // 2. 타격 지점에 풀링된 이펙트 생성 및 위치 조정
-        var effect = ObjectPoolManager.Instance.AddPoolObject(effectName);
+        var effect = GameMaster.Instance.objectPoolManager.AddPoolObject(effectName);
         if (effect != null)
             effect.transform.position = m_target.transform.position;
     }
@@ -219,8 +219,8 @@ public class PlayerAttackController : MonoBehaviour, IGamePlayCharacter
     private void OnDestroy()
     {
         // 객체 파괴 시 등록된 이펙트 풀 정보 제거
-        if (ObjectPoolManager.Instance != null)
-            ObjectPoolManager.Instance.RemovePoolObject(effectName);
+        if (GameMaster.Instance.addressableManager != null)
+            GameMaster.Instance.objectPoolManager.RemovePoolObject(effectName);
     }
 
     /// <summary> 플레이어 전용 사망 로직 </summary>

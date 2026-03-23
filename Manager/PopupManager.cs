@@ -9,7 +9,7 @@ using UnityEngine.AddressableAssets;
 /// 게임 내 팝업 UI를 스택 기반으로 관리하는 MonoSingleton 클래스입니다.
 /// 팝업 데이터를 로드하고, 팝업을 비동기로 생성/표시하며, 닫는 로직을 처리합니다.
 /// </summary>
-public class PopupManager : MonoSingleton<PopupManager>
+public class PopupManager : MonoBehaviour 
 {
     // ====== Data Structures ======
 
@@ -50,15 +50,13 @@ public class PopupManager : MonoSingleton<PopupManager>
     private const string POPUP_DATA_TABLE_KEY = "PopupDataTable";
     [SerializeField] private TextAsset m_localPopupDataText;
 
-    public override void Init()
-    {
-        base.Init();
-    }
-
     // ----------------------------------------------------------------------
     // ## Initialization and Data Loading
     // ----------------------------------------------------------------------
+    public void Init()
+    {
 
+    }
     /// <summary>
     /// Addressables에서 JSON 형태의 팝업 데이터 테이블을 로드하고, 팝업 타입과 경로를 매핑합니다.
     /// </summary>
@@ -66,7 +64,7 @@ public class PopupManager : MonoSingleton<PopupManager>
     {
         // 1. 데이터 로드 (TextAsset 형태)
         TextAsset popupDataTable =
-            await AddressableManager.Instance.LoadAssetAndCacheAsync<TextAsset>(POPUP_DATA_TABLE_KEY);
+            await GameMaster.Instance.addressableManager.LoadAssetAndCacheAsync<TextAsset>(POPUP_DATA_TABLE_KEY);
 
         if (popupDataTable == null)
         {
@@ -91,7 +89,7 @@ public class PopupManager : MonoSingleton<PopupManager>
         {
             // 4. 로드된 TextAsset은 더 이상 필요 없으므로 해제
             // LoadAddressableAssetAsync를 사용했기 때문에 명시적으로 Release가 필요합니다.
-            AddressableManager.Instance.UnloadAsset(POPUP_DATA_TABLE_KEY);
+            GameMaster.Instance.addressableManager.UnloadAsset(POPUP_DATA_TABLE_KEY);
         }
     }
 
@@ -134,7 +132,7 @@ public class PopupManager : MonoSingleton<PopupManager>
         }
 
         // 1. 팝업 프리팹을 Addressables에서 로드하여 컴포넌트(PopupBase)를 인스턴스화
-        PopupBase popup = await AddressableManager.Instance.InstantiateComponentAsync<PopupBase>(path, transform);
+        PopupBase popup = await GameMaster.Instance.addressableManager.InstantiateComponentAsync<PopupBase>(path, transform);
 
         if (popup == null)
         {

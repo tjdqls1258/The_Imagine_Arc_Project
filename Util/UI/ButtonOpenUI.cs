@@ -52,6 +52,6 @@ public class ButtonOpenUI : UIBaseFormMaker
 
         // UIManager에 UI 출력을 요청 (비동기 호출)
         // Forget()을 사용하여 화면 전환 작업 중 메인 흐름이 멈추지 않도록 처리
-        UIManager.Instance.ShowUI(OpenUI, uiType).Forget();
+        GameMaster.Instance.uiManager.ShowUI(OpenUI, uiType).Forget();
     }
 }

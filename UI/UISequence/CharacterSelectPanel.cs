@@ -306,7 +306,7 @@ public class CharacterSelectPanel : UIBase
     /// <param name="closetPopupAction">저장 확인(또는 저장 안 함 선택) 후 실행될 후속 동작</param>
     async UniTask SavePopup(Action closetPopupAction = null)
     {
-        var popup = await PopupManager.Instance.ShowPopup(PopupManager.PopupType.PopupQ) as PopupQ;
+        var popup = await GameMaster.Instance.popupManager.ShowPopup(PopupManager.PopupType.PopupQ) as PopupQ;
 
         // [확인] 클릭 시: 데이터 저장 후 등록된 후속 동작 실행
         popup.okAction = () =>
@@ -330,7 +330,7 @@ public class CharacterSelectPanel : UIBase
     /// <summary> [비동기] 빈 덱 저장 불가 메시지 팝업을 출력합니다. </summary>
     async UniTask PopupNotSaveMessage()
     {
-        var Popup = await PopupManager.Instance.ShowPopup(PopupManager.PopupType.PopupMsg) as PopupMsg;
+        var Popup = await GameMaster.Instance.popupManager.ShowPopup(PopupManager.PopupType.PopupMsg) as PopupMsg;
         Popup.Mssage = "기록이 비워져 있어 저장 되지 않았습니다.";
     }
 }

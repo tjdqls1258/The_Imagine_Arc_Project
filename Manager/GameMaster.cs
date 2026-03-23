@@ -20,13 +20,14 @@ public class GameMaster : MonoSingleton<GameMaster>
 
     // ====== Managers Access (Read-Only Properties) ======
     // 싱글톤 관리자들에 대한 단축 접근 프로퍼티
-    public SoundManager soundManager => SoundManager.Instance;
-    public AddressableManager addressableManager => AddressableManager.Instance;
-    public SceneLoadManager sceneLoadManager => SceneLoadManager.Instance;
-    public UIManager uiManager => UIManager.Instance;
-    public PopupManager popupManager => PopupManager.Instance;
+    public SoundManager soundManager;
+    public AddressableManager addressableManager;
+    public SceneLoadManager sceneLoadManager;
+    public UIManager uiManager;
+    public PopupManager popupManager;
+    public UserDataManager dataManager;
+    [HideInInspector] public ObjectPoolManager objectPoolManager;
     public CSVHelper csvHelper => m_csvHelper;
-    public UserDataManager dataManager => UserDataManager.Instance;
     // ----------------------------------------------------------------------
     // ## Initialization Phase 1: Basic Boot
     // ----------------------------------------------------------------------
@@ -55,6 +56,7 @@ public class GameMaster : MonoSingleton<GameMaster>
     /// <param name="downloadDoneAction">다운로드 완료 시 실행될 콜백</param>
     public async UniTask InitAddress(Action showDownloadPanel, Action<string, long, long> downloadAction, Action downloadDoneAction)
     {
+        addressableManager = new();
         // 1. 어드레서블 시스템 초기화
         await addressableManager.InitAsync();
 
@@ -101,7 +103,11 @@ public class GameMaster : MonoSingleton<GameMaster>
         // 1. 하위 매니저 동기 초기화
         soundManager.Init();
         sceneLoadManager.Init();
-        uiManager.Init();
+
+        uiManager = new();
+        dataManager = new();
+
+        objectPoolManager = gameObject.AddComponent<ObjectPoolManager>();
 
         // 2. 데이터 테이블 및 팝업 에셋 로드
         await popupManager.SettingPopupDataAsync();
@@ -157,7 +163,7 @@ public class GameMaster : MonoSingleton<GameMaster>
     /// </summary>
     public async UniTask ExitGamePopup()
     {
-        var popup = await PopupManager.Instance.ShowPopup(PopupManager.PopupType.PopupMsg);
+        var popup = await GameMaster.Instance.popupManager.ShowPopup(PopupManager.PopupType.PopupMsg);
         if (popup != null)
         {
             popup.closeAction += ExitGame;

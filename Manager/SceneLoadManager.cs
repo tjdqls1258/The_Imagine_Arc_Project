@@ -8,7 +8,7 @@ using UnityEngine.SceneManagement;
 /// 게임 내 씬 전환을 관리하는 매니저 클래스입니다.
 /// 페이드 연출, 비동기 로딩, 씬 전환 시 UI 상태 변경 등을 담당합니다.
 /// </summary>
-public class SceneLoadManager : MonoSingleton<SceneLoadManager>
+public class SceneLoadManager : MonoBehaviour
 {
     // ====== Inspector References ======
     [Header("Loading UI")]
@@ -23,13 +23,9 @@ public class SceneLoadManager : MonoSingleton<SceneLoadManager>
     private SceneInfo.SceneType m_currentScene = SceneInfo.SceneType.Awake;
     public SceneInfo.SceneType CurrentScene => m_currentScene;
 
-    // ----------------------------------------------------------------------
-    // ## Initialization
-    // ----------------------------------------------------------------------
-
-    public override void Init()
+    public void Init()
     {
-        base.Init();
+
     }
 
     // ----------------------------------------------------------------------
@@ -46,7 +42,7 @@ public class SceneLoadManager : MonoSingleton<SceneLoadManager>
         m_currentProgress = 0;
 
         // 1. 씬 전환 전 모든 팝업 닫기 및 타임스케일 초기화
-        PopupManager.Instance.ClosePopupAll();
+        GameMaster.Instance.popupManager.ClosePopupAll();
         Time.timeScale = 1;
 
         // 2. 목표 씬 이름 확인

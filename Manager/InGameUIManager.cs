@@ -191,12 +191,13 @@ public class InGameUIManager : UIBaseFormMaker
         ResetCharacterDatas();
 
         m_inGameManager = null;
+        m_updateCostAction = null;
 
         // 홈 씬 로드 (비동기)
-        SceneLoadManager.Instance.SceneLoad(SceneInfo.SceneType.HomeScene).Forget();
+        GameMaster.Instance.sceneLoadManager.SceneLoad(SceneInfo.SceneType.HomeScene).Forget();
 
         // 오브젝트 풀링 내의 유효하지 않은(Null) 객체 정리
-        ObjectPoolManager.Instance.ClearNullPoolObject();
+        GameMaster.Instance.objectPoolManager.ClearNullPoolObject();
     }
 
     /// <summary>

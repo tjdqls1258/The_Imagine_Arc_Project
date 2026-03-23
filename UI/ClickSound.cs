@@ -23,7 +23,7 @@ public class ClickSound : MonoBehaviour
     {
         if (useClickSound == false) return;
 
-        SoundManager.Instance.Play(clickSound, SoundType.EFFECT).Forget();
+        GameMaster.Instance.soundManager.Play(clickSound, SoundType.EFFECT).Forget();
     }
 
 #if UNITY_EDITOR

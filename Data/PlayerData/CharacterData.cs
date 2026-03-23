@@ -90,7 +90,7 @@ public class CharacterData : CSVData
     /// </summary>
     public async UniTask<GameObject> GetModleObject()
     {
-        return await AddressableManager.Instance.LoadAssetAndCacheAsync<GameObject>(modelObjectName);
+        return await GameMaster.Instance.addressableManager.LoadAssetAndCacheAsync<GameObject>(modelObjectName);
     }
 
     /// <summary>
@@ -120,7 +120,7 @@ public class CharacterData : CSVData
     {
         if (characterSprite != null) return; // 이미 로드되어 있다면 중단
 
-        SpriteAtlas atlas = await AddressableManager.Instance.LoadAssetAndCacheAsync<SpriteAtlas>(GetSpriteName);
+        SpriteAtlas atlas = await GameMaster.Instance.addressableManager.LoadAssetAndCacheAsync<SpriteAtlas>(GetSpriteName);
         characterSprite = atlas;
     }
 
@@ -131,7 +131,7 @@ public class CharacterData : CSVData
     {
         if (characterSprite == null) return;
 
-        AddressableManager.Instance.UnloadAsset(GetSpriteName);
+        GameMaster.Instance.addressableManager.UnloadAsset(GetSpriteName);
         characterSprite = null;
     }
 }

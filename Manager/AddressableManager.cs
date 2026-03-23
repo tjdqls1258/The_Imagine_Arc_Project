@@ -10,7 +10,7 @@ using Object = UnityEngine.Object;
 /// Unity Addressables 시스템의 리소스 로드, 인스턴스화, 다운로드 및 메모리 해제를 총괄하는 매니저입니다.
 /// 모든 작업은 비동기로 처리되며 로드된 에셋의 캐싱을 통해 중복 로드를 방지합니다.
 /// </summary>
-public class AddressableManager : MonoSingleton<AddressableManager>
+public class AddressableManager
 {
     // ====== Addressables Caching Dictionaries ======
 
@@ -28,11 +28,6 @@ public class AddressableManager : MonoSingleton<AddressableManager>
     private bool m_isInitialized = false;
 
     public bool IsInitialized => m_isInitialized;
-
-    public override void Init()
-    {
-        base.Init();
-    }
 
     // ----------------------------------------------------------------------
     // ## 초기화 및 패치 (Initialization and Patching)

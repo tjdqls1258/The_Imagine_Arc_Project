@@ -91,7 +91,7 @@ public class UIBase : CachObject
         m_onClose = null;
 
         // UIManager를 통해 관리 스택에서 이 UI를 제거하도록 요청
-        UIManager.Instance.CloseUI(m_UISequence);
+        GameMaster.Instance.uiManager.CloseUI(m_UISequence);
     }
 
     /// <summary>

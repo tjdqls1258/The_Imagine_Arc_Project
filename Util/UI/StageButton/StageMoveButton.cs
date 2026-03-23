@@ -59,7 +59,7 @@ public class StageMoveButton : CachObject
 
         // 2. 씬 로드 매니저를 통해 인게임 씬(GameScene)으로 전환
         // Forget()을 사용하여 비동기 연산의 완료를 기다리지 않고 흐름을 이어갑니다.
-        SceneLoadManager.Instance.SceneLoad(SceneInfo.SceneType.GameScene, () =>
+        GameMaster.Instance.sceneLoadManager.SceneLoad(SceneInfo.SceneType.GameScene, () =>
         {
             // [씬 로드 완료 후 실행될 콜백 로직]
             var userCharacterData = GameMaster.Instance.dataManager.GetUserData<UserData>() as UserData;

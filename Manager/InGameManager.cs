@@ -96,8 +96,8 @@ public class InGameManager : MonoBehaviour
         string atlasAddress = $"{SPRITE_ATLAS_FOLDER}/{_stageAtlasKey}.spriteatlas";
 
         // 2. 맵 데이터 객체와 텍스쳐 아틀라스를 비동기 병렬 로드 및 메모리 캐싱
-        var mapDataTask = AddressableManager.Instance.LoadAssetAndCacheAsync<MapData>(mapDataAddress);
-        var atlasTask = AddressableManager.Instance.LoadAssetAndCacheAsync<SpriteAtlas>(atlasAddress);
+        var mapDataTask = GameMaster.Instance.addressableManager.LoadAssetAndCacheAsync<MapData>(mapDataAddress);
+        var atlasTask = GameMaster.Instance.addressableManager.LoadAssetAndCacheAsync<SpriteAtlas>(atlasAddress);
 
         m_mapData = await mapDataTask;
         SpriteAtlas spAtlas = await atlasTask;
@@ -152,7 +152,7 @@ public class InGameManager : MonoBehaviour
         string tileAddress = $"Tile/{prefabName}.prefab";
 
         // Addressables를 통해 해당 타일 프리팹을 로드하고 게임 월드(m_mapObject 하위)에 배치
-        var tileObject = await AddressableManager.Instance.InstantiateComponentAsync<TileBase>(tileAddress, m_mapObject.transform);
+        var tileObject = await GameMaster.Instance.addressableManager.InstantiateComponentAsync<TileBase>(tileAddress, m_mapObject.transform);
 
         if (tileObject != null)
         {
@@ -250,9 +250,9 @@ public class InGameManager : MonoBehaviour
     public void ExitGame()
     {
         // 맵 데이터 (.asset) 해제
-        AddressableManager.Instance.UnloadAsset($"{MAP_DATA_FOLDER}/{_currentStageKey}.asset");
+        GameMaster.Instance.addressableManager.UnloadAsset($"{MAP_DATA_FOLDER}/{_currentStageKey}.asset");
         // 스프라이트 아틀라스 (.spriteatlas) 해제
-        AddressableManager.Instance.UnloadAsset($"{SPRITE_ATLAS_FOLDER}/{_stageAtlasKey}.spriteatlas");
+        GameMaster.Instance.addressableManager.UnloadAsset($"{SPRITE_ATLAS_FOLDER}/{_stageAtlasKey}.spriteatlas");
 
         m_isStartGame = false;
         currentCost = 0; // 다음 판을 위해 코스트 초기화

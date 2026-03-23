@@ -121,8 +121,8 @@ public class UserSettingData : IUserData
 
     private void SetSoundData()
     {
-        SoundManager.Instance.MasterValue(userSettingOption.masterSoundValue, userSettingOption.muteMasterSound);
-        SoundManager.Instance.BGMValue(userSettingOption.bgmSoundValue, userSettingOption.muteBgmSound);
-        SoundManager.Instance.EffectValue(userSettingOption.effectSoundValue, userSettingOption.muteEffectSound);
+        GameMaster.Instance.soundManager.MasterValue(userSettingOption.masterSoundValue, userSettingOption.muteMasterSound);
+        GameMaster.Instance.soundManager.BGMValue(userSettingOption.bgmSoundValue, userSettingOption.muteBgmSound);
+        GameMaster.Instance.soundManager.EffectValue(userSettingOption.effectSoundValue, userSettingOption.muteEffectSound);
     }
 }

@@ -64,7 +64,7 @@ public class PopupBase : UIBase
             closeAction.Invoke();
 
         // 2. 관리자(PopupManager)에게 현재 팝업이 닫혔음을 알림 (스택 관리)
-        PopupManager.Instance.CloseCurrentPopup();
+        GameMaster.Instance.popupManager.CloseCurrentPopup();
 
         // 3. 실제 게임 오브젝트 파괴 (CachObject의 MyObj 사용)
         Destroy(MyObj);

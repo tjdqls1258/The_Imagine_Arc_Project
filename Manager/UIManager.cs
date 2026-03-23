@@ -8,7 +8,7 @@ using UnityEngine;
 /// 게임의 개별 UI 패널들을 로드, 표시 및 풀링을 통해 관리하는 중앙 관리자 Singleton 클래스입니다.
 /// AutoUIManager와 연동하여 캔버스 계층 구조를 제어하며, UI를 활성(Open)과 비활성(Close) 풀로 나누어 재활용합니다.
 /// </summary>
-public class UIManager : Singleton<UIManager>
+public class UIManager
 {
     // ====== Constants and Enums ======
 
@@ -45,14 +45,6 @@ public class UIManager : Singleton<UIManager>
     /// <summary> 현재 비활성화되어 보관소(Closet)에 대기 중인 UI 패널 (Close Pool) </summary>
     public readonly Dictionary<UISequence, GameObject> m_closeUIPool = new();
 
-    // ----------------------------------------------------------------------
-    // ## Initialization
-    // ----------------------------------------------------------------------
-
-    public override void Init()
-    {
-        base.Init();
-    }
 
     /// <summary>
     /// 시스템의 뼈대가 되는 MasterCanvas를 로드하고 AutoUIManager를 초기화합니다.
@@ -61,7 +53,7 @@ public class UIManager : Singleton<UIManager>
     public async UniTask LoadMasterCanvasAsync(Transform parent)
     {
         // 1. "MasterCanvas" 프리팹 인스턴스화
-        GameObject masterCanvasObj = await AddressableManager.Instance.InstantiateObjectAsync("MasterCanvas", parent);
+        GameObject masterCanvasObj = await GameMaster.Instance.addressableManager.InstantiateObjectAsync("MasterCanvas", parent);
 
         if (masterCanvasObj == null)
         {
@@ -106,7 +98,7 @@ public class UIManager : Singleton<UIManager>
             Logger.Log($"Loading UI panel: {type.ToString()}");
 
             string path = string.Format(UIPATH_FORMAT, type.ToString());
-            GameObject ui = await AddressableManager.Instance.InstantiateObjectAsync(path, AutoUIManager.GetParent(uiType));
+            GameObject ui = await GameMaster.Instance.addressableManager.InstantiateObjectAsync(path, AutoUIManager.GetParent(uiType));
 
             if (ui == null)
             {

@@ -38,7 +38,7 @@ public class ButtonSceneMove : UIBaseFormMaker
         m_sceneLoadAction += () =>
         {
             // 씬 이동 후 해당 씬에 맞는 UI 레이아웃(Lobby/InGame 등)을 활성화합니다.
-            UIManager.Instance.AutoUIManager.SetUIType(m_uiType);
+            GameMaster.Instance.uiManager.AutoUIManager.SetUIType(m_uiType);
         };
     }
 
@@ -63,6 +63,6 @@ public class ButtonSceneMove : UIBaseFormMaker
     {
         // SceneLoadManager에 씬 타입과 완료 후 실행할 콜백 리스트를 전달합니다.
         // Forget()을 사용하여 비동기 호출을 비차단(Non-blocking) 방식으로 실행합니다.
-        SceneLoadManager.Instance.SceneLoad(m_loadScene, m_sceneLoadAction).Forget();
+        GameMaster.Instance.sceneLoadManager.SceneLoad(m_loadScene, m_sceneLoadAction).Forget();
     }
 }

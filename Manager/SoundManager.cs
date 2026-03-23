@@ -30,7 +30,7 @@ public enum SoundPath
 /// <summary>
 /// 게임의 모든 사운드 재생, 볼륨 조절, 리소스 로딩을 담당하는 중앙 관리자입니다.
 /// </summary>
-public class SoundManager : MonoSingleton<SoundManager>
+public class SoundManager : MonoBehaviour
 {
     // ====== Inspector References ======
     [Header("Audio Mixer Settings")]
@@ -49,10 +49,8 @@ public class SoundManager : MonoSingleton<SoundManager>
     /// <summary>
     /// SoundManager 초기화 및 각 사운드 타입별 전용 AudioSource를 생성합니다.
     /// </summary>
-    public override void Init()
+    public void Init()
     {
-        base.Init();
-
         string[] soundNames = System.Enum.GetNames(typeof(SoundType));
 
         for (int i = 0; i < (int)SoundType.MaxCount; i++)
@@ -112,14 +110,14 @@ public class SoundManager : MonoSingleton<SoundManager>
         // 1. BGM 처리 (AddressableManager에서 자체 캐싱)
         if (type == SoundType.BGM)
         {
-            audioClip = await AddressableManager.Instance.LoadAssetAndCacheAsync<AudioClip>(path);
+            audioClip = await GameMaster.Instance.addressableManager.LoadAssetAndCacheAsync<AudioClip>(path);
         }
         // 2. EFFECT 처리 (Dictionary에 명시적으로 캐싱)
         else
         {
             if (m_clipDic.TryGetValue(path, out audioClip) == false)
             {
-                audioClip = await AddressableManager.Instance.LoadAssetAndCacheAsync<AudioClip>(path);
+                audioClip = await GameMaster.Instance.addressableManager.LoadAssetAndCacheAsync<AudioClip>(path);
                 if (audioClip != null)
                 {
                     m_clipDic.Add(path, audioClip);
@@ -226,7 +224,7 @@ public class SoundManager : MonoSingleton<SoundManager>
 
         foreach (var key in keysToUnload)
         {
-            AddressableManager.Instance.UnloadAsset(key);
+            GameMaster.Instance.addressableManager.UnloadAsset(key);
             m_clipDic.Remove(key);
         }
 

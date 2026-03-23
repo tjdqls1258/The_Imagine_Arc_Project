@@ -74,7 +74,7 @@ public class AutoUIManager : MonoBehaviour
     public async UniTask LoadJsonAsync()
     {
         // 1. JSON TextAsset 로드 및 데이터 캐싱
-        var data = await AddressableManager.Instance.LoadAssetAndCacheAsync<TextAsset>("UIData");
+        var data = await GameMaster.Instance.addressableManager.LoadAssetAndCacheAsync<TextAsset>("UIData");
 
         if (data == null)
         {
@@ -115,7 +115,7 @@ public class AutoUIManager : MonoBehaviour
     public async UniTask InstantiateObjectAndSettingAsync(UIBaseData data, Transform parent)
     {
         // Addressables를 통해 GameObject를 비동기로 인스턴스화
-        var obj = await AddressableManager.Instance.InstantiateObjectAsync(data.dataName, parent);
+        var obj = await GameMaster.Instance.addressableManager.InstantiateObjectAsync(data.dataName, parent);
 
         if (obj == null) return;
 

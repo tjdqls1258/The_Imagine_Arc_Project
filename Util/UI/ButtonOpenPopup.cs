@@ -45,6 +45,6 @@ public class ButtonOpenPopup : UIBaseFormMaker
     private void OnClickButton()
     {
         // Forget()을 사용하여 팝업 생성 비동기 로직의 완료를 기다리지 않고 흐름을 이어갑니다.
-        PopupManager.Instance.ShowPopup(popupTarget, popupData).Forget();
+        GameMaster.Instance.popupManager.ShowPopup(popupTarget, popupData).Forget();
     }
 }

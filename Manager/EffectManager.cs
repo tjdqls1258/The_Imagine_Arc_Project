@@ -1,9 +1,5 @@
 using UnityEngine;
 
-public class EffectManager : MonoSingleton<EffectManager>
+public class EffectManager
 {
-    public override void Init()
-    {
-        base.Init();
-    }
 }

@@ -8,7 +8,7 @@ using UnityEngine;
 /// 싱글톤 패턴을 통해 게임 전역에서 유저 데이터의 로드, 저장, 초기화를 총괄합니다.
 /// 동기(Sync) 데이터와 비동기(Async) 데이터를 구분하여 최적의 입출력 퍼포먼스를 보장합니다.
 /// </summary>
-public class UserDataManager : Singleton<UserDataManager>
+public class UserDataManager
 {
     /// <summary>
     /// 로컬 저장소에 기존 유저의 저장 데이터가 존재하는지 여부를 나타냅니다.
@@ -34,7 +34,7 @@ public class UserDataManager : Singleton<UserDataManager>
     /// <summary>
     /// 관리할 데이터 클래스들을 인스턴스화하고 시스템에 등록합니다.
     /// </summary>
-    public override void Init()
+    public void Init()
     {
         userDatas.Clear();
         asyncUserDatas.Clear();

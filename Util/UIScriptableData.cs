@@ -87,7 +87,7 @@ public class UIScriptableData : ScriptableObject
     public async UniTask InstantiateObjectSetting(UIBaseData data, Transform parent)
     {
         // 1. Addressables 매니저를 호출하여 프리팹 인스턴스화
-        var obj = await AddressableManager.Instance.InstantiateObjectAsync(data.dataName, parent);
+        var obj = await GameMaster.Instance.addressableManager.InstantiateObjectAsync(data.dataName, parent);
 
         if (obj == null) return;
 
@@ -149,7 +149,7 @@ public class UIScriptableData : ScriptableObject
     public async UniTask LoadJsonUI()
     {
         // Addressables를 통해 TextAsset 자원 로드
-        var data = await AddressableManager.Instance.LoadAssetAndCacheAsync<TextAsset>("UIData");
+        var data = await GameMaster.Instance.addressableManager.LoadAssetAndCacheAsync<TextAsset>("UIData");
 
         if (data == null)
         {

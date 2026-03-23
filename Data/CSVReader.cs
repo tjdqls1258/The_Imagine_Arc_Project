@@ -18,8 +18,8 @@ public class CSVReader
 
     public static async Task<List<Dictionary<string, object>>> ReadFromAddressable(string key)
     {
-        TextAsset data = await AddressableManager.Instance.LoadAssetAndCacheAsync<TextAsset>(key);
-        return Read(data, ()=> AddressableManager.Instance.UnloadAsset(key));
+        TextAsset data = await GameMaster.Instance.addressableManager.LoadAssetAndCacheAsync<TextAsset>(key);
+        return Read(data, ()=> GameMaster.Instance.addressableManager.UnloadAsset(key));
     }
 
     private static List<Dictionary<string, object>> Read(TextAsset data, Action DoneAction = null)

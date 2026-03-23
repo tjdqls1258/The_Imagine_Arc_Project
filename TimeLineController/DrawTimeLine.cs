@@ -1,5 +1,6 @@
 using Cysharp.Threading.Tasks;
 using DG.Tweening;
+using System;
 using TMPro;
 using UnityEngine;
 using UnityEngine.Playables;
@@ -72,17 +73,18 @@ public class DrawTimeLine : TimeLineController
         m_drawCharacterList = characterDatas;
 
         // 첫 번째 캐릭터 데이터 설정 후 타임라인 시작
-        SetCharacterData(characterDatas[currentIndex]);
-        StartTimeLine();
+        SetCharacterData(characterDatas[currentIndex], StartTimeLine).Forget();
     }
 
     /// <summary>
     /// UI 요소를 특정 캐릭터의 데이터로 갱신합니다.
     /// </summary>
-    public void SetCharacterData(CharacterData data)
+    public async UniTask SetCharacterData(CharacterData data, Action SettingDoneAction)
     {
         // 비동기로 캐릭터 스프라이트 로드 및 이미지 적용
-        data.GetCharacterSprite(targetImage: Get<Image>((int)DrawImage.Character)).Forget();
+        await data.GetCharacterSprite(targetImage: Get<Image>((int)DrawImage.Character));
+
+        if (SettingDoneAction != null) SettingDoneAction.Invoke();
 
         // 캐릭터 획득 메시지 설정
         Get<TextMeshProUGUI>((int)DrawTextMeshProUGUI.SayWhat).text = $"{data.characterName} 추출 성공";
@@ -136,8 +138,7 @@ public class DrawTimeLine : TimeLineController
             m_targetTimeLine.time = 0;
 
             // 데이터 갱신 후 타임라인 재시작
-            SetCharacterData(m_drawCharacterList[currentIndex]);
-            StartTimeLine();
+            SetCharacterData(m_drawCharacterList[currentIndex], StartTimeLine).Forget();
         }
         else
         {

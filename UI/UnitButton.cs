@@ -173,7 +173,7 @@ public class UnitButton : MonoBehaviour, IEndDragHandler, IDragHandler, IPointer
             m_previewCharacter = null;
         }
         // AddressableManager를 통해 객체를 비동기로 인스턴스화
-        var obj = await AddressableManager.Instance.InstantiateObjectAsync(string.Format(Util.CHARACTER_MODLED_PATH, m_characterData.characterData.modelObjectName));
+        var obj = await GameMaster.Instance.addressableManager.InstantiateObjectAsync(string.Format(Util.CHARACTER_MODLED_PATH, m_characterData.characterData.modelObjectName));
 
         m_previewCharacter = obj.GetComponent<PlayerCharacterContrroller>();
         m_previewCharacter.SetCharacter(m_characterData);

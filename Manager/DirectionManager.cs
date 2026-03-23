@@ -1,12 +1,7 @@
 using UnityEngine;
 
-public class DirectionManager : MonoSingleton<DirectionManager>
+public class DirectionManager
 {
-    public override void Init()
-    {
-        base.Init();
-    }
-
     public void DoDirection()
     {
 

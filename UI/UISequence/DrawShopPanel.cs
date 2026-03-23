@@ -119,6 +119,11 @@ public class DrawShopPanel : UIBase
             count += 1;
         }
 
+        for(int i = count; i < 10; i++)
+        {
+            Get<Image>(i).gameObject.SetActive(false);
+        }
+
         // 5. 타임라인 컨트롤러에 데이터를 넘겨 연출 실행
         Get<DrawTimeLine>(0).DrawCharacter(currentData.ToArray());
     }

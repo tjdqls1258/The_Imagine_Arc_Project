@@ -48,7 +48,7 @@ public class StagePanel : UIBase
         async UniTask TaskHelp()
         {
             // 1. 어드레서블 매니저를 통해 "StageList" 키를 가진 텍스트 자산 로드
-            var textAsset = await AddressableManager.Instance.LoadAssetAndCacheAsync<TextAsset>("StageList");
+            var textAsset = await GameMaster.Instance.addressableManager.LoadAssetAndCacheAsync<TextAsset>("StageList");
 
             // 2. 로드된 JSON 텍스트를 StageData 객체로 역직렬화(Deserialize)
             StageData stage = JsonConvert.DeserializeObject<StageData>(textAsset.text);
