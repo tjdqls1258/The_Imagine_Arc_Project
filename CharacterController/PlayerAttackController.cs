@@ -31,10 +31,13 @@ public class PlayerAttackController : MonoBehaviour, IGamePlayCharacter
     /// <summary> 공격 쿨타임 계산용 타이머 </summary>
     private float m_currentDelay = 0;
 
+    private float lastSkillTime;
+
     [Header("Component & Object References")]
     [SerializeField] private GameObject m_atkRangeObject; // 사거리를 시각적으로 표시할 오브젝트 (범위 표시용)
     private InGameCharacterData m_characterData;         // 캐릭터 고유 데이터 데이터
     private CharacterAnimationController m_characterAnimationController; // 애니메이션 제어기
+    private Transform m_modelTransform;
 
     [SerializeField] private MpHpController m_pHpController; // 체력 및 마나 컨트롤러
 
@@ -62,6 +65,7 @@ public class PlayerAttackController : MonoBehaviour, IGamePlayCharacter
     /// </summary>
     public void InitCharacterData(InGameCharacterData characterData, CharacterAnimationController animator)
     {
+        lastSkillTime = 0;
         m_characterData = characterData;
 
         // 이펙트 프리팹을 오브젝트 풀에 미리 등록 (비동기)
@@ -75,7 +79,9 @@ public class PlayerAttackController : MonoBehaviour, IGamePlayCharacter
 
         // 애니메이션 컨트롤러에 실제 공격 로직(AtkAction)을 콜백으로 등록
         // 애니메이션의 '공격 시점' 이벤트 발생 시 AtkAction이 실행됩니다.
-        m_characterAnimationController.SetAction(AtkAction, null);
+        m_characterAnimationController.SetAction(AtkAction, null, DieAction, null);
+
+        m_modelTransform = m_characterAnimationController.transform;
     }
 
     /// <summary>
@@ -112,6 +118,8 @@ public class PlayerAttackController : MonoBehaviour, IGamePlayCharacter
         // 3. 타겟이 존재하면 공격 프로세스(딜레이 체크) 실행
         if (m_target != null)
             CharacterAction(m_target);
+
+        SeeTarget();
     }
 
     /// <summary>
@@ -236,5 +244,25 @@ public class PlayerAttackController : MonoBehaviour, IGamePlayCharacter
     {
         m_characterData.UpgradeCharacter(1);
         m_pHpController.UpgradeCharacter(1);
+    }
+
+    private void SeeTarget()
+    {
+        if (m_target == null) return;
+
+        if (m_target.transform.position.x > transform.position.x)
+            m_modelTransform.localScale = Util.REVERSE_2D;
+        else
+            m_modelTransform.localScale = Vector3.one;
+    }
+
+    public void UseSkill()
+    {
+
+    }
+
+    public float SkillLastTime()
+    {
+        return lastSkillTime;
     }
 }

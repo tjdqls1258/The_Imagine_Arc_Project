@@ -21,6 +21,10 @@ public interface TileClickEvent
     public void OnSkill();
 
     public int GetUpgradeCost();
+
+    public float GetSkillLastTime();
+
+    public float GetSkillTime();
 }
 
 /// <summary>
@@ -135,4 +139,10 @@ public class TileBase : CachObject, TileClickEvent
     public virtual void OnSkill()
     {
     }
+
+    /// <summary> [TileClickEvent] 스킬 쿨타임 관련 동작입니다. 하위 클래스에서 재정의(Override)하여 사용합니다. </summary>
+    public virtual float GetSkillLastTime()
+    { return 0; }
+
+    public virtual float GetSkillTime() { return 0; }
 }

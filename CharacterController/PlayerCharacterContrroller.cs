@@ -10,8 +10,9 @@ public class PlayerCharacterContrroller : MonoBehaviour
 {
     // ====== Runtime Components & Data ======
 
-    /// <summary> 캐릭터가 보유한 스킬 리스트 </summary>
-    private List<SkillBase> m_currentSkill;
+    /// <summary> 캐릭터가 보유한 스킬 </summary>
+    private SkillBase m_activeSkill;
+    private SkillBase m_passiveSkill;
 
     /// <summary> 캐릭터의 인게임 스탯 및 설정 데이터 </summary>
     private InGameCharacterData m_characterData;
@@ -33,6 +34,8 @@ public class PlayerCharacterContrroller : MonoBehaviour
     /// <summary> 현재 맵에 정식으로 배치(스폰)되어 작동 중인지 여부 </summary>
     private bool m_isSpawn = false;
 
+    private float m_lastSkillTime;
+
     // ----------------------------------------------------------------------
     // ## Initialization
     // ----------------------------------------------------------------------
@@ -41,7 +44,7 @@ public class PlayerCharacterContrroller : MonoBehaviour
     {
         // 내부 컴포넌트 캐싱
         m_atkController = GetComponent<PlayerAttackController>();
-        m_characterAniumationController = GetComponent<CharacterAnimationController>();
+        m_characterAniumationController = GetComponentInChildren<CharacterAnimationController>();
     }
 
     /// <summary>
@@ -56,6 +59,8 @@ public class PlayerCharacterContrroller : MonoBehaviour
         m_atkController.InitCharacterData(m_characterData, m_characterAniumationController);
 
         // TODO: 캐릭터 데이터에 정의된 스킬들을 로드하고 세팅하는 로직 추가 예정
+        m_activeSkill = characterData.activeSkill;
+        m_passiveSkill = characterData.passive;
     }
 
     /// <summary>
@@ -135,4 +140,14 @@ public class PlayerCharacterContrroller : MonoBehaviour
         m_atkController.Upgrade();
         Logger.Log($"UpgradeCharacter {m_characterData.GetAtk()}");
     }
+
+    public void Skill()
+    {
+        m_atkController.UseSkill();
+        m_lastSkillTime = Time.time;
+    }
+
+    public float GetLastSkillTime() => m_lastSkillTime;
+
+    public float GetSkillTime() => m_activeSkill.SkillCoolTime; //추후 스킬 쿨타임 감소등 버프 효과가 있을 경우 추가
 }

@@ -30,42 +30,25 @@ public static class ScriptDataLoader<DATA> where DATA : CSVData, new()
                 break;
             }
 
-            string datas = dataList[currentLine];
+            string datas = dataList[currentLine].Replace("\r", "").Trim();
             currentLine++;
 
             var dataSplit = datas.Split(',');
 
-            for (int i = 0; i < dataSplit.Length; i++) 
+            int columnIndex = 0;
+            foreach (FieldInfo field in fieldInfos)
             {
-                FieldInfo field = fieldInfos[i];
-                Type fieldType = fieldInfos[i].FieldType;
-
-                object value;
-                object stringData = dataSplit[i];
+                if (columnIndex >= dataSplit.Length) break;
 
                 try
                 {
-                    if (fieldType.IsEnum)
-                    {
-                        if (int.TryParse(dataSplit[i], out int enumNumber))
-                            value = Enum.ToObject(fieldType, enumNumber);
-                        else
-                            value = Enum.Parse(fieldType, dataSplit[i]);
-                    }
-                    else
-                    {
-                        if (fieldType == typeof(string))//안드로이드 경우 \r가 붙어서 제거.
-                            value = ((string)(Convert.ChangeType(stringData, fieldType))).Replace("\r", "") ?? string.Empty;
-                        else
-                            value = Convert.ChangeType(stringData, fieldType);
-                    }
-
-                    field.SetValue(data, value);
+                    object fieldValue = ParseFieldRecursive(field.FieldType, dataSplit, ref columnIndex);
+                    field.SetValue(data, fieldValue);
                 }
                 catch (Exception e)
                 {
                     Logger.LogError("ex : " + e.Message);
-                    Logger.LogError($"i : {i}, fieldType : {fieldType}, list[i] : {dataSplit[i]}");
+                    Logger.LogError($"i : {columnIndex}, fieldType : {field}, list[i] : {dataSplit[columnIndex]}");
                 }
             }
 
@@ -73,6 +56,80 @@ public static class ScriptDataLoader<DATA> where DATA : CSVData, new()
         }
 
         return result;
+    }
+
+    private static object ParseFieldRecursive(Type fieldType, string[] dataSplit, ref int columnIndex)
+    {
+        // 1. 일반 타입 (int, float, string, Enum 등) 처리
+        if (IsSimpleType(fieldType))
+        {
+            string stringData = dataSplit[columnIndex].Trim();
+            columnIndex++; // 사용한 만큼 인덱스 증가
+            return ConvertSimpleType(stringData, fieldType);
+        }
+
+        if(fieldType.IsArray)
+        {
+            string stringData = dataSplit[columnIndex].Trim();
+            columnIndex++;
+            return ConvertSimpleType(stringData, fieldType);
+        }
+
+        // 2. 중첩 클래스 처리 (Class이며 String이 아닌 경우)
+        if (fieldType.IsClass && fieldType != typeof(string))
+        {
+            object nestedObj = Activator.CreateInstance(fieldType);
+            FieldInfo[] nestedFields = fieldType.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+
+            foreach (var nField in nestedFields)
+            {
+                if (columnIndex < dataSplit.Length)
+                {
+                    // 내부 필드들에 대해 다시 재귀 호출
+                    object nValue = ParseFieldRecursive(nField.FieldType, dataSplit, ref columnIndex);
+                    nField.SetValue(nestedObj, nValue);
+                }
+            }
+            return nestedObj;
+        }
+
+        return null;
+    }
+
+    private static bool IsSimpleType(Type type)
+    {
+        return type.IsPrimitive || type.IsEnum || type == typeof(string) || type == typeof(decimal) || type == typeof(float);
+    }
+
+    private static object ConvertSimpleType(string stringData, Type fieldType, string splitChar = ";")
+    {
+        if (fieldType.IsEnum)
+        {
+            if (int.TryParse(stringData, out int enumNumber))
+                return Enum.ToObject(fieldType, enumNumber);
+            return Enum.Parse(fieldType, stringData);
+        }
+
+        if (fieldType.IsArray)
+        {
+            Type elemnetType = fieldType.GetElementType();
+            var datas = stringData.Split(splitChar);
+
+            Array newArray = Array.CreateInstance(elemnetType, datas.Length);
+
+            for(int i = 0; i < datas.Length; i++)
+            {
+                object value = Convert.ChangeType(datas[i], elemnetType);
+                newArray.SetValue(value, i);
+            }
+
+            return newArray;
+        }
+
+        if (fieldType == typeof(string))
+            return stringData;
+
+        return Convert.ChangeType(stringData, fieldType);
     }
 }
 
@@ -84,12 +141,14 @@ public class CSVHelper
 
     public enum CSVFile
     {
-        CharacterData
+        CharacterData,
+        EnemyData
     }
 
     private readonly (CSVFile, ICsvListHelper)[] m_csvData =
     {
         (CSVFile.CharacterData ,(new CharacterDataList())),
+        (CSVFile.EnemyData ,(new EnemyDataList())),
     };
 
     public void InitCSVData()
@@ -114,9 +173,12 @@ public class CSVHelper
 
         async UniTask InitItem((CSVFile, ICsvListHelper) data)
         {
-            var file = await AddressableManager.Instance.LoadAssetAndCacheAsync<TextAsset>(string.Format(PATH, data.Item1.ToString()));
+            var file = await GameMaster.Instance.addressableManager.LoadAssetAndCacheAsync<TextAsset>(string.Format(PATH, data.Item1.ToString()));
             data.Item2.SetDatas(file.text);
-            m_scriptDataList.Add(data.Item2.GetType(), data.Item2);
+            if (m_scriptDataList.ContainsKey(data.Item2.GetType()) == false)
+                m_scriptDataList.Add(data.Item2.GetType(), data.Item2);
+            else
+                Logger.Log($"{data.Item2.GetType()} Same");
         }
     }
 

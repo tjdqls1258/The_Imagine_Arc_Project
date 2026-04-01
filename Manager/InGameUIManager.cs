@@ -191,7 +191,7 @@ public class InGameUIManager : UIBaseFormMaker
         ResetCharacterDatas();
 
         m_inGameManager = null;
-        m_updateCostAction = null;
+        //m_updateCostAction = null;
 
         // 홈 씬 로드 (비동기)
         GameMaster.Instance.sceneLoadManager.SceneLoad(SceneInfo.SceneType.HomeScene).Forget();

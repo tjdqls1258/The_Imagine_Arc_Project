@@ -225,6 +225,11 @@ public class GoogleSheetReder : EditorWindow
             }
         }
 
+        if(GUILayout.Button("Save"))
+        {
+            SaveSetting();
+        }
+
 
         void AddData()
         {

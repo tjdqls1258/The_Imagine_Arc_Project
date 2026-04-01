@@ -2,11 +2,6 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
 
-/// <summary>
-/// 캐릭터의 애니메이션 재생을 제어하고, 애니메이션 이벤트를 통해 로직을 실행하는 컨트롤러입니다.
-/// Animator 컴포넌트가 필수적으로 포함되어야 합니다.
-/// </summary>
-[RequireComponent(typeof(Animator))]
 public class CharacterAnimationController : MonoBehaviour
 {
     // ====== Animation Parameter Enums ======
@@ -37,6 +32,10 @@ public class CharacterAnimationController : MonoBehaviour
     /// <summary> 피격/사망 관련 애니메이션 중 특정 시점에 실행될 액션입니다. </summary>
     private UnityAction m_hitAction;
 
+    private UnityAction m_dieAction;
+
+    private UnityAction m_skillAction;
+
     // ----------------------------------------------------------------------
     // ## Initialization
     // ----------------------------------------------------------------------
@@ -44,7 +43,7 @@ public class CharacterAnimationController : MonoBehaviour
     private void Awake()
     {
         // 동일한 오브젝트에 부착된 Animator 컴포넌트를 캐싱합니다.
-        m_animator = GetComponent<Animator>();
+        m_animator = GetComponentInChildren<Animator>();
     }
 
     // ----------------------------------------------------------------------
@@ -94,6 +93,18 @@ public class CharacterAnimationController : MonoBehaviour
             m_hitAction.Invoke();
     }
 
+    public void EventDieAnimation()
+    {
+        if(m_dieAction != null)
+            m_dieAction.Invoke();
+    }
+
+    public void EventSkillAnimation()
+    {
+        if(m_skillAction != null)
+            m_skillAction.Invoke();
+    }
+
     // ----------------------------------------------------------------------
     // ## Action Management (Delegate)
     // ----------------------------------------------------------------------
@@ -101,31 +112,41 @@ public class CharacterAnimationController : MonoBehaviour
     /// <summary>
     /// 애니메이션 이벤트 액션을 초기화(덮어쓰기)합니다.
     /// </summary>
-    public void SetAction(UnityAction atteckAction, UnityAction hitAction)
+    public void SetAction(UnityAction atteckAction, UnityAction hitAction, UnityAction dieAction, UnityAction skillAction)
     {
         m_atteckAction = atteckAction;
         m_hitAction = hitAction;
+        m_dieAction = dieAction;
+        m_skillAction = skillAction;
     }
 
     /// <summary>
     /// 기존 애니메이션 이벤트 액션에 새로운 기능을 추가합니다.
     /// </summary>
-    public void AddAction(UnityAction atteckAction, UnityAction hitAction)
+    public void AddAction(UnityAction atteckAction, UnityAction hitAction, UnityAction dieAction, UnityAction skillAction)
     {
         if (atteckAction != null)
             m_atteckAction += atteckAction;
         if (hitAction != null)
             m_hitAction += hitAction;
+        if(dieAction != null)
+            m_dieAction += dieAction;
+        if(skillAction != null)
+            m_skillAction += skillAction;
     }
 
     /// <summary>
     /// 등록된 애니메이션 이벤트 액션을 제거합니다.
     /// </summary>
-    public void RemoveAction(UnityAction atteckAction, UnityAction hitAction)
+    public void RemoveAction(UnityAction atteckAction, UnityAction hitAction, UnityAction dieAction, UnityAction skillAction)
     {
         if (atteckAction != null)
             m_atteckAction -= atteckAction;
         if (hitAction != null)
             m_hitAction -= hitAction;
+        if(dieAction != null)
+            m_dieAction -= dieAction;
+        if(skillAction != null)
+            m_skillAction -= skillAction;
     }
 }

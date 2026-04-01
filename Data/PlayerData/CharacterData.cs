@@ -15,17 +15,23 @@ using UnityEngine.UI;
 public class InGameCharacterData
 {
     private NetExcute.UserCharacterData userCharacterDatas; // 서버/유저 DB에서 가져온 기본 성장 정보 (레벨 등)
-    public CharacterData characterData; // 변하지 않는 캐릭터 원본 정보 (CSV 데이터) 참조
     protected int upgradeCount;          // 인게임 내에서 진행된 실시간 강화 횟수
+    
+    public CharacterData characterData; // 변하지 않는 캐릭터 원본 정보 (CSV 데이터) 참조
+    public SkillBase passive;
+    public SkillBase activeSkill;
 
     /// <summary>
     /// 원본 데이터와 유저 성장 데이터를 조합하여 인게임용 인스턴스를 생성합니다.
     /// </summary>
-    public InGameCharacterData(CharacterData data, NetExcute.UserCharacterData userCharacterData)
+    public InGameCharacterData(CharacterData data, NetExcute.UserCharacterData userCharacterData, SkillBase passive = null, SkillBase other = null)
     {
         characterData = data;
         userCharacterDatas = userCharacterData;
         upgradeCount = 0; // 전투 시작 시 강화 횟수 초기화
+
+        this.passive = passive;
+        activeSkill = other;
     }
 
     /// <summary>
@@ -59,6 +65,9 @@ public class CharacterData : CSVData
     public int rating;              // 캐릭터 등급 (예: 1~5성)
     public string characterName;    // 캐릭터 이름
     public MpCharacterState characterState; // 캐릭터의 기본 스탯(HP, ATK, MP 등) 객체
+
+    public int[] passiveSkill;
+    public int[] activeSkill;
 
     [Header("Resource Keys")]
     public string modelObjectName;  // Addressables: 캐릭터 프리팹 에셋 주소
