@@ -1,4 +1,7 @@
+using Cysharp.Threading.Tasks;
 using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.Events;
 
@@ -36,6 +39,8 @@ public class PlayerCharacterContrroller : MonoBehaviour
 
     private float m_lastSkillTime;
 
+    private CancellationTokenSource cancel;
+
     // ----------------------------------------------------------------------
     // ## Initialization
     // ----------------------------------------------------------------------
@@ -47,28 +52,35 @@ public class PlayerCharacterContrroller : MonoBehaviour
         m_characterAniumationController = GetComponentInChildren<CharacterAnimationController>();
     }
 
+    private void OnDestroy()
+    {
+        cancel.Cancel();
+        cancel.Dispose();
+    }
+
     /// <summary>
     /// 캐릭터 데이터를 주입하고 하위 컴포넌트들을 초기화합니다.
     /// </summary>
     /// <param name="characterData">주입할 인게임 캐릭터 데이터</param>
     public void SetCharacter(InGameCharacterData characterData)
     {
+        cancel = new();
         m_characterData = characterData;
 
         // 공격 컨트롤러 초기화 (데이터 및 애니메이터 전달)
         m_atkController.InitCharacterData(m_characterData, m_characterAniumationController);
 
-        // TODO: 캐릭터 데이터에 정의된 스킬들을 로드하고 세팅하는 로직 추가 예정
-        m_activeSkill = characterData.activeSkill;
-        m_passiveSkill = characterData.passive;
+        SetSkill(characterData.activeSkill, characterData.passive);
     }
 
     /// <summary>
     /// 캐릭터의 스킬 시스템을 초기화합니다.
     /// </summary>
-    public void SetSkill()
+    public void SetSkill(SkillBase active, SkillBase passive)
     {
         // 스킬 생성 및 리스트 관리 로직 구현부
+        m_activeSkill = active;
+        m_passiveSkill = passive;
     }
 
     // ----------------------------------------------------------------------
@@ -133,6 +145,8 @@ public class PlayerCharacterContrroller : MonoBehaviour
         // 드래그 중에는 로직이 돌지 않도록 공격 컴포넌트 자체를 On/Off 함
         m_atkController.enabled = isSpawn;
         m_isSpawn = isSpawn;
+
+        UpdateFunc().Forget();
     }
 
     public void UpgradeCharacter()
@@ -141,13 +155,22 @@ public class PlayerCharacterContrroller : MonoBehaviour
         Logger.Log($"UpgradeCharacter {m_characterData.GetAtk()}");
     }
 
-    public void Skill()
+    public bool Skill()
     {
-        m_atkController.UseSkill();
         m_lastSkillTime = Time.time;
+        return m_atkController.UseSkill();
     }
 
     public float GetLastSkillTime() => m_lastSkillTime;
 
-    public float GetSkillTime() => m_activeSkill.SkillCoolTime; //추후 스킬 쿨타임 감소등 버프 효과가 있을 경우 추가
+    public float GetSkillCoolTime() => m_activeSkill.SkillCoolTime; //추후 스킬 쿨타임 감소등 버프 효과가 있을 경우 추가
+
+    protected async UniTask UpdateFunc()
+    {
+        while(m_isSpawn && cancel.IsCancellationRequested == false)
+        {
+            await UniTask.WaitForEndOfFrame(cancellationToken:cancel.Token);
+            m_passiveSkill.SkillUse(m_characterData, m_atkController);
+        }
+    }
 }

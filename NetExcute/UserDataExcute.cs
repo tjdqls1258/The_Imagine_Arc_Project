@@ -16,6 +16,9 @@ namespace NetExcute
         public int Enforce; // 강화 수치
         public int Rank;    // 초월/진화 등급
 
+        public int activeSkillID = 1;
+        public int passiveSkillID = 0;
+
         /// <summary> 캐릭터 리스트 정렬 시 사용됩니다. (기본적으로 ID 순 정렬) </summary>
         public int CompareTo(object obj)
         {

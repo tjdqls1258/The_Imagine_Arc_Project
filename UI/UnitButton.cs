@@ -1,289 +1,314 @@
 ﻿using Cysharp.Threading.Tasks;
 using System;
+using System.Threading;
 using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 /// <summary>
-/// UI 버튼을 드래그하여 유닛(캐릭터)을 맵 타일에 배치하는 기능을 담당합니다.
-/// IBeginDrag, IDrag, IEndDrag 인터페이스를 사용하여 유닛 배치 과정을 제어합니다.
+/// UI 버튼을 드래그하여 유닛을 배치하고, 배치 후에는 스킬 버튼으로 전환되는 클래스입니다.
 /// </summary>
-public class UnitButton : MonoBehaviour, IEndDragHandler, IDragHandler, IPointerDownHandler, IBeginDragHandler
+public class UnitButton : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler, IPointerDownHandler
 {
-    // ====== Editor References (Unity Inspector) ======
-    [Header("UI References")]
+    // ==========================================
+    // [1] Inspector References
+    // ==========================================
+    [Header("UI References")]
     [SerializeField] private Image m_characterImage;
-    [SerializeField] private Image m_blockImage; // 쿨타임 또는 사용 불가 상태를 표시하는 오버레이 이미지
+    [SerializeField] private TextMeshProUGUI m_costText;
+    [SerializeField] private GameObject m_blockImage;
 
-    [SerializeField] private TextMeshProUGUI m_costText;
+    [Header("Skill References")]
+    [SerializeField] private Button m_skillButton;
+    [SerializeField] private TextMeshProUGUI m_coolTimeText; // m_lateTimeText -> m_coolTimeText 직관적으로 변경
 
     [Header("Character Data")]
-    [SerializeField] private InGameCharacterData m_characterData; // 버튼에 할당된 캐릭터 데이터
+    [SerializeField] private InGameCharacterData m_characterData;
 
-    private InGameUIManager m_inGameUIManager;
+    // ==========================================
+    // [2] Cached & State Variables
+    // ==========================================
+    private InGameUIManager m_inGameUIManager;
+    private PlayerCharacterContrroller m_previewCharacter;
 
-    // ====== Cached Components and Data ======
-    // m_tileMask는 Tile 레이어(Layer 8)에 대해서만 레이캐스트를 수행합니다.
-    private readonly LayerMask m_tileMask = 1 << 8;
-    private PlayerData PlayerDataInstance => PlayerData.Instance; // PlayerData 싱글톤 인스턴스
-    private Camera MainCamera => GameUtil.mainCamera; // 메인 카메라 캐시
+    private readonly LayerMask m_tileMask = 1 << 8;
+    private Camera MainCamera => GameUtil.mainCamera;
 
-    // ====== Runtime State ======
-    private PlayerCharacterContrroller m_previewCharacter; // 드래그 시 표시되는 유닛의 프리뷰 인스턴스
-    private Vector3 m_pointerWorldPosition; // 현재 포인터의 월드 좌표 위치
-    private RaycastHit2D m_hit2D; // Physics2D.Raycast의 마지막 결과
-    private bool m_startDrag = false;
+    // 상태 플래그
+    private bool m_isDragging = false;
+    private bool m_isSpawned = false; // 맵에 배치되어 스킬 모드로 전환되었는지 여부
+    private bool m_hasEnoughCost = false;
 
-    private bool m_isUnitSpawned = false; // 유닛이 현재 맵에 배치되었는지 (또는 쿨타임 중인지) 여부
+    // 스킬 및 비동기 제어
+    private CancellationTokenSource m_cancelTokenSource;
+    private float m_skillReadyTime; // 스킬을 다시 사용할 수 있는 시간
 
-    private void Awake()
+    // ==========================================
+    // [3] Initialization & Data Setup
+    // ==========================================
+    private void Awake()
     {
-        ActiveBlockButton(true);
+        SetBlockState(true);
+        m_skillButton.onClick.AddListener(UseSkill);
     }
 
-    /// <summary>
-    /// 버튼에 캐릭터 데이터를 할당하고, 해당 캐릭터의 프리뷰 인스턴스를 비동기로 생성합니다.
-    /// </summary>
-    public void SetCharater(InGameCharacterData characterData, InGameUIManager ingameManager = null)
+    public void SetCharacter(InGameCharacterData characterData, InGameUIManager ingameManager = null)
     {
         m_characterData = characterData;
-        m_characterData.characterData.LoadSprite().Forget();
-        CreateCharacterPreviewAsync().Forget(); // Addressables 로딩을 비동기로 시작하고 결과를 기다리지 않음
-
-        m_inGameUIManager = ingameManager;
-
+        m_inGameUIManager = ingameManager;
         m_costText.text = m_characterData.characterData.cost.ToString();
+
+        // 비동기 작업 취소 토큰 초기화
+        ResetCancellationToken();
+
+        // 리소스 로딩
+        m_characterData.characterData.LoadSprite().Forget();
+        CreateCharacterPreviewAsync().Forget();
     }
 
+    private void ResetCancellationToken()
+    {
+        m_cancelTokenSource?.Cancel();
+        m_cancelTokenSource?.Dispose();
+        m_cancelTokenSource = new CancellationTokenSource();
+    }
+
+    public void DeleteData()
+    {
+        m_cancelTokenSource?.Cancel();
+
+        m_characterData?.characterData.UnloadAtlas();
+        if (m_previewCharacter != null)
+        {
+            Destroy(m_previewCharacter.gameObject);
+            m_previewCharacter = null;
+        }
+
+        m_isSpawned = false;
+        ToggleSkillMode(false);
+        SetBlockState(true);
+    }
+
+    // ==========================================
+    // [4] Drag & Drop Logic (유닛 배치)
+    // ==========================================
     public void OnPointerDown(PointerEventData eventData)
     {
-        // Todo: 설치 가능한 타일 하이라이트 기능 구현 예정
-    }
+        // Todo: 설치 가능한 타일 하이라이트 기능 구현 예정
+    }
 
-    // ====== Drag Handlers ======
-
-    /// <summary>
-    /// 드래그 시작 시: 유닛 배치 가능 상태인지 확인 후, 프리뷰 캐릭터를 활성화하고 드래그 위치로 이동시킵니다.
-    /// </summary>
-    public void OnBeginDrag(PointerEventData eventData)
+    public void OnBeginDrag(PointerEventData eventData)
     {
-        if (IsUnitSpawned() || m_previewCharacter == null) return;
+        if (m_isSpawned || !m_hasEnoughCost || m_previewCharacter == null) return;
 
-        m_startDrag = true;
-        // 1. 프리뷰 캐릭터 활성화 및 위치 초기화
-        m_previewCharacter.gameObject.SetActive(true);
-        SetPointerWorldPosition(eventData.position);
-        m_previewCharacter.transform.position = m_pointerWorldPosition;
+        m_isDragging = true;
+        m_previewCharacter.gameObject.SetActive(true);
 
-        // 2. 프리뷰 상태이므로 공격/로직은 비활성화
-        m_previewCharacter.SetSpawn(false);
+        UpdatePreviewPosition(eventData.position);
+        m_previewCharacter.SetSpawn(false);
         m_previewCharacter.AtkAreaActive(true);
     }
 
-    /// <summary>
-    /// 드래그 중: 프리뷰 캐릭터를 포인터 위치로 이동시키고, 유효한 타일 위에 있을 경우 타일 중앙으로 스냅합니다.
-    /// </summary>
-    public void OnDrag(PointerEventData eventData)
+    public void OnDrag(PointerEventData eventData)
     {
-        if (IsUnitSpawned() || m_previewCharacter == null || m_startDrag == false) return;
+        if (!m_isDragging || m_previewCharacter == null) return;
 
-        SetPointerWorldPosition(eventData.position);
-        m_previewCharacter.transform.position = m_pointerWorldPosition; // 임시로 포인터 위치로 이동
+        UpdatePreviewPosition(eventData.position);
 
-        TrySnapToTile(eventData.position,
-            // 히트 성공 및 타일 유효 시
-            () =>
-            {
-                // 캐릭터 위치를 히트한 타일의 중앙으로 스냅
-                m_previewCharacter.transform.position = m_hit2D.transform.position;
-            },
-            // 히트 실패 또는 타일 유효성 검사 실패 시
-            () =>
-            {
-                // 포인터 위치를 유지 (스냅 해제)
-                m_previewCharacter.transform.position = m_pointerWorldPosition;
-            });
+        TrySnapToTile(
+            onHit: (hitPos) => m_previewCharacter.transform.position = hitPos,
+            onFail: () => m_previewCharacter.transform.position = GetWorldPosition(eventData.position)
+        );
     }
 
-    /// <summary>
-    /// 드래그 종료 시: 유닛 배치 가능 상태인지 확인하고, 유효한 타일 위에 있을 경우 유닛을 배치합니다.
-    /// </summary>
-    public void OnEndDrag(PointerEventData eventData)
+    public void OnEndDrag(PointerEventData eventData)
     {
-        if (IsUnitSpawned() || m_previewCharacter == null || m_startDrag == false) return;
+        if (!m_isDragging || m_previewCharacter == null) return;
 
-        m_startDrag = false;
-        SetPointerWorldPosition(eventData.position);
+        m_isDragging = false;
+        m_previewCharacter.AtkAreaActive(false);
 
-        TrySnapToTile(eventData.position,
-          CharacterSpawn, // 히트 성공 및 유효성 통과 시: 유닛 배치 실행
-                () => m_previewCharacter.gameObject.SetActive(false)); // 실패 시: 프리뷰 비활성화
-
-        m_previewCharacter.AtkAreaActive(false);
+        TrySnapToTile(
+            onHit: (hitPos) => TrySpawnCharacter(),
+            onFail: () => m_previewCharacter.gameObject.SetActive(false)
+        );
     }
 
-    // ====== Utility Methods ======
-
-    /// <summary>
-    /// 포인터 월드 위치에서 Raycast를 쏘아 타일 히트를 확인하고, 결과를 기반으로 액션을 실행합니다.
-    /// </summary>
-    private void TrySnapToTile(Vector2 pointerScreenPos, Action hitAction, Action notHitAction = null)
+    private void UpdatePreviewPosition(Vector2 screenPosition)
     {
-        // 월드 포지션에서 전방(forward)으로 레이캐스트를 쏴서 m_tileMask 레이어의 객체를 찾습니다.
-        m_hit2D = Physics2D.Raycast(m_pointerWorldPosition, Vector3.forward, float.MaxValue, m_tileMask);
+        m_previewCharacter.transform.position = GetWorldPosition(screenPosition);
+    }
 
-        if (m_hit2D.transform != null)
+    private Vector3 GetWorldPosition(Vector2 screenPosition)
+    {
+        Vector3 worldPos = MainCamera.ScreenToWorldPoint(screenPosition);
+        worldPos.z = 0;
+        return worldPos;
+    }
+
+    private void TrySnapToTile(Action<Vector3> onHit, Action onFail)
+    {
+        Vector3 currentPos = m_previewCharacter.transform.position;
+        RaycastHit2D hit = Physics2D.Raycast(currentPos, Vector3.forward, float.MaxValue, m_tileMask);
+
+        if (hit.collider != null)
         {
-            var spawnTile = m_hit2D.collider.gameObject.GetComponent<SpawnPlayerCharacterTile>();
-
-            // 타일이 유효성 검사를 통과하는지 확인
-            if (IsValidSpawnTile(spawnTile))
+            var spawnTile = hit.collider.GetComponent<SpawnPlayerCharacterTile>();
+            if (spawnTile != null && !spawnTile.CheckSpawn())
             {
-                hitAction?.Invoke();
+                onHit?.Invoke(hit.transform.position);
+                return;
             }
-            else
-            {
-                notHitAction?.Invoke(); // 유효하지 않은 타일
-            }
         }
-        else
-        {
-            notHitAction?.Invoke(); // 히트 실패
-        }
+
+        onFail?.Invoke();
     }
 
-    /// <summary>
-    /// 특정 타일 컴포넌트가 유닛 스폰을 위한 유효한 타일인지 확인합니다.
-    /// </summary>
-    private bool IsValidSpawnTile(SpawnPlayerCharacterTile spawnTile)
-    {
-        // 타일 객체가 존재하고, 아직 유닛이 스폰되지 않은 상태여야 합니다.
-        return spawnTile != null && spawnTile.CheckSpawn() == false;
-    }
-
-    /// <summary>
-    /// Addressables를 사용하여 유닛의 프리뷰 인스턴스를 비동기로 생성하고 설정합니다.
-    /// </summary>
-    private async UniTask CreateCharacterPreviewAsync()
+    // ==========================================
+    // [5] Spawn Logic
+    // ==========================================
+    private async UniTask CreateCharacterPreviewAsync()
     {
         if (m_previewCharacter != null)
         {
-            DestroyImmediate(m_previewCharacter);
-            m_previewCharacter = null;
+            Destroy(m_previewCharacter.gameObject);
         }
-        // AddressableManager를 통해 객체를 비동기로 인스턴스화
-        var obj = await GameMaster.Instance.addressableManager.InstantiateObjectAsync(string.Format(Util.CHARACTER_MODLED_PATH, m_characterData.characterData.modelObjectName));
+
+        string path = string.Format(Util.CHARACTER_MODLED_PATH, m_characterData.characterData.modelObjectName);
+        var obj = await GameMaster.Instance.addressableManager.InstantiateObjectAsync(path);
 
         m_previewCharacter = obj.GetComponent<PlayerCharacterContrroller>();
         m_previewCharacter.SetCharacter(m_characterData);
-        m_previewCharacter.AddDieAction(HandleCharacterDie); // 유닛 사망 시 쿨타임 처리를 위한 액션 등록
-        m_previewCharacter.gameObject.SetActive(false); // 생성 직후에는 비활성화 상태
-    }
+        m_previewCharacter.AddDieAction(HandleCharacterDie);
+        m_previewCharacter.gameObject.SetActive(false);
 
-    /// <summary>
-    /// 배치된 유닛이 사망했을 때 호출되는 콜백입니다. 쿨타임 처리를 시작합니다.
-    /// </summary>
-    private void HandleCharacterDie()
-    {
-        StartCoolDownAsync(5f).Forget(); // 5초 쿨타임을 비동기로 시작
-    }
-
-    /// <summary>
-    /// 지정된 지연 시간 동안 UI 이미지 fillAmount를 업데이트하여 쿨타임을 시각적으로 표시합니다.
-    /// </summary>
-    private async UniTask StartCoolDownAsync(float delay)
-    {
-        m_isUnitSpawned = true; // 쿨타임 동안 유닛 배치 불가 상태로 설정
-
-        float current = delay;
-        while (current >= 0)
-        {
-            await UniTask.WaitForEndOfFrame(); // 매 프레임 업데이트
-            current -= Time.deltaTime;
-
-            // 쿨타임 진행률을 오버레이 이미지에 표시 (1에서 0으로 감소)
-            m_blockImage.fillAmount = current / delay;
-        }
-
-        m_isUnitSpawned = false; // 쿨타임 종료, 스폰 가능 상태로 복귀
-        m_blockImage.fillAmount = 0;
+        m_skillButton.image.sprite = m_characterData.activeSkill.SkillIcon;
+        ToggleSkillMode(false);
     }
 
-    /// <summary>
-    /// PointerEventData의 스크린 좌표를 월드 좌표로 변환하여 저장합니다. (Z축 0 고정)
-    /// </summary>
-    private void SetPointerWorldPosition(Vector2 screenPosition)
+    private void TrySpawnCharacter()
     {
-        m_pointerWorldPosition = MainCamera.ScreenToWorldPoint(screenPosition);
-        m_pointerWorldPosition.z = 0;
-    }
+        Vector3 currentPos = m_previewCharacter.transform.position;
+        RaycastHit2D hit = Physics2D.Raycast(currentPos, Vector3.forward, float.MaxValue, m_tileMask);
 
-    /// <summary>
-    /// 유닛 버튼 사용 불가 상태(스폰됨 또는 쿨타임 중)인지 확인합니다.
-    /// </summary>
-    private bool IsUnitSpawned() => m_isUnitSpawned;
+        if (hit.collider == null) return;
 
-    /// <summary>
-    /// 프리뷰 유닛을 유효한 타일 위에 정식으로 배치하고 활성화합니다.
-    /// </summary>
-    private void CharacterSpawn()
-    {
-        // 최종 유효성 검사 (타일이 유효하고, 스폰 지점이 사용 가능한지)
-        var spawnTile = m_hit2D.collider.gameObject.GetComponent<SpawnPlayerCharacterTile>();
-        if (!IsValidSpawnTile(spawnTile) || spawnTile.CheckSpawnPoint(false) == false || CheckCost() == false)
+        var spawnTile = hit.collider.GetComponent<SpawnPlayerCharacterTile>();
+
+        if (spawnTile == null || spawnTile.CheckSpawn() || !spawnTile.CheckSpawnPoint(false))
         {
             m_previewCharacter.gameObject.SetActive(false);
             return;
         }
 
-        // 1. 유닛 배치
-        spawnTile.SpawnUnit(m_previewCharacter);
-        m_previewCharacter.enabled = true; // 유닛의 로직 활성화
-        m_previewCharacter.SetSpawn(true); // 유닛의 내부 스폰 로직 실행
-
-        ActiveBlockButton(true);
-    }
-
-    public void DeleteData()
-    {
-        m_characterData.characterData.UnloadAtlas();
-        Destroy(m_previewCharacter);
-        m_previewCharacter = null;
-        m_isUnitSpawned = false; // 쿨타임 종료, 스폰 가능 상태로 복귀
-        m_blockImage.fillAmount = 0;
-        ActiveBlockButton(true);
-    }
-
-    private bool CheckCost()
-    {
-        if (m_inGameUIManager.m_inGameManager.UseCost(m_characterData.characterData.cost) == false)
+        if (!m_inGameUIManager.m_inGameManager.UseCost(m_characterData.characterData.cost))
         {
-            Logger.Log("코스트 부족!");
-            return false;
-        }
-
-        return true;
-    }
-
-    public void UpdateCostAction(int cost)
-    {
-        if (m_previewCharacter == null || m_previewCharacter.CheckSpawn())
+            m_previewCharacter.gameObject.SetActive(false);
             return;
-
-        if (m_characterData.characterData.cost > cost && m_isUnitSpawned == false)
-        {
-            ActiveBlockButton(true);
         }
-        else if (m_characterData.characterData.cost <= cost)
+
+        // 배치 완료
+        spawnTile.SpawnUnit(m_previewCharacter);
+        m_previewCharacter.enabled = true;
+        m_previewCharacter.SetSpawn(true);
+
+        ToggleSkillMode(true);
+    }
+
+    private void HandleCharacterDie()
+    {
+        // 유닛 사망 시 재배치 대기 시간(쿨타임) 적용
+        StartRespawnCooldownAsync(5f).Forget();
+    }
+
+    private async UniTask StartRespawnCooldownAsync(float delay)
+    {
+        m_isSpawned = true; // 쿨타임 중 드래그 방지
+        ToggleSkillMode(false); // 사망했으므로 스킬 UI는 끔
+
+        // 빈 while문 대신 UniTask.Delay 사용 (훨씬 최적화됨)
+        await UniTask.Delay(TimeSpan.FromSeconds(delay), cancellationToken: m_cancelTokenSource.Token);
+
+        m_isSpawned = false; // 쿨타임 종료, 다시 배치 가능
+    }
+
+    // ==========================================
+    // [6] Cost & UI State Logic
+    // ==========================================
+    public void UpdateCostAction(int currentCost)
+    {
+        if (m_previewCharacter == null || m_previewCharacter.CheckSpawn()) return;
+
+        m_hasEnoughCost = currentCost >= m_characterData.characterData.cost;
+
+        // 배치되지 않은 상태일 때만 블록 UI 업데이트
+        if (!m_isSpawned)
         {
-            ActiveBlockButton(false);
+            SetBlockState(!m_hasEnoughCost);
         }
     }
 
-    private void ActiveBlockButton(bool Active)
+    private void SetBlockState(bool isBlocked)
     {
-        m_isUnitSpawned = Active; // 유닛 배치 상태로 전환 (쿨타임 시작까지 유지)
-        m_blockImage.fillAmount = Active ? 1 : 0; // 쿨타임 UI를 즉시 꽉 채움 (DieAction에서 감소 시작)
-    }
+        m_hasEnoughCost = !isBlocked;
+        m_blockImage.SetActive(isBlocked);
+    }
+
+    // ==========================================
+    // [7] Skill Logic
+    // ==========================================
+    private void ToggleSkillMode(bool isActive)
+    {
+        m_isSpawned = isActive;
+
+        m_skillButton.gameObject.SetActive(isActive);
+        m_coolTimeText.gameObject.SetActive(isActive);
+        m_costText.gameObject.SetActive(!isActive);
+
+        if (isActive)
+        {
+            UpdateSkillCooldownTask().Forget();
+        }
+    }
+
+    private void UseSkill()
+    {
+        if (m_previewCharacter.Skill() == false) return;
+        m_skillReadyTime = m_previewCharacter.GetLastSkillTime() + m_previewCharacter.GetSkillCoolTime();
+
+        SetSkillUIState(isOnCooldown: true);
+        UpdateSkillCoolTimeText();
+    }
+
+    private async UniTask UpdateSkillCooldownTask()
+    {
+        while (!m_cancelTokenSource.IsCancellationRequested)
+        {
+            await UniTask.WaitForEndOfFrame(this.GetCancellationTokenOnDestroy());
+
+            if (!m_isSpawned) break; // 맵에서 사라지면 루프 종료
+
+            if (m_skillReadyTime <= Time.time)
+            {
+                SetSkillUIState(isOnCooldown: false);
+            }
+            else
+            {
+                UpdateSkillCoolTimeText();
+            }
+        }
+    }
+
+    private void UpdateSkillCoolTimeText()
+    {
+        m_coolTimeText.text = (m_skillReadyTime - Time.time).ToString("N1");
+    }
+
+    private void SetSkillUIState(bool isOnCooldown)
+    {
+        m_coolTimeText.gameObject.SetActive(isOnCooldown);
+        m_blockImage.SetActive(isOnCooldown);
+        m_skillButton.interactable = !isOnCooldown;
+    }
 }

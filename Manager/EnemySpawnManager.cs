@@ -98,7 +98,7 @@ public class EnemySpawnManager : MonoBehaviour
             if (m_enemyModelList.ContainsKey(enemySpawnData.enemyDataID))
                 continue;
             var enemyData = GameMaster.Instance.csvHelper.GetScripteData<EnemyDataList>().GetData(enemySpawnData.enemyDataID);
-            var obj = await GameMaster.Instance.addressableManager.LoadAssetAndCacheAsync<GameObject>(string.Format(Util.ENEMY_MODLED_PATH, enemyData.controllObjectKey));
+            var obj = await GameMaster.Instance.addressableManager.LoadAssetAndCacheAsync<GameObject>(string.Format(Util.ENEMY_MODLED_PATH, enemyData.controllObjectKey)).AttachExternalCancellation(destroyCancellationToken);
             obj.gameObject.SetActive(false);
             m_enemyModelList.Add(enemySpawnData.enemyDataID, obj);
         }
@@ -108,14 +108,14 @@ public class EnemySpawnManager : MonoBehaviour
         if (currentTime > 0)
         {
             // 1. 게임 시작 전 초기 대기 시간 (예: 준비 시간)
-            await UniTask.WaitForSeconds(currentTime);
+            await UniTask.WaitForSeconds(currentTime, cancellationToken: destroyCancellationToken);
         }
 
         // 2. 캔슬 토큰이 요청되기 전까지 무한 루프
         while (m_cancellationTokenSource.IsCancellationRequested == false)
         {
             // 물리 업데이트 타이밍 대기 (최적화)
-            await UniTask.WaitForFixedUpdate();
+            await UniTask.WaitForFixedUpdate(m_cancellationTokenSource.Token);
 
             m_currentTime += Time.fixedDeltaTime;
             SpawnEnemy();

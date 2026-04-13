@@ -2,6 +2,7 @@ using Cysharp.Threading.Tasks;
 using DG.Tweening;
 using NetExcute;
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using TMPro;
 using UnityEngine;
@@ -31,12 +32,22 @@ public class CharacterDetail : CachObject
         Close           // 패널 닫기 버튼
     }
 
+    enum Transforms
+    {
+        PassiveLayout,
+        ActiveLayout
+    }
+
     // ====== Runtime Variables ======
 
     private CanvasGroup m_group;       // 페이드 인/아웃 연출을 위한 컴포넌트
     private float m_fadeTime = 0.3f;   // UI 연출 시간
     private CharacterData m_characterData; // 현재 표시 중인 캐릭터의 원본 데이터
     private UserCharacterData m_userCharacterData; // 현재 표시 중인 캐릭터의 원본 데이터
+
+    private CharacterSkillCell m_baseSkillCellPrefab;
+    private List<CharacterSkillCell> m_activeSkillCellList = new();
+    private List<CharacterSkillCell> m_passiveSkillCellList = new();
 
     // ----------------------------------------------------------------------
     // ## Initialization (Lifecycle)
@@ -49,9 +60,13 @@ public class CharacterDetail : CachObject
         Bind<Image>(typeof(Images));
         Bind<TextMeshProUGUI>(typeof(Texts));
         Bind<Button>(typeof(Buttons));
+        Bind<Transform>(typeof(Transforms));
+        Bind<CharacterSkillCell>();
 
         // 2. 버튼 이벤트 연결
         Get<Button>((int)Buttons.Close).onClick.AddListener(Close);
+        m_baseSkillCellPrefab = Get<CharacterSkillCell>();
+        m_activeSkillCellList.Add(m_baseSkillCellPrefab);
 
         // 3. 초기 상태 설정 (비활성화 및 투명도 0)
         m_group.alpha = 0;
@@ -97,6 +112,31 @@ public class CharacterDetail : CachObject
         {
             gameObject.SetActive(true);
             m_group.DOFade(1, m_fadeTime);
+        }
+
+        List<UniTask> taskList = new();
+
+        SetSkillList(m_characterData.activeSkill, Get<Transform>((int)Transforms.ActiveLayout) ,ref taskList, ref m_activeSkillCellList);
+        SetSkillList(m_characterData.passiveSkill, Get<Transform>((int)Transforms.PassiveLayout), ref taskList, ref m_passiveSkillCellList);
+
+        await UniTask.WhenAll(taskList);
+
+        void SetSkillList(int[] skillList, Transform parent, ref List<UniTask> uniTasks, ref List<CharacterSkillCell> baseList)
+        {
+            for (int a = 0; a < skillList.Length; a++)
+            {
+                if (baseList.Count <= a)
+                {
+                    var newCell = Instantiate(m_baseSkillCellPrefab, parent);
+                    baseList.Add(newCell);
+                }
+
+                baseList[a].transform.gameObject.SetActive(true);
+                taskList.Add(baseList[a].SetSkill(skillList[a]));
+            }
+
+            for(int i = skillList.Length; i < baseList.Count; i++)
+                baseList[i].gameObject.SetActive(false);
         }
     }
 

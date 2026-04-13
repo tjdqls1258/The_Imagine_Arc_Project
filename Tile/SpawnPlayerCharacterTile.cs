@@ -96,12 +96,6 @@ public class SpawnPlayerCharacterTile : TileBase, IPointerDownHandler, IPointerU
     {
         m_character.UpgradeCharacter();
     }
-
-    public override void OnSkill()
-    {
-        m_character.Skill();
-    }
-
     // ----------------------------------------------------------------------
     // ## Unit Lifecycle (배치 및 해제)
     // ----------------------------------------------------------------------
@@ -130,8 +124,8 @@ public class SpawnPlayerCharacterTile : TileBase, IPointerDownHandler, IPointerU
         return m_character.GetLastSkillTime();
     }
 
-    public override float GetSkillTime()
+    public override float GetSkillCoolTime()
     {
-        return m_character.GetSkillTime();
+        return m_character.GetSkillCoolTime();
     }
 }

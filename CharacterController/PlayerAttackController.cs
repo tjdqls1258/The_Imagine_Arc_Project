@@ -11,7 +11,7 @@ using UnityEngine;
 public class PlayerAttackController : MonoBehaviour, IGamePlayCharacter
 {
     // ====== Constants & Settings ======
-    private readonly string effectName = "EffectPrefabs/Hit_FX01.prefab"; // 공격 시 생성될 타격 이펙트 경로
+    private readonly string effectName = "EffectPrefabs/Hit_FX01.prefab"; // 임시 공격 시 생성될 타격 이펙트 경로
 
     [Header("Attack Settings")]
     [Tooltip("공격 사거리 (CircleCollider2D의 반지름으로 사용됨).")]
@@ -256,13 +256,15 @@ public class PlayerAttackController : MonoBehaviour, IGamePlayCharacter
             m_modelTransform.localScale = Vector3.one;
     }
 
-    public void UseSkill()
+    public bool UseSkill()
     {
-
+        return m_characterData.activeSkill.SkillClass.ActiveSkill(m_characterData, m_target);
     }
 
     public float SkillLastTime()
     {
         return lastSkillTime;
     }
+
+    public IGamePlayCharacter GetSelf() => this;
 }

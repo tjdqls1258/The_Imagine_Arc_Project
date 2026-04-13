@@ -18,20 +18,27 @@ public class InGameCharacterData
     protected int upgradeCount;          // 인게임 내에서 진행된 실시간 강화 횟수
     
     public CharacterData characterData; // 변하지 않는 캐릭터 원본 정보 (CSV 데이터) 참조
-    public SkillBase passive;
-    public SkillBase activeSkill;
+    public SkillBase passive;           // 선택한 액티브 스킬
+    public SkillBase activeSkill;       // 선택한 패시브 스킬
 
     /// <summary>
     /// 원본 데이터와 유저 성장 데이터를 조합하여 인게임용 인스턴스를 생성합니다.
     /// </summary>
-    public InGameCharacterData(CharacterData data, NetExcute.UserCharacterData userCharacterData, SkillBase passive = null, SkillBase other = null)
+    public InGameCharacterData(CharacterData data, NetExcute.UserCharacterData userCharacterData, SkillBase passive = null, SkillBase active = null)
     {
         characterData = data;
         userCharacterDatas = userCharacterData;
         upgradeCount = 0; // 전투 시작 시 강화 횟수 초기화
 
-        this.passive = passive;
-        activeSkill = other;
+        if (passive.Type != SkillBase.SkillType.Passive)
+            Logger.LogError($"{passive.ID} : {passive.name} Is Not Passive");
+        else
+            this.passive = passive;
+
+        if (active.Type == SkillBase.SkillType.Passive)
+            Logger.LogError($"{active.ID} : {active.name} Is Not Active");
+        else
+            activeSkill = active;
     }
 
     /// <summary>

@@ -16,21 +16,17 @@ public class OnClickCharacterPaenl : CachObject
     enum Images
     {
         CharacterImage, // 캐릭터 전신 일러스트 표시용
-        CoolDownImage,  // 스킬 쿨타임 이미지
     }
 
     enum Buttons
     {
         UpgradButton,  // 강화/업그레이드 버튼
-        SkillButton,   // 스킬 정보 확인 버튼
         Back,          // 패널 닫기 버튼
     }
 
     enum TextMeshPros
     {
         UpgradText,    // "UPGRADE" 텍스트 레이블
-        SkillText,      // "SKILL" 텍스트 레이블
-        LateTimeText,  // 스킬 쿨타임 남은 시간
     }
 
     // ====== Runtime Data ======
@@ -41,7 +37,7 @@ public class OnClickCharacterPaenl : CachObject
 
     private float m_currentSkillTime;
 
-    private CancellationTokenSource cancelToken;
+
 
     // ----------------------------------------------------------------------
     // ## Initialization
@@ -54,19 +50,16 @@ public class OnClickCharacterPaenl : CachObject
         Bind<TextMeshProUGUI>(typeof(TextMeshPros));
 
         // 2. 기본 텍스트 초기화
-        Get<TextMeshProUGUI>((int)TextMeshPros.SkillText).text = "SKILL";
         Get<TextMeshProUGUI>((int)TextMeshPros.UpgradText).text = "UPGRAD";
 
         // 3. 버튼 이벤트 연결 (인덱스 기반 접근)
         Get<Button>((int)Buttons.Back).onClick.AddListener(ClosePanel);
         Get<Button>((int)Buttons.UpgradButton).onClick.AddListener(UpgradeButtonClick);
-        Get<Button>((int)Buttons.SkillButton).onClick.AddListener(SkillButtonOnClick);
     }
 
     public void SetInGameManager(InGameManager inGameManager)
     {
         m_inGameManager = inGameManager;
-        cancelToken = new();
     }
 
     // ----------------------------------------------------------------------
@@ -95,7 +88,7 @@ public class OnClickCharacterPaenl : CachObject
         Get<TextMeshProUGUI>((int)TextMeshPros.UpgradText).text = $"UPGRAD\nCost:{characterData.characterData.cost}";
         characterData.characterData.GetCharacterSprite(targetImage: Get<Image>((int)Images.CharacterImage)).Forget();
 
-        m_currentSkillTime = m_tileEvents.GetSkillLastTime() + m_tileEvents.GetSkillTime();
+        m_currentSkillTime = m_tileEvents.GetSkillLastTime() + m_tileEvents.GetSkillCoolTime();
     }
 
     /// <summary>
@@ -115,22 +108,11 @@ public class OnClickCharacterPaenl : CachObject
         m_tileEvents = null;
     }
 
-    public async UniTask UpdateTask()
-    {
-        while(gameObject.activeSelf && cancelToken.IsCancellationRequested == false)
-        {
-            await UniTask.WaitForEndOfFrame();
-            if (m_tileEvents == null) continue;
-            if (m_currentSkillTime <= Time.time) continue;
-
-            Get<TextMeshProUGUI>((int)TextMeshPros.SkillText).text = (m_currentSkillTime - Time.time).ToString("N1");
-        }
-    }
 
     private void UpgradeButtonClick()
     {
         int useCost = m_tileEvents.GetUpgradeCost();
-        if (m_inGameManager.currentCost < m_tileEvents.GetUpgradeCost())
+        if (m_inGameManager.GetCurrentCost() < m_tileEvents.GetUpgradeCost())
         {
             Logger.Log("요구되는 소모치 부족");
             return;
@@ -138,19 +120,5 @@ public class OnClickCharacterPaenl : CachObject
 
         m_tileEvents.OnUpgrade();
         m_inGameManager.UseCost(useCost);
-    }
-
-    private void SkillButtonOnClick()
-    {
-        if (m_currentSkillTime <= Time.time)
-            m_tileEvents.OnSkill();
-        else
-            Logger.Log("스킬 쿨타임 중");
-    }
-
-    public void ExitGame()
-    {
-        cancelToken.Cancel();
-        cancelToken.Dispose();
     }
 }

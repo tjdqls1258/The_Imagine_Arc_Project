@@ -17,14 +17,11 @@ public interface TileClickEvent
     /// <summary> 타일 위의 유닛을 업그레이드할 때 호출됩니다. 사용 코스트 반환 </summary>
     public void OnUpgrade();
 
-    /// <summary> 타일 위의 유닛을 스킬을 호출합니다. </summary>
-    public void OnSkill();
-
     public int GetUpgradeCost();
 
     public float GetSkillLastTime();
 
-    public float GetSkillTime();
+    public float GetSkillCoolTime();
 }
 
 /// <summary>
@@ -135,14 +132,9 @@ public class TileBase : CachObject, TileClickEvent
     {
     }
 
-    /// <summary> [TileClickEvent] 스킬 관련 기본 동작입니다. 하위 클래스에서 재정의(Override)하여 사용합니다. </summary>
-    public virtual void OnSkill()
-    {
-    }
-
     /// <summary> [TileClickEvent] 스킬 쿨타임 관련 동작입니다. 하위 클래스에서 재정의(Override)하여 사용합니다. </summary>
     public virtual float GetSkillLastTime()
     { return 0; }
 
-    public virtual float GetSkillTime() { return 0; }
+    public virtual float GetSkillCoolTime() { return 0; }
 }

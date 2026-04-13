@@ -9,6 +9,7 @@ using UnityEngine;
 /// </summary>
 public interface IGamePlayCharacter
 {
+    public IGamePlayCharacter GetSelf();
     public void DieAction();
 }
 
@@ -192,6 +193,8 @@ public class EnemyController : MonoBehaviour, IGamePlayCharacter
     {
         gameObject.SetActive(false);
     }
+
+    public virtual IGamePlayCharacter GetSelf() => this;
 
     private void OnDisable()
     {

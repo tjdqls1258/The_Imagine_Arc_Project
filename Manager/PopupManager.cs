@@ -50,12 +50,14 @@ public class PopupManager : MonoBehaviour
     private const string POPUP_DATA_TABLE_KEY = "PopupDataTable";
     [SerializeField] private TextAsset m_localPopupDataText;
 
+    private ToolTipBox m_tooltipBox;
+
     // ----------------------------------------------------------------------
     // ## Initialization and Data Loading
     // ----------------------------------------------------------------------
     public void Init()
     {
-
+        m_tooltipBox = GetComponentInChildren<ToolTipBox>(true);
     }
     /// <summary>
     /// Addressables에서 JSON 형태의 팝업 데이터 테이블을 로드하고, 팝업 타입과 경로를 매핑합니다.
@@ -190,5 +192,12 @@ public class PopupManager : MonoBehaviour
         }
         // 스택이 완전히 비었음을 보장
         _stackPopup.Clear();
+    }
+
+    public void ShowToolTipPopup(IToolTip toolTip)
+    {
+        if (toolTip == null || m_tooltipBox == null)
+            Logger.LogError($"toolTip is Null = {toolTip == null}, Box is Null = {m_tooltipBox == null}");
+        m_tooltipBox.ShowToolTip(toolTip);
     }
 }
