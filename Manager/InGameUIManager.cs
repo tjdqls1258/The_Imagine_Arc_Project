@@ -7,10 +7,6 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-/// <summary>
-/// ¿Œ∞‘¿” ¿¸≈ı »≠∏È¿« UI ø‰º“∏¶ ¡¶æÓ«œ∞Ì ∞¸∏Æ«œ¥¬ ≈¨∑°Ω∫¿‘¥œ¥Ÿ.
-/// ƒ≥∏Ø≈Õ πËƒ° πˆ∆∞ ª˝º∫, Ω«Ω√∞£ ƒ⁄Ω∫∆Æ «•Ω√ æ˜µ•¿Ã∆Æ, ªÛºº ¡§∫∏ ∆–≥Œ »£√‚ µÓ¿ª ¥„¥Á«’¥œ¥Ÿ.
-/// </summary>
 public class InGameUIManager : UIBaseFormMaker
 {
     [Header("UI Components")]
@@ -31,12 +27,10 @@ public class InGameUIManager : UIBaseFormMaker
         }
     }
 
-
     enum OnClickSettingPanel
     {
         OnClickSettingPanel,
     }
-
 
     protected override void Awake()
     {
@@ -45,10 +39,10 @@ public class InGameUIManager : UIBaseFormMaker
         Bind<OnClickCharacterPaenl>(typeof(OnClickSettingPanel));
     }
 
-    public async Task SetInGameData(UserCharacterData[] characterDatas)
+    public async UniTask SetInGameData(UserCharacterData[] characterDatas)
     {
         m_endPanel.gameObject.SetActive(false);
-        Logger.Log("Game Data Test Setting");
+        Debug.Log("Game Data Test Setting");
 
         List<InGameCharacterData> characterDeckList = new();
 
@@ -61,7 +55,6 @@ public class InGameUIManager : UIBaseFormMaker
         m_inGameManager = FindAnyObjectByType<InGameManager>();
 
         m_inGameManager.SetChargeAction(m_inGameView.UpdateCostDisplay);
-        m_inGameManager.StartGame();
 
         m_inGameView.CreateUnitButtons(characterDeckList.ToArray(), this);
         m_inGameView.UpdateCostDisplay((m_inGameManager.GetCurrentCost()));
@@ -87,26 +80,13 @@ public class InGameUIManager : UIBaseFormMaker
 
     public void EndGame(bool isWin)
     {
-        //TODO ∞·∞˙ ∞¸∑√ Web≈ÎΩ≈
+        // TODO: Í≤∞Í≥º Î¶¨Ìè¨Ìä∏ Web ÌÜµÏã† Îì±
 
-        //¿”Ω√ µ•¿Ã≈Õ
         m_endPanel.ResultGame(isWin, new ItemData[]
         {
-            new()
-            {
-                itemID = 0,
-                count = 1,
-            },
-            new()
-            {
-                itemID = 1,
-                count = 2,
-            },
-            new()
-            {
-                itemID = 2,
-                count = 3,
-            }
+            new() { itemID = 0, count = 1 },
+            new() { itemID = 1, count = 2 },
+            new() { itemID = 2, count = 3 }
         });
     }
 
@@ -116,7 +96,6 @@ public class InGameUIManager : UIBaseFormMaker
         m_inGameView.Clear();
 
         m_inGameManager.ExitGame();
-
         m_inGameManager = null;
 
         GameMaster.Instance.sceneLoadManager.SceneLoad(SceneInfo.SceneType.HomeScene).Forget();

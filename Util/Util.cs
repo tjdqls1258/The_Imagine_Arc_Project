@@ -19,7 +19,7 @@ public static class Util
 
 
     //#### Map
-    public const string MAP_DATAPATH_FORMAT = "MapData-{0}-{1}"; // Addressable 에셋 검색용 포맷 규칙 (MapData-{Main}-{Sub})
+    public const string MAP_DATAPATH_FORMAT = "MapData-{0}-{1}"; //  (MapData-{Main}-{Sub})
     public const string STAGE_NAME = "Stage-{0}-{1}";
     public const string MAP_DATA_FOLDER = "MapData/{0}.asset";
     public const string SPRITE_ATLAS_FOLDER = "SpriteAltas/{0}.spriteatlas";

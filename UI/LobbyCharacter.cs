@@ -6,59 +6,38 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-/// <summary>
-/// ·Îºñ È­¸é¿¡¼­ ¹èÄ¡µÈ Ä³¸¯ÅÍÀÇ ÀÌ¹ÌÁö¿Í ´ë»ç ½Ã½ºÅÛÀ» Á¦¾îÇÏ´Â Å¬·¡½ºÀÔ´Ï´Ù.
-/// ÀÏÁ¤ ½Ã°£¸¶´Ù ´ë»ç¸¦ º¯°æÇÏ°Å³ª Å¬¸¯ ½Ã ¹İÀÀÇÏ´Â ±â´ÉÀ» ´ã´çÇÕ´Ï´Ù.
-/// </summary>
 public class LobbyCharacter : UILobbyUpdate
 {
-    // ====== Runtime State & Settings ======
-    private CancellationTokenSource cancelToken; // ºñµ¿±â ´ë»ç ·çÇÁ¸¦ Ãë¼ÒÇÏ±â À§ÇÑ ÅäÅ«
-    private CharacterData lobbyCharacterData;    // ·Îºñ¿¡ Ç¥½ÃµÉ Ä³¸¯ÅÍ µ¥ÀÌÅÍ
+    private CancellationTokenSource cancelToken;
+    private CharacterData lobbyCharacterData;
 
-    [SerializeField] private float m_delayTime = 3f; // ´ë»ç Ãâ·Â ¹× À¯Áö °£°İ
-    [SerializeField] private float m_fadeTime = 0.1f; // ´ë»ç ÅØ½ºÆ® ÆäÀÌµå ¿¬Ãâ ½Ã°£
+    [SerializeField] private float m_delayTime = 3f;
+    [SerializeField] private float m_fadeTime = 0.1f;
     private bool isRunTalk = false;
 
-    // ====== UI Binding Enums (CachObject ½Ã½ºÅÛ È°¿ë) ======
     enum Images
     {
-        CharacterImage, // Ä³¸¯ÅÍ ÀÏ·¯½ºÆ® Image
+        CharacterImage,
     }
-
-    // ----------------------------------------------------------------------
-    // ## Initialization (Lifecycle)
-    // ----------------------------------------------------------------------
 
     protected override void Awake()
     {
-        // 1. ÄÄÆ÷³ÍÆ® ÀÚµ¿ ¹ÙÀÎµù
         Bind<Image>(typeof(Images));
         Bind<TextMeshProUGUI>();
     }
 
-    /// <summary>
-    /// ·Îºñ ÆĞ³ÎÀÌ È°¼ºÈ­µÇ°Å³ª ¾÷µ¥ÀÌÆ®µÉ ¶§ È£ÃâµÇ´Â ÃÊ±âÈ­ ¸Ş¼­µåÀÔ´Ï´Ù.
-    /// </summary>
     public override void UpdateFormLobby()
     {
-        // Å×½ºÆ®¿ëÀ¸·Î ID 1¹ø Ä³¸¯ÅÍ µ¥ÀÌÅÍ¸¦ ·Îµå (ÃßÈÄ À¯Àú ¼³Á¤ ¸ŞÀÎ Ä³¸¯ÅÍ ID·Î º¯°æ °¡´É)
         lobbyCharacterData = GameMaster.Instance.csvHelper.GetScripteData<CharacterDataList>().GetData(1);
 
-        // Ä³¸¯ÅÍ ÀÌ¹ÌÁö ºñµ¿±â ·Îµå ¹× Àû¿ë
         lobbyCharacterData.GetCharacterSprite(targetImage: Get<Image>((int)Images.CharacterImage)).Forget();
 
-        // ±âº» ´ë»ç ¼³Á¤ ¹× ÀÚµ¿ ´ë»ç ·çÇÁ ½ÃÀÛ
-        Get<TextMeshProUGUI>().text = $"{lobbyCharacterData.characterName}ÀÇ ´ë»ç";
+        Get<TextMeshProUGUI>().text = $"{lobbyCharacterData.characterName}ì˜ ëŒ€ì‚¬";
         RestartChatMessage();
     }
 
-    /// <summary>
-    /// ·Îºñ È­¸éÀÌ ´İÈ÷°Å³ª ÆĞ³ÎÀÌ ÀüÈ¯µÉ ¶§ È£ÃâµÇ¾î ¸®¼Ò½º¸¦ Á¤¸®ÇÕ´Ï´Ù.
-    /// </summary>
     public override void CloseFormLobby()
     {
-        // ½ÇÇà ÁßÀÎ ºñµ¿±â ·çÇÁ Áß´Ü ¹× ¸Ş¸ğ¸® ÇØÁ¦
         if (cancelToken != null)
         {
             cancelToken.Cancel();
@@ -66,41 +45,25 @@ public class LobbyCharacter : UILobbyUpdate
             cancelToken = null;
         }
 
-        // ÇØ´ç °´Ã¼¿¡¼­ µ¿ÀÛ ÁßÀÎ ¸ğµç Æ®À© ¾Ö´Ï¸ŞÀÌ¼Ç Á¤Áö
         DOTween.Kill(this);
     }
 
-    // ----------------------------------------------------------------------
-    // ## Chat Message Logic (Async Loop)
-    // ----------------------------------------------------------------------
-
-    /// <summary>
-    /// [ºñµ¿±â] ÁÖ±âÀûÀ¸·Î Ä³¸¯ÅÍ ´ë»ç¸¦ ·£´ıÇÏ°Ô º¯°æÇÏ°í ÆäÀÌµå ¿¬ÃâÀ» ¼öÇàÇÏ´Â ·çÇÁÀÔ´Ï´Ù.
-    /// </summary>
     private async UniTask updateCharacterChatMessage(CancellationToken cancelToken)
     {
         while (cancelToken.IsCancellationRequested == false)
         {
-            // 1. ´ë»ç Ãâ·Â Àü ´ë±â
             await UniTask.WaitForSeconds(m_delayTime, cancellationToken: cancelToken);
 
-            // 2. ·£´ı ´ë»ç Ãâ·Â ¹× ÆäÀÌµå ÀÎ
             SayRandom();
 
-            // 3. ´ë»ç À¯Áö ½Ã°£ ´ë±â
             await UniTask.WaitForSeconds(m_delayTime, cancellationToken: cancelToken);
 
-            // 4. ´ë»ç ÅØ½ºÆ® ÆäÀÌµå ¾Æ¿ô (Åõ¸íÇÏ°Ô ¸¸µé±â)
             Get<TextMeshProUGUI>().DOFade(0, m_fadeTime);
         }
     }
 
-    /// <summary>
-    /// ±âÁ¸ ´ë»ç ·çÆ¾À» ÃÊ±âÈ­ÇÏ°í »õ·Ó°Ô ½ÃÀÛÇÕ´Ï´Ù.
-    /// </summary>
     private void RestartChatMessage()
     {
-        // ±âÁ¸ ÅäÅ« Ãë¼Ò ¹× Àç»ı¼º (Áßº¹ ½ÇÇà ¹æÁö)
         if (cancelToken != null)
         {
             cancelToken.Cancel();
@@ -109,33 +72,20 @@ public class LobbyCharacter : UILobbyUpdate
 
         cancelToken = new CancellationTokenSource();
 
-        // ºñµ¿±â ·çÇÁ ½ÃÀÛ (Fire and Forget)
         updateCharacterChatMessage(cancelToken.Token).Forget();
     }
 
-    // ----------------------------------------------------------------------
-    // ## Interaction
-    // ----------------------------------------------------------------------
-
-    /// <summary>
-    /// À¯Àú°¡ ·ÎºñÀÇ Ä³¸¯ÅÍ¸¦ Å¬¸¯ÇßÀ» ¶§ È£ÃâµË´Ï´Ù.
-    /// Áï½Ã ´ë»ç¸¦ Ãâ·ÂÇÏ°í ÀÚµ¿ ´ë»ç Å¸ÀÌ¸Ó¸¦ Àç¼³Á¤ÇÕ´Ï´Ù.
-    /// </summary>
     public void OnClickCharacter()
     {
         SayRandom();
         RestartChatMessage();
     }
 
-    /// <summary>
-    /// ·£´ıÇÑ ÀÎµ¦½ºÀÇ ´ë»ç¸¦ ¼±ÅÃÇÏ¿© ÅØ½ºÆ®¸¦ °»½ÅÇÏ°í ÆäÀÌµå ÀÎ ¿¬ÃâÀ» º¸¿©Áİ´Ï´Ù.
-    /// </summary>
     private void SayRandom()
     {
         int index = Random.Range(0, 5);
-        Get<TextMeshProUGUI>().text = $"{lobbyCharacterData.characterName}ÀÇ {index}¹øÂ° ´ë»ç";
+        Get<TextMeshProUGUI>().text = $"{lobbyCharacterData.characterName}ì˜ {index}ë²ˆì§¸ ëŒ€ì‚¬";
 
-        // ÅØ½ºÆ®¸¦ ´Ù½Ã ºÒÅõ¸íÇÏ°Ô ¸¸µê
         Get<TextMeshProUGUI>().DOFade(1, m_fadeTime);
     }
 }

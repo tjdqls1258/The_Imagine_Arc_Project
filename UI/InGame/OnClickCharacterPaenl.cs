@@ -5,54 +5,39 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-/// <summary>
-/// ÀÎ°ÔÀÓ ÇÊµå¿¡ ¹èÄ¡µÈ Ä³¸¯ÅÍ¸¦ Å¬¸¯ÇßÀ» ¶§ ³ªÅ¸³ª´Â »ó¼¼ »óÈ£ÀÛ¿ë ÆĞ³ÎÀÔ´Ï´Ù.
-/// Ä³¸¯ÅÍÀÇ ¿ÜÇü È®ÀÎ, ¾÷±×·¹ÀÌµå, ½ºÅ³ °ü¸® ±â´ÉÀ» Á¦°øÇÏ¸ç °ÔÀÓ ÀÏ½ÃÁ¤Áö¸¦ Á¦¾îÇÕ´Ï´Ù.
-/// </summary>
 public class OnClickCharacterPaenl : CachObject
 {
-    // ====== UI Binding Enums (CachObject ½Ã½ºÅÛ È°¿ë) ======
-
     enum Images
     {
-        CharacterImage, // Ä³¸¯ÅÍ Àü½Å ÀÏ·¯½ºÆ® Ç¥½Ã¿ë
+        CharacterImage,
     }
 
     enum Buttons
     {
-        UpgradButton,  // °­È­/¾÷±×·¹ÀÌµå ¹öÆ°
-        Back,          // ÆĞ³Î ´İ±â ¹öÆ°
+        UpgradButton,
+        Back,
     }
 
     enum TextMeshPros
     {
-        UpgradText,    // "UPGRADE" ÅØ½ºÆ® ·¹ÀÌºí
+        UpgradText,
     }
 
-    // ====== Runtime Data ======
-    private InGameCharacterData m_currentCharaterData; // ÇöÀç ¼±ÅÃµÈ Ä³¸¯ÅÍÀÇ µ¥ÀÌÅÍ
+    private InGameCharacterData m_currentCharaterData; 
     private TileClickEvent m_tileEvents;
 
     private InGameManager m_inGameManager;
 
     private float m_currentSkillTime;
 
-
-
-    // ----------------------------------------------------------------------
-    // ## Initialization
-    // ----------------------------------------------------------------------
     private void Awake()
     {
-        // 1. UI ÄÄÆ÷³ÍÆ® ÀÚµ¿ ¹ÙÀÎµù (Enum ±â¹İ)
         Bind<Image>(typeof(Images));
         Bind<Button>(typeof(Buttons));
         Bind<TextMeshProUGUI>(typeof(TextMeshPros));
 
-        // 2. ±âº» ÅØ½ºÆ® ÃÊ±âÈ­
         Get<TextMeshProUGUI>((int)TextMeshPros.UpgradText).text = "UPGRAD";
 
-        // 3. ¹öÆ° ÀÌº¥Æ® ¿¬°á (ÀÎµ¦½º ±â¹İ Á¢±Ù)
         Get<Button>((int)Buttons.Back).onClick.AddListener(ClosePanel);
         Get<Button>((int)Buttons.UpgradButton).onClick.AddListener(UpgradeButtonClick);
     }
@@ -62,44 +47,25 @@ public class OnClickCharacterPaenl : CachObject
         m_inGameManager = inGameManager;
     }
 
-    // ----------------------------------------------------------------------
-    // ## Panel Control (Open / Close)
-    // ----------------------------------------------------------------------
-
-    /// <summary>
-    /// Ä³¸¯ÅÍ¸¦ Å¬¸¯ÇßÀ» ¶§ ÆĞ³ÎÀ» ¿­°í µ¥ÀÌÅÍ¸¦ ¼¼ÆÃÇÕ´Ï´Ù.
-    /// </summary>
-    /// <param name="characterData">Å¬¸¯µÈ Ä³¸¯ÅÍÀÇ µ¥ÀÌÅÍ</param>
-    /// <param name="activeAction">¿­¸± ¶§ ½ÇÇàÇÒ Äİ¹é (¿¹: ÇÏÀÌ¶óÀÌÆ® È¿°ú)</param>
-    /// <param name="disableAction">´İÈú ¶§ ½ÇÇàÇÒ Äİ¹é (¿¹: ÇÏÀÌ¶óÀÌÆ® ÇØÁ¦)</param>
     public void OnClickCharacter(InGameCharacterData characterData, TileClickEvent tileClickActions)
     {
-        // ÆĞ³Î È°¼ºÈ­
         gameObject.SetActive(true);
         m_currentCharaterData = characterData;
 
-        // Äİ¹é ÀúÀå ¹× ½ÇÇà
         m_tileEvents = tileClickActions;
 
-        // °ÔÀÓ ·ÎÁ÷ ÀÏ½ÃÁ¤Áö (ÀüÅõ Áß´Ü)
         Time.timeScale = 0f;
 
-        // ¾îµå·¹¼­ºí ½Ã½ºÅÛÀ» ÅëÇØ Ä³¸¯ÅÍ ÀÌ¹ÌÁö ºñµ¿±â ·Îµå ¹× Àû¿ë
         Get<TextMeshProUGUI>((int)TextMeshPros.UpgradText).text = $"UPGRAD\nCost:{characterData.characterData.cost}";
         characterData.characterData.GetCharacterSprite(targetImage: Get<Image>((int)Images.CharacterImage)).Forget();
 
         m_currentSkillTime = m_tileEvents.GetSkillLastTime() + m_tileEvents.GetSkillCoolTime();
     }
 
-    /// <summary>
-    /// ÆĞ³ÎÀ» ´İ°í °ÔÀÓÀ» ´Ù½Ã ÁøÇà »óÅÂ·Î µ¹¸³´Ï´Ù.
-    /// </summary>
     public void ClosePanel()
     {
-        // °ÔÀÓ ¼Óµµ Á¤»óÈ­
         Time.timeScale = 1f;
 
-        // ÆĞ³Î ºñÈ°¼ºÈ­ ¹× Á¾·á Äİ¹é ½ÇÇà
         gameObject.SetActive(false);
 
         if(m_tileEvents != null)
@@ -114,7 +80,7 @@ public class OnClickCharacterPaenl : CachObject
         int useCost = m_tileEvents.GetUpgradeCost();
         if (m_inGameManager.GetCurrentCost() < m_tileEvents.GetUpgradeCost())
         {
-            Logger.Log("¿ä±¸µÇ´Â ¼Ò¸ğÄ¡ ºÎÁ·");
+            Logger.Log("ì—…ê·¸ë ˆì´ë“œ ë¶ˆê°€");
             return;
         }
 

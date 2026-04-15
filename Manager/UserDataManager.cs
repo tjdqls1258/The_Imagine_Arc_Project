@@ -3,59 +3,27 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-/// <summary>
-/// »ç¿ëÀÚ µ¥ÀÌÅÍ °ü¸®ÀÚ (UserDataManager)
-/// ½Ì±ÛÅæ ÆĞÅÏÀ» ÅëÇØ °ÔÀÓ Àü¿ª¿¡¼­ À¯Àú µ¥ÀÌÅÍÀÇ ·Îµå, ÀúÀå, ÃÊ±âÈ­¸¦ ÃÑ°ıÇÕ´Ï´Ù.
-/// µ¿±â(Sync) µ¥ÀÌÅÍ¿Í ºñµ¿±â(Async) µ¥ÀÌÅÍ¸¦ ±¸ºĞÇÏ¿© ÃÖÀûÀÇ ÀÔÃâ·Â ÆÛÆ÷¸Õ½º¸¦ º¸ÀåÇÕ´Ï´Ù.
-/// </summary>
-public class UserDataManager
+public class UserDataManager 
 {
-    /// <summary>
-    /// ·ÎÄÃ ÀúÀå¼Ò¿¡ ±âÁ¸ À¯ÀúÀÇ ÀúÀå µ¥ÀÌÅÍ°¡ Á¸ÀçÇÏ´ÂÁö ¿©ºÎ¸¦ ³ªÅ¸³À´Ï´Ù.
-    /// </summary>
     public bool hasSaveData { get; private set; }
 
-    /// <summary>
-    /// [Sync Data] PlayerPrefs³ª ¼Ò±Ô¸ğ ·ÎÄÃ ÆÄÀÏ¿¡ Áï°¢ÀûÀ¸·Î ·Îµå/ÀúÀåµÇ´Â µ¥ÀÌÅÍ ¸ñ·ÏÀÔ´Ï´Ù.
-    /// (¿¹: È¯°æ ¼³Á¤, Æ©Åä¸®¾ó ¿Ï·á ¿©ºÎ µî)
-    /// </summary>
-    public Dictionary<Type, IUserData> userDatas { get; private set; } = new();
+    private Dictionary<Type, IUserData> userDatas = new();
+    private Dictionary<Type, IAsyncUserData> asyncUserDatas = new();
 
-    /// <summary>
-    /// [Async Data] ¼­¹ö Åë½ÅÀÌ³ª ´ë¿ë·® ÆÄÀÏ IO°¡ ¼ö¹İµÇ¾î ºñµ¿±â Ã³¸®°¡ ÇÊ¿äÇÑ µ¥ÀÌÅÍ ¸ñ·ÏÀÔ´Ï´Ù.
-    /// (¿¹: À¯Àú ÀÎº¥Åä¸®, µ¦ Á¤º¸, ÀçÈ­ µ¥ÀÌÅÍ µî)
-    /// </summary>
-    public Dictionary<Type, IAsyncUserData> asyncUserDatas { get; private set; } = new();
+    public bool CheckHasSaveData() => hasSaveData;
 
-    // ----------------------------------------------------------------------
-    // ## Initialization (ÃÊ±âÈ­ ¹× µî·Ï)
-    // ----------------------------------------------------------------------
-
-    /// <summary>
-    /// °ü¸®ÇÒ µ¥ÀÌÅÍ Å¬·¡½ºµéÀ» ÀÎ½ºÅÏ½ºÈ­ÇÏ°í ½Ã½ºÅÛ¿¡ µî·ÏÇÕ´Ï´Ù.
-    /// </summary>
     public void Init()
     {
         userDatas.Clear();
         asyncUserDatas.Clear();
 
-        // 1. µ¿±â ¹æ½Ä µ¥ÀÌÅÍ °´Ã¼ µî·Ï
         userDatas.Add(typeof(UserSettingData), new UserSettingData());
 
-        // 2. ºñµ¿±â ¹æ½Ä µ¥ÀÌÅÍ °´Ã¼ µî·Ï (¾Õ¼­ ¸¸µç UserData Å¬·¡½º Æ÷ÇÔ)
         asyncUserDatas.Add(typeof(UserData), new UserData());
 
-        // 3. ±âÁ¸ ÀúÀå µ¥ÀÌÅÍ°¡ ÀÖ´ÂÁö PlayerPrefs¸¦ ÅëÇØ °£´ÜÈ÷ Ã¼Å©
         hasSaveData = PlayerPrefasHelper.GetInt(PlayerPrefasHelper.PrefabsKey.HasSettingData, 0) != 0;
     }
 
-    // ----------------------------------------------------------------------
-    // ## Non-Async UserData Management (·ÎÄÃ µ¿±â µ¥ÀÌÅÍ Á¦¾î)
-    // ----------------------------------------------------------------------
-
-    /// <summary>
-    /// ½Å±Ô À¯Àú ¶Ç´Â µ¥ÀÌÅÍ ÃÊ±âÈ­ ½Ã, ¸ğµç µ¿±â µ¥ÀÌÅÍ¸¦ ±âº»°ª(Default)À¸·Î ¼³Á¤ÇÕ´Ï´Ù.
-    /// </summary>
     public void InitDefaultData()
     {
         foreach (var item in userDatas.Values)
@@ -64,9 +32,6 @@ public class UserDataManager
         }
     }
 
-    /// <summary>
-    /// ·ÎÄÃ ÀúÀå¼Ò(PlayerPrefs µî)·ÎºÎÅÍ ¸ğµç µ¿±â µ¥ÀÌÅÍ¸¦ ºÒ·¯¿É´Ï´Ù.
-    /// </summary>
     public void LoadUserData()
     {
         hasSaveData = PlayerPrefasHelper.GetInt(PlayerPrefasHelper.PrefabsKey.HasSettingData, 0) != 0;
@@ -75,19 +40,14 @@ public class UserDataManager
         {
             foreach (var item in userDatas.Values)
             {
-                // °¢ µ¥ÀÌÅÍ Å¬·¡½ºÀÇ ·Îµå ¼º°ø ¿©ºÎ¸¦ È®ÀÎÇÏ¿© ¿¹¿Ü Ã³¸®
                 if (item.LoadData() == false)
                 {
-                    Logger.LogError($"[UserDataManager] {item.GetType()} ·Îµå ½ÇÆĞ");
+                    Debug.LogError($"[UserDataManager] {item.GetType()} ë¡œë“œ ì‹¤íŒ¨");
                 }
             }
         }
     }
 
-    /// <summary>
-    /// ÇöÀç ¸Ş¸ğ¸® »óÀÇ µ¿±â µ¥ÀÌÅÍ¸¦ ·ÎÄÃ ÀúÀå¼Ò¿¡ Áï½Ã ±â·ÏÇÕ´Ï´Ù.
-    /// ¸ğµç µ¥ÀÌÅÍ°¡ ¼º°øÀûÀ¸·Î ÀúÀåµÇ¾úÀ» ¶§¸¸ ¼¼ÀÌºê ÇÃ·¡±×¸¦ ¾÷µ¥ÀÌÆ®ÇÕ´Ï´Ù.
-    /// </summary>
     public void SaveUserData()
     {
         bool isSaveFailed = false;
@@ -96,26 +56,17 @@ public class UserDataManager
         {
             if (item.SaveData() == false)
             {
-                Logger.LogError($"[UserDataManager] {item.GetType()} ÀúÀå ½ÇÆĞ");
+                Debug.LogError($"[UserDataManager] {item.GetType()} ì €ì¥ ì‹¤íŒ¨");
                 isSaveFailed = true;
             }
         }
 
-        // ÀüÃ¼ ÀúÀåÀÌ ¼º°øÇÑ °æ¿ì¿¡¸¸ 'ÀúÀå µ¥ÀÌÅÍ ÀÖÀ½' »óÅÂ·Î ±â·Ï
         if (isSaveFailed == false)
         {
             hasSaveData = true;
         }
     }
 
-    // ----------------------------------------------------------------------
-    // ## Async UserData Management (¼­¹ö/´ë¿ë·® ºñµ¿±â µ¥ÀÌÅÍ Á¦¾î)
-    // ----------------------------------------------------------------------
-
-    /// <summary>
-    /// [ºñµ¿±â] ¸ğµç ºñµ¿±â µ¥ÀÌÅÍ¸¦ º´·Ä·Î ·ÎµåÇÕ´Ï´Ù. (·Îµù È­¸é¿¡¼­ ÁÖ·Î È£Ãâ)
-    /// UniTask.WhenAllÀ» »ç¿ëÇÏ¿© ¸ğµç µ¥ÀÌÅÍ°¡ ·ÎµåµÉ ¶§±îÁö È¿À²ÀûÀ¸·Î ´ë±âÇÕ´Ï´Ù.
-    /// </summary>
     public async UniTask AsyncLoadUserData()
     {
         List<UniTask> tasks = new();
@@ -123,19 +74,13 @@ public class UserDataManager
 
         foreach (var item in asyncUserDatas.Values)
         {
-            // 1. ÃÊ±âÈ­ ÀÛ¾÷ ¿¹¾à
             inittasks.Add(item.InitData());
-            // 2. ½ÇÁ¦ µ¥ÀÌÅÍ ·Îµå(¼­¹ö ¿äÃ» µî) ÀÛ¾÷ ¿¹¾à
             tasks.Add(item.LoadData());
         }
 
-        // ¸ğµç ÃÊ±âÈ­ ¹× ·Îµå ÀÛ¾÷ÀÌ º´·Ä·Î ¿Ï·áµÉ ¶§±îÁö ºñµ¿±â ´ë±â (ÃÖÀûÈ­)
         await UniTask.WhenAll(tasks);
     }
 
-    /// <summary>
-    /// [ºñµ¿±â] ¸ğµç ºñµ¿±â µ¥ÀÌÅÍ¸¦ ¼­¹ö ¶Ç´Â ÆÄÀÏ ½Ã½ºÅÛ¿¡ º´·Ä·Î ÀúÀåÇÕ´Ï´Ù.
-    /// </summary>
     public async UniTask AsyncSaveUserData()
     {
         List<UniTask> tasks = new();
@@ -148,24 +93,13 @@ public class UserDataManager
         await UniTask.WhenAll(tasks);
     }
 
-    // ----------------------------------------------------------------------
-    // ## Data Access (µ¥ÀÌÅÍ Á¢±Ù ÀÎÅÍÆäÀÌ½º)
-    // ----------------------------------------------------------------------
-
-    /// <summary>
-    /// Æ¯Á¤ Å¸ÀÔÀÇ À¯Àú µ¥ÀÌÅÍ °´Ã¼¸¦ °¡Á®¿É´Ï´Ù. 
-    /// µ¿±â/ºñµ¿±â ¸ñ·ÏÀ» ¸ğµÎ °Ë»öÇÏ¿© ÇØ´ç ÀÎ½ºÅÏ½º¸¦ ¹İÈ¯ÇÕ´Ï´Ù.
-    /// </summary>
-    /// <typeparam name="T">Ã£À¸·Á´Â µ¥ÀÌÅÍ Å¬·¡½º Å¸ÀÔ (IUserDataBase »ó¼Ó ÇÊ¼ö)</typeparam>
     public IUserDataBase GetUserData<T>() where T : IUserDataBase
     {
         var type = typeof(T);
 
-        // 1. µ¿±â µ¥ÀÌÅÍ ¸ñ·Ï °Ë»ö
         if (userDatas.ContainsKey(type))
             return userDatas[type];
 
-        // 2. ºñµ¿±â µ¥ÀÌÅÍ ¸ñ·Ï °Ë»ö
         else if (asyncUserDatas.ContainsKey(type))
             return asyncUserDatas[type];
 

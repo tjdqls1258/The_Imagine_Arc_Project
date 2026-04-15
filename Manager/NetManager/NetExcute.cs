@@ -1,7 +1,9 @@
 using Cysharp.Threading.Tasks;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -10,61 +12,58 @@ using UnityEngine.Networking;
 
 namespace NetExcute
 {
-    /// <summary>
-    /// °ÔÀÓÀÇ À¥ Åë½ÅÀ» ÃÑ°ýÇÏ´Â Áß¾Ó ½ÇÇà Å¬·¡½ºÀÔ´Ï´Ù.
-    /// À¯´ÏÆ¼ÀÇ UnityWebRequest¸¦ UniTask¿Í °áÇÕÇÏ¿© ºñµ¿±â HTTP Åë½ÅÀ» ¼öÇàÇÕ´Ï´Ù.
-    /// </summary>
     public class NetExcute : Singleton<NetExcute>
     {
-        /// <summary> ¾îÇÃ¸®ÄÉÀÌ¼Ç Á¾·á ¶Ç´Â ÇÊ¿ä ½Ã Åë½ÅÀ» ÀÏ°ý Ãë¼ÒÇÏ±â À§ÇÑ ÅäÅ« ¼Ò½ºÀÔ´Ï´Ù. </summary>
+       
         public CancellationTokenSource cancellation = new();
 
-        /// <summary>
-        /// [ºñµ¿±â] ¼­¹ö¿¡ API ¿äÃ»À» º¸³»°í ÀÀ´äÀ» Ã³¸®ÇÕ´Ï´Ù.
-        /// </summary>
-        /// <typeparam name="T">Response¸¦ »ó¼Ó¹ÞÀº ÀÀ´ä µ¥ÀÌÅÍ Å¸ÀÔ</typeparam>
-        /// <param name="header">¿äÃ» °æ·Î ¹× º»¹® µ¥ÀÌÅÍ¸¦ Æ÷ÇÔÇÑ Çì´õ °´Ã¼</param>
-        /// <param name="requsetAction">Åë½Å ¼º°ø ½Ã ½ÇÇàµÉ ÄÝ¹é (ÀÀ´ä °´Ã¼ Àü´Þ)</param>
-        /// <param name="fail">Åë½Å ½ÇÆÐ(³×Æ®¿öÅ© ¿À·ù µî) ½Ã ½ÇÇàµÉ ÄÝ¹é</param>
         public async UniTask Requset<T>(RequsetHeader header, Action<T> requsetAction, Action fail) where T : Response
         {
-            // 1. ¼­¹ö º£ÀÌ½º URL°ú API »ó¼¼ °æ·Î¸¦ °áÇÕÇÏ¿© ÀüÃ¼ URL »ý¼º
-            string url = Path.Combine(Config.WebURL, header.GetRutor());
-            Logger.Log($"[Tag RequsetData] Requset {url}");
+            string url = $"{Config.WebURL}{header.GetRutor()}";
+            string method = header.GetMethod().ToUpper();
+            Logger.Log($"[Tag RequsetData] Requset {url}, {JsonConvert.SerializeObject(header)}");
 
-            // 2. UnityWebRequest ¼³Á¤ (using »ç¿ëÀ¸·Î Åë½Å ¿Ï·á ÈÄ ÀÚµ¿ ÀÚ¿ø ÇØÁ¦)
-            using (UnityWebRequest unityWeb = new UnityWebRequest(url, header.GetMethod()))
+            if (method == "GET")
             {
-                // ¿äÃ» º»¹®(JSON) µ¥ÀÌÅÍ ¼³Á¤
-                unityWeb.uploadHandler = new UploadHandlerRaw(header.GetData());
-                // ÀÀ´ä µ¥ÀÌÅÍ¸¦ ¹Þ±â À§ÇÑ ¹öÆÛ ¼³Á¤
+                string quertString = header.GetQueryString();
+                if (!string.IsNullOrEmpty(quertString))
+                {
+                    url += $"?{quertString}";
+                }
+            }
+
+            using (UnityWebRequest unityWeb = new UnityWebRequest(url, method))
+            {
+                if (method != "GET")
+                {
+                    byte[] data = header.GetData();
+                    if (data != null && data.Length > 0)
+                    {
+                        unityWeb.uploadHandler = new UploadHandlerRaw(header.GetData());
+                        unityWeb.SetRequestHeader("Content-Type", RequsetHeader.REQUSET_CONTENT_TYPE);
+                    }
+                }
                 unityWeb.downloadHandler = new DownloadHandlerBuffer();
-                // HTTP Çì´õ ¼³Á¤ (JSON Åë½Å ¸í½Ã)
-                unityWeb.SetRequestHeader("Content-Type", RequsetHeader.REQUSET_CONTENT_TYPE);
 
                 try
                 {
-                    // 3. ¼­¹ö¿¡ ¿äÃ»À» º¸³»°í ºñµ¿±â ´ë±â (cancellation ÅäÅ« ¿¬°á)
                     await unityWeb.SendWebRequest().ToUniTask(cancellationToken: cancellation.Token);
 
-                    // 4. °á°ú Ã³¸®
                     if (unityWeb.result == UnityWebRequest.Result.Success)
                     {
                         string downLoadValue = unityWeb.downloadHandler.text;
+                        Logger.Log($"Web Request Success : {downLoadValue}");
 
                         if (downLoadValue != string.Empty)
                         {
-                            // JSON µ¥ÀÌÅÍ¸¦ ÁöÁ¤µÈ ÀÀ´ä °´Ã¼ T·Î ¿ªÁ÷·ÄÈ­
                             T res = JsonConvert.DeserializeObject<T>(downLoadValue);
 
-                            // ¼º°ø ÄÝ¹é È£Ãâ
                             if (requsetAction != null)
                                 requsetAction.Invoke(res);
                         }
                     }
                     else
                     {
-                        // ¼­¹ö ¿À·ù, Å¸ÀÓ¾Æ¿ô µî ³×Æ®¿öÅ© ½ÇÆÐ Ã³¸®
                         Logger.LogError($"[NetExcute] Request Fail : {unityWeb.error}");
                         if (fail != null)
                             fail.Invoke();
@@ -78,51 +77,49 @@ namespace NetExcute
         }
     }
 
-    /// <summary>
-    /// ¼­¹ö·ÎºÎÅÍ ¹Þ´Â ¸ðµç ÀÀ´ä µ¥ÀÌÅÍÀÇ º£ÀÌ½º Å¬·¡½ºÀÔ´Ï´Ù.
-    /// ¿¡·¯ ÄÚµå È®ÀÎ ¹× ¼º°ø ¿©ºÎ¸¦ ÆÇ´ÜÇÕ´Ï´Ù.
-    /// </summary>
     [Serializable]
     public class Response
     {
-        /// <summary> ¿¡·¯ ÄÚµå (º¸Åë 0ÀÌ¸é ¼º°ø, ³ª¸ÓÁö´Â ¿¡·¯¸¦ ÀÇ¹ÌÇÔ) </summary>
         public int error = -1;
 
-        /// <summary> ¼­¹ö ·ÎÁ÷»óÀÇ ¼º°ø ¿©ºÎ¸¦ ¹ÝÈ¯ÇÕ´Ï´Ù. </summary>
         public virtual bool IsSuccess()
         {
             return error == 0;
         }
     }
 
-    /// <summary>
-    /// ¼­¹ö¿¡ º¸³¾ ¿äÃ» µ¥ÀÌÅÍ¸¦ Á¤ÀÇÇÏ´Â Ãß»ó Å¬·¡½ºÀÔ´Ï´Ù.
-    /// API °æ·Î, ¸Þ¼­µå, µ¥ÀÌÅÍ Á÷·ÄÈ­ ·ÎÁ÷À» Æ÷ÇÔÇÕ´Ï´Ù.
-    /// </summary>
     [Serializable]
     public abstract class RequsetHeader
     {
         public const string REQUSET_CONTENT_TYPE = "application/json";
 
-        /// <summary> APIÀÇ ¼¼ºÎ °æ·Î(Endpoint)¸¦ ¹ÝÈ¯ÇØ¾ß ÇÕ´Ï´Ù. </summary>
         public abstract string GetRutor();
 
-        /// <summary> HTTP ¸Þ¼­µå(GET, POST, PUT µî)¸¦ Á¤ÀÇÇÕ´Ï´Ù. ±âº»Àº POSTÀÔ´Ï´Ù. </summary>
         public virtual string GetMethod()
         {
             return "post";
         }
 
-        /// <summary> °´Ã¼ÀÇ ÇÊµå µ¥ÀÌÅÍ¸¦ UTF8 ÀÎÄÚµùµÈ ¹ÙÀÌÆ® ¹è¿­(JSON)·Î º¯È¯ÇÕ´Ï´Ù. </summary>
         public virtual byte[] GetData()
         {
             return Encoding.UTF8.GetBytes(JsonUtility.ToJson(this));
         }
 
-        /// <summary> µð¹ö±ë ¶Ç´Â ·Î±× È®ÀÎÀ» À§ÇÑ Á÷·ÄÈ­ ¹®ÀÚ¿­À» ¹ÝÈ¯ÇÕ´Ï´Ù. </summary>
         public virtual string RequsetStaringData()
         {
             return JsonConvert.SerializeObject(this);
+        }
+
+        public string GetQueryString()
+        {
+            string json = JsonConvert.SerializeObject(this);
+            var jObj = JObject.Parse(json);
+
+            var properties = jObj.Properties()
+                .Where(p => p.Value.Type != JTokenType.Null) // null ê°’ ì œì™¸
+                .Select(p => $"{p.Name}={Uri.EscapeDataString(p.Value.ToString())}");
+
+            return string.Join("&", properties);
         }
     }
 }

@@ -5,16 +5,14 @@ using UnityEngine;
 
 public class GameGoodsSystem
 {
-    private Action<int> m_chargeCostAction;        // 코스트 변동 시 UI를 갱신하기 위해 등록되는 콜백 (Event 역할)
-    private float m_costAddTime = 1; // 코스트가 1씩 차오르는 주기 (초)
-    private float m_currentTime = 0; // 코스트 증가를 계산하기 위한 내부 타이머 누적값
+    private Action<int> m_chargeCostAction;
+    private float m_costAddTime = 1;
+    private float m_currentTime = 0;
     public int currentCost { get; private set; } = 0;
     CancellationTokenSource m_cancleToken;
     public void Init()
     {
-        m_chargeCostAction = null;
         currentCost = 0;
-
         m_cancleToken = new();
     }
 
@@ -33,7 +31,7 @@ public class GameGoodsSystem
                 if (m_currentTime > m_costAddTime)
                 {
                     m_currentTime = 0;
-                    UpdateCost(1); // 1 코스트 획득
+                    UpdateCost(1);
                 }
             }
 
@@ -46,7 +44,7 @@ public class GameGoodsSystem
         if (currentCost < cost)
             return false;
 
-        UpdateCost(-cost); // 성공 시 음수값 전달하여 차감
+        UpdateCost(-cost);
         return true;
     }
 
@@ -73,8 +71,7 @@ public class GameGoodsSystem
             m_cancleToken.Dispose();
             m_cancleToken = null;
         }
-        
-        m_chargeCostAction = null;
+
         currentCost = 0;
     }
 }

@@ -6,78 +6,61 @@ using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
 
-/// <summary>
-/// À¯ÀúÀÇ Ä³¸¯ÅÍ µ¦À» ÆäÀÌÁöº°·Î °ü¸®ÇÏ°í, Ä³¸¯ÅÍ ¹èÄ¡¸¦ º¯°æ/±³Ã¼ÇÏ´Â UI ÆĞ³ÎÀÔ´Ï´Ù.
-/// ºñµ¿±â ·Îµù Áß Áßº¹ Å¬¸¯ ¹æÁö ¹× µ¥ÀÌÅÍ ¹«°á¼ºÀ» À§ÇÑ ÀúÀå ÆË¾÷ ½Ã½ºÅÛÀÌ Æ÷ÇÔµÇ¾î ÀÖ½À´Ï´Ù.
-/// </summary>
 public class CharacterSelectPanel : UIBase
 {
-    // ====== UI Binding Enums (CachObject ÀÚµ¿ ¹ÙÀÎµù ½Ã½ºÅÛ) ======
     private enum CanvasGroups
     {
-        PagePanel, // µ¦ ÆäÀÌÁö ÀüÈ¯ ½Ã ºÎµå·¯¿î ¿¬Ãâ(¾ËÆÄ°ª Á¶Àı)À» À§ÇÑ ±×·ì
+        PagePanel,
     }
 
     private enum GameObjects
     {
-        OderCharacterListPanel, // Ä³¸¯ÅÍ ±³Ã¼ ½Ã ¿­¸®´Â ÀüÃ¼ º¸À¯ Ä³¸¯ÅÍ ¸ñ·Ï ÆĞ³Î
-        PageList,               // ÆäÀÌÁö ¹öÆ°(Pagination)µéÀÌ »ı¼ºµÉ ºÎ¸ğ ÄÁÅ×ÀÌ³Ê
+        OderCharacterListPanel,
+        PageList,
     }
 
     private enum Buttons
     {
-        PageItem, // µ¦ ÆäÀÌÁö ¼±ÅÃ ¹öÆ°ÀÇ ¿øº» ÅÛÇÃ¸´
-        SaveButton, //ÀúÀå ¹öÆ°
+        PageItem,
+        SaveButton,
     }
 
-    // ====== µ¥ÀÌÅÍ ¹× »óÅÂ °ü¸® º¯¼ö ======
-
-    /// <summary> ÀüÃ¼ À¯Àú µ¥ÀÌÅÍ¸¦ °ü¸®ÇÏ´Â ¸Å´ÏÀú·ÎºÎÅÍ UserData ÀÎ½ºÅÏ½º ÂüÁ¶ </summary>
     private UserData m_userCharacterData => GameMaster.Instance.dataManager.GetUserData<UserData>() as UserData;
 
-    /// <summary> ÆäÀÌÁö ÀüÈ¯ ¹öÆ°µéÀÇ È°¼ºÈ­ »óÅÂ¸¦ ÇÑ²¨¹ø¿¡ Á¦¾îÇÏ±â À§ÇÑ ¸®½ºÆ® </summary>
     private List<Button> m_pageInteractable = new();
 
     [SerializeField]
-    private CharacterChangeButton[] m_characterImages; // µ¦ ½½·Ô(ÃÖ´ë 12°³)À» ´ã´çÇÏ´Â ¹öÆ° ÄÄÆ÷³ÍÆ®µé
-    private CharacterChangeButton m_clickTarget;       // ÇöÀç ±³Ã¼ ÀÛ¾÷À» À§ÇØ ¼±ÅÃµÈ ½½·Ô ¹öÆ°
-    private UserCharacterData m_targetData;            // ¼±ÅÃµÈ ½½·Ô¿¡ ¿ø·¡ ¹èÄ¡µÇ¾î ÀÖ´ø µ¥ÀÌÅÍ (ºñ±³¿ë)
-    private UserCharacterData[] m_currentDeck;         // ÇöÀç È­¸é¿¡¼­ ¼öÁ¤ ÁßÀÎ 'ÀÓ½Ã' µ¦ µ¥ÀÌÅÍ ¹è¿­
+    private CharacterChangeButton[] m_characterImages;
+    private CharacterChangeButton m_clickTarget;
+    private UserCharacterData m_targetData;
+    private UserCharacterData[] m_currentDeck;
 
-    private bool isDirtFlag = false; // µ¥ÀÌÅÍ ¼öÁ¤ ¿©ºÎ (trueÀÏ °æ¿ì ´İ±â³ª ÆäÀÌÁö ÀüÈ¯ ½Ã ÀúÀå ÆË¾÷ Ãâ·Â)
-    private int m_currentPage = -1;  // ÇöÀç ÆíÁı ÁßÀÎ µ¦ ÆäÀÌÁö ÀÎµ¦½º (0, 1, 2...)
-    private int m_currentindex = -1; // ÇöÀç ¼±ÅÃµÈ Ä³¸¯ÅÍ ½½·ÔÀÇ ÀÎµ¦½º ¹øÈ£
+    private bool isDirtFlag = false;
+    private int m_currentPage = -1;
+    private int m_currentindex = -1;
 
-    /// <summary> Ä³¸¯ÅÍ ¸ñ·ÏÀ» ±×¸®µå ÇüÅÂ·Î º¸¿©ÁÖ´Â ½ºÅ©·Ñ ºä ÄÄÆ÷³ÍÆ® </summary>
     private CharacterPanelScroll m_characterListPanel => Get<CharacterPanelScroll>();
-
-    // ----------------------------------------------------------------------
-    // ## Initialization (ÃÊ±âÈ­)
-    // ----------------------------------------------------------------------
 
     public override void Init(Transform parent = null)
     {
         base.Init(parent);
 
-        // µ¦ ½½·Ô ÃÖ´ë ¼ö(12°³)¸¸Å­ ÀÓ½Ã ¹è¿­ °ø°£ È®º¸
         m_currentDeck = new UserCharacterData[UserData.MAX_CHARACTER_SETTING];
 
-        // UI ¿ä¼Ò ¹× ½ºÅ©¸³Æ® ¹ÙÀÎµù
         Bind<CanvasGroup>(typeof(CanvasGroups));
         Bind<GameObject>(typeof(GameObjects));
         Bind<CharacterPanelScroll>();
         Bind<Button>(typeof(Buttons));
 
-        SelecteButtonSetting(); // µ¦ ½½·Ô ¹öÆ° ÃÊ±â ÀÌº¥Æ® ¼³Á¤
-        SettingContext();       // ÇÏÀ§ ½ºÅ©·Ñ ºä µ¥ÀÌÅÍ ¿¬°á
-        SetPageItem();          // µ¦ ÆäÀÌÁö ¹øÈ£ ¹öÆ°(Pagination) µ¿Àû »ı¼º
+        SelecteButtonSetting();
+        SettingContext();
+        SetPageItem();
 
         Get<Button>((int)Buttons.SaveButton).onClick.AddListener(() =>
         {
             SavePopup().Forget();
         });
 
-        // [Local Function] µ¦ ½½·Ô ¹öÆ°µé¿¡ Å¬¸¯ Äİ¹é ÁÖÀÔ
         void SelecteButtonSetting()
         {
             int index = 0;
@@ -88,7 +71,6 @@ public class CharacterSelectPanel : UIBase
             }
         }
 
-        // [Local Function] ¼³Á¤µÈ ÃÖ´ë µ¦ °³¼ö¸¸Å­ ÆäÀÌÁö ÀÌµ¿ ¹öÆ° »ı¼º
         void SetPageItem()
         {
             var parent = Get<GameObject>((int)GameObjects.PageList);
@@ -100,10 +82,9 @@ public class CharacterSelectPanel : UIBase
                 {
                     OnClickPageAction(buttonindex);
                 });
-                m_pageInteractable.Add(page); // ¸®½ºÆ®¿¡ ´ã¾Æ ÃßÈÄ ÀÏ°ı ºñÈ°¼ºÈ­ °¡´ÉÇÏ°Ô °ü¸®
+                m_pageInteractable.Add(page);
             }
 
-            // 0¹ø ÆäÀÌÁö ¹öÆ°(¿øº»)¿¡µµ ÀÌº¥Æ® ÇÒ´ç ¹× ¸®½ºÆ® µî·Ï
             Get<Button>((int)Buttons.PageItem).onClick.AddListener(() =>
             {
                 OnClickPageAction(0);
@@ -111,17 +92,12 @@ public class CharacterSelectPanel : UIBase
             m_pageInteractable.Add(Get<Button>((int)Buttons.PageItem));
         }
 
-        /// <summary>
-        /// ÆäÀÌÁö ¹öÆ° Å¬¸¯ ½Ã ½ÇÇàµÇ´Â ¾×¼Ç. ÀúÀå ¿©ºÎ È®ÀÎ ¹× ºñµ¿±â ÆäÀÌÁö ·Îµå¸¦ Æ®¸®°ÅÇÕ´Ï´Ù.
-        /// </summary>
         void OnClickPageAction(int pageindex)
         {
-            // ·Îµù Áß Áßº¹ Å¬¸¯ ¹æÁö¸¦ À§ÇØ ¸ğµç ÆäÀÌÁö ¹öÆ° ºñÈ°¼ºÈ­
             SetInteractablePage(false);
 
             if (isDirtFlag && m_currentPage != pageindex)
             {
-                // º¯°æ »çÇ×ÀÌ ÀÖ´Ù¸é ÀúÀå Áú¹® ÆË¾÷À» ¶ç¿ì°í, È®ÀÎ/Ãë¼Ò ½Ã ´ÙÀ½ ÆäÀÌÁö·Î ÀÌµ¿
                 SavePopup(() =>
                 {
                     OnClickPage(pageindex).Forget();
@@ -129,22 +105,16 @@ public class CharacterSelectPanel : UIBase
             }
             else
             {
-                // º¯°æ »çÇ×ÀÌ ¾ø´Ù¸é Áï½Ã ÆäÀÌÁö ÀÌµ¿
                 OnClickPage(pageindex).Forget();
             }
         }
     }
 
-    /// <summary> ¸ğµç µ¦ ÆäÀÌÁö ¼±ÅÃ ¹öÆ°ÀÇ Å¬¸¯ °¡´É ¿©ºÎ¸¦ Á¦¾îÇÕ´Ï´Ù. </summary>
     private void SetInteractablePage(bool active)
     {
         foreach (var i in m_pageInteractable)
             i.interactable = active;
     }
-
-    // ----------------------------------------------------------------------
-    // ## Lifecycle & Interaction Events
-    // ----------------------------------------------------------------------
 
     public override void ShowUI()
     {
@@ -152,14 +122,13 @@ public class CharacterSelectPanel : UIBase
 
         isDirtFlag = false;
         SetInteractablePage(false);
-        OnClickPage(0).Forget(); // ÁøÀÔ ½Ã ±âº»ÀûÀ¸·Î 0¹ø µ¦ ÆäÀÌÁö ·Îµå
+        OnClickPage(0).Forget();
     }
 
-    /// <summary> ´İ±â ¹öÆ° Å¬¸¯ ½Ã º¯°æ »çÇ×ÀÌ ÀÖ´Ù¸é ÀúÀå ÆË¾÷À», ¾ø´Ù¸é Áï½Ã Á¾·áÇÕ´Ï´Ù. </summary>
     public override void OnClickClosetButton()
     {
         if (isDirtFlag)
-            SavePopup(()=> 
+            SavePopup(() =>
             {
                 base.OnClickClosetButton();
                 ResetData();
@@ -169,25 +138,16 @@ public class CharacterSelectPanel : UIBase
             base.OnClickClosetButton();
             ResetData();
         }
-            
     }
 
     private void ResetData()
     {
-            m_currentPage = -1;  
-            m_currentindex = -1; 
+        m_currentPage = -1;
+        m_currentindex = -1;
     }
 
-    // ----------------------------------------------------------------------
-    // ## Core Logic (Deck & Page Management)
-    // ----------------------------------------------------------------------
-
-    /// <summary>
-    /// [ºñµ¿±â] Æ¯Á¤ ÆäÀÌÁöÀÇ µ¦ µ¥ÀÌÅÍ¸¦ ·ÎµåÇÏ°í ½½·Ô UI¸¦ °»½ÅÇÕ´Ï´Ù.
-    /// </summary>
     public async UniTask OnClickPage(int pageIndex)
     {
-        // ÀÌ¹Ì ÇØ´ç ÆäÀÌÁö¶ó¸é ¹öÆ°¸¸ ´Ù½Ã È°¼ºÈ­ÇÏ°í Áß´Ü
         if (m_currentPage == pageIndex)
         {
             SetInteractablePage(true);
@@ -197,16 +157,13 @@ public class CharacterSelectPanel : UIBase
         m_currentPage = pageIndex;
         int index = 0;
 
-        // ½Ã°¢Àû ¿¬ÃâÀ» À§ÇØ ÆĞ³Î Åõ¸íÈ­
         Get<CanvasGroup>((int)CanvasGroups.PagePanel).alpha = 0;
 
         List<UniTask> loadList = new();
         if (m_userCharacterData.characterDeckList.ContainsKey(pageIndex))
         {
-            // Áß¿ä: ¿øº» µ¥ÀÌÅÍ¸¦ ÀÓ½Ã ¼öÁ¤¿ë ¹è¿­(m_currentDeck)·Î '±íÀº º¹»ç'ÇÏ¿© µ¥ÀÌÅÍ ¿À¿° ¹æÁö
             Array.Copy(m_userCharacterData.characterDeckList[m_currentPage], m_currentDeck, m_currentDeck.Length);
 
-            // °¢ ½½·Ô¿¡ ¸Â´Â Ä³¸¯ÅÍ ÇÁ¸®ÆÕ/ÀÌ¹ÌÁö ·Îµå ÀÛ¾÷À» º´·Ä·Î ½ÇÇà
             foreach (var character in m_characterImages)
             {
                 loadList.Add(m_characterImages[index].SettingPrefab(m_currentDeck[index]));
@@ -214,54 +171,43 @@ public class CharacterSelectPanel : UIBase
             }
         }
 
-        // ¸ğµç Ä³¸¯ÅÍÀÇ ¸®¼Ò½º ·ÎµùÀÌ ³¡³¯ ¶§±îÁö ´ë±â (ÃÖÀûÈ­)
         await UniTask.WhenAll(loadList);
 
-        // ·Îµå ¿Ï·á ÈÄ È­¸é Ç¥½Ã ¹× ¹öÆ° ´Ù½Ã È°¼ºÈ­
         Get<CanvasGroup>((int)CanvasGroups.PagePanel).alpha = 1;
         SetInteractablePage(true);
     }
 
-    /// <summary> Ä³¸¯ÅÍ ½½·Ô Å¬¸¯ ½Ã ¼±ÅÃ ¸ñ·Ï ÆĞ³ÎÀ» È°¼ºÈ­ÇÕ´Ï´Ù. </summary>
     private void OnClickChangeCharacter(CharacterChangeButton button)
     {
         m_clickTarget = button;
         m_targetData = button.GetCharacterData();
         m_currentindex = button.prefabIndex;
 
-        SettingContext(); // ÇÏ´Ü ¸®½ºÆ®¿¡ ÇöÀç µ¦ Á¤º¸ µîÀ» Àü´ŞÇÏ¿© °»½Å
+        SettingContext();
         Get<GameObject>((int)GameObjects.OderCharacterListPanel).gameObject.SetActive(true);
     }
 
-    /// <summary>
-    /// Ä³¸¯ÅÍ ¸ñ·Ï¿¡¼­ Æ¯Á¤ Ä³¸¯ÅÍ¸¦ ¼±ÅÃÇßÀ» ¶§ ½ÇÇàµÇ´Â ¹èÄ¡ ·ÎÁ÷ (ÇØÁ¦/½º¿Ò/½Å±Ô ¹èÄ¡)
-    /// </summary>
     private void OnClickChange(UserCharacterData data)
     {
         Get<GameObject>((int)GameObjects.OderCharacterListPanel).gameObject.SetActive(false);
-        isDirtFlag = true; // º¯°æ »çÇ× ¹ß»ı ±â·Ï
+        isDirtFlag = true;
 
-        // 1. [ÇØÁ¦] ÀÌ¹Ì ¹èÄ¡µÈ Ä³¸¯ÅÍ¸¦ °°Àº ½½·Ô¿¡¼­ ´Ù½Ã ¼±ÅÃÇÑ °æ¿ì -> Á¦°Å
         if (m_targetData != null && m_targetData.ID == data.ID)
         {
             m_clickTarget.SettingPrefab(null).Forget();
             m_currentDeck[m_currentindex] = null;
         }
-        // 2. [½º¿Ò] ¼±ÅÃÇÑ Ä³¸¯ÅÍ°¡ ´Ù¸¥ ½½·Ô¿¡ ÀÌ¹Ì ¹èÄ¡µÇ¾î ÀÖ´Â °æ¿ì -> À§Ä¡ ±³Ã¼
         else if (m_currentDeck.Any(x => x != null && x.ID == data.ID))
         {
-            int oldIndex = Array.IndexOf(m_currentDeck, data); // ±âÁ¸ À§Ä¡ ÀÎµ¦½º
-            var currentSlotData = m_currentDeck[m_currentindex]; // ÇöÀç ½½·ÔÀÇ µ¥ÀÌÅÍ ¹é¾÷
+            int oldIndex = Array.IndexOf(m_currentDeck, data);
+            var currentSlotData = m_currentDeck[m_currentindex];
 
-            // µÎ ½½·ÔÀÇ UI¸¦ ºñµ¿±â·Î ±³Ã¼ °»½Å
             m_characterImages[m_currentindex].SettingPrefab(data).Forget();
             m_characterImages[oldIndex].SettingPrefab(currentSlotData).Forget();
 
-            // ³»ºÎ ÀÓ½Ã ¹è¿­ µ¥ÀÌÅÍ ±³Ã¼
             m_currentDeck[m_currentindex] = data;
             m_currentDeck[oldIndex] = currentSlotData;
         }
-        // 3. [½Å±Ô ¹èÄ¡] µ¦¿¡ ¾ø´ø »õ·Î¿î Ä³¸¯ÅÍ¸¦ ¼±ÅÃÇÑ °æ¿ì -> ÇØ´ç ½½·Ô¿¡ ¹èÄ¡
         else
         {
             m_clickTarget.SettingPrefab(data).Forget();
@@ -269,46 +215,31 @@ public class CharacterSelectPanel : UIBase
         }
     }
 
-    /// <summary> ¼öÁ¤ÇÑ ÀÓ½Ã µ¦ ¹è¿­ µ¥ÀÌÅÍ¸¦ ½ÇÁ¦ À¯Àú µ¥ÀÌÅÍ ¿øº»À¸·Î ÀúÀåÇÕ´Ï´Ù. </summary>
     private void SaveCurrentDeckList()
     {
         if (isDirtFlag == false) return;
 
-        // ÃÖ¼Ò ÇÑ ¸í ÀÌ»óÀÇ Ä³¸¯ÅÍ°¡ ¹èÄ¡µÈ °æ¿ì¿¡¸¸ ÀúÀå ¼º°ø
         if (m_currentDeck.Any(x => x != null))
         {
-            // ÀÓ½Ã ¹è¿­ÀÇ ³»¿ëÀ» ¿øº» µ¥ÀÌÅÍ µñ¼Å³Ê¸®·Î º¹»çÇÏ¿© È®Á¤
             Array.Copy(m_currentDeck, m_userCharacterData.characterDeckList[m_currentPage], m_currentDeck.Length);
-
-            isDirtFlag = false; // ÇÃ·¡±× ÃÊ±âÈ­
+            isDirtFlag = false;
             return;
         }
 
-        // µ¦ÀÌ ¿ÏÀüÈ÷ ºñ¾îÀÖÀ» °æ¿ì °æ°í ¸Ş½ÃÁö Ãâ·Â
         PopupNotSaveMessage().Forget();
         isDirtFlag = false;
     }
 
-    /// <summary> ÇÏ´Ü Ä³¸¯ÅÍ ¸ñ·Ï ½ºÅ©·Ñ ºä¿¡ À¯Àú ¼ÒÀ¯ Ä³¸¯ÅÍ¿Í ÇöÀç µ¦ »óÅÂ¸¦ µ¿±âÈ­ÇÕ´Ï´Ù. </summary>
     private void SettingContext()
     {
         m_characterListPanel.OnCellClicked(OnClickChange, m_currentDeck, m_targetData);
         m_characterListPanel.UpdateContents(m_userCharacterData.oderCharacter.Values.ToList());
     }
 
-    // ----------------------------------------------------------------------
-    // ## Popup & Utility Management
-    // ----------------------------------------------------------------------
-
-    /// <summary>
-    /// [ºñµ¿±â] ÀúÀå ¿©ºÎ¸¦ ¹¯´Â ÆË¾÷À» Ãâ·ÂÇÏ¸ç, ¿Ï·á ½Ã ½ÇÇàÇÒ Äİ¹é ¾×¼ÇÀ» Áö¿øÇÕ´Ï´Ù.
-    /// </summary>
-    /// <param name="closetPopupAction">ÀúÀå È®ÀÎ(¶Ç´Â ÀúÀå ¾È ÇÔ ¼±ÅÃ) ÈÄ ½ÇÇàµÉ ÈÄ¼Ó µ¿ÀÛ</param>
     async UniTask SavePopup(Action closetPopupAction = null)
     {
         var popup = await GameMaster.Instance.popupManager.ShowPopup(PopupManager.PopupType.PopupQ) as PopupQ;
 
-        // [È®ÀÎ] Å¬¸¯ ½Ã: µ¥ÀÌÅÍ ÀúÀå ÈÄ µî·ÏµÈ ÈÄ¼Ó µ¿ÀÛ ½ÇÇà
         popup.okAction = () =>
         {
             SaveCurrentDeckList();
@@ -316,21 +247,19 @@ public class CharacterSelectPanel : UIBase
                 closetPopupAction.Invoke();
         };
 
-        // [¾Æ´Ï¿À] Å¬¸¯ ½Ã: ÀúÀåÇÏÁö ¾Ê°í º¯°æ »çÇ× ¹«½Ã(ÇÃ·¡±× ÇØÁ¦)
-        popup.noAction = () => 
+        popup.noAction = () =>
         {
             isDirtFlag = false;
             if (closetPopupAction != null)
                 closetPopupAction.Invoke();
         };
 
-        popup.Mssage = "ÇöÀç ±â·ÏÀ» ÀúÀåÇÏ½Ã°Ú½À´Ï±î? \n(ºñ¿öÁ® ÀÖ´Â °æ¿ì ÀúÀåÀÌ µÇÁö ¾Ê½À´Ï´Ù.)";
+        popup.Mssage = "ë³€ê²½ ì‚¬í•­ì´ ìˆìŠµë‹ˆë‹¤. ì €ì¥í•˜ì‹œê² ìŠµë‹ˆê¹Œ? \n(ì €ì¥í•˜ì§€ ì•Šì„ ê²½ìš° ë°ì´í„°ê°€ ìœ ì§€ë˜ì§€ ì•ŠìŠµë‹ˆë‹¤.)";
     }
 
-    /// <summary> [ºñµ¿±â] ºó µ¦ ÀúÀå ºÒ°¡ ¸Ş½ÃÁö ÆË¾÷À» Ãâ·ÂÇÕ´Ï´Ù. </summary>
     async UniTask PopupNotSaveMessage()
     {
         var Popup = await GameMaster.Instance.popupManager.ShowPopup(PopupManager.PopupType.PopupMsg) as PopupMsg;
-        Popup.Mssage = "±â·ÏÀÌ ºñ¿öÁ® ÀÖ¾î ÀúÀå µÇÁö ¾Ê¾Ò½À´Ï´Ù.";
+        Popup.Mssage = "ìµœì†Œ í•œ ëª… ì´ìƒì˜ ìºë¦­í„°ê°€ ë°°ì¹˜ë˜ì–´ì•¼ ì €ì¥ì´ ê°€ëŠ¥í•©ë‹ˆë‹¤.";
     }
 }

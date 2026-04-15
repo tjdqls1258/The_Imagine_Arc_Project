@@ -3,59 +3,37 @@ using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 
-/// <summary>
-/// °ÔÀÓ Á¾·á ½Ã ½Â¸®/ÆĞ¹è °á°ú¿Í º¸»ó ¸ñ·ÏÀ» Ç¥½ÃÇÏ´Â UI ÆĞ³ÎÀÔ´Ï´Ù.
-/// </summary>
 public class GameEndPanel : UIBase
 {
-    // ====== UI Binding Enums (CachObject ½Ã½ºÅÛ È°¿ë) ======
     enum TextMeshProUGUIs
     {
-        Title, // "º¹±¸ ¼º°ø" ¶Ç´Â "º¹±¸ ½ÇÆĞ" Å¸ÀÌÆ²
+        Title,
     }
 
     enum GameObjects
     {
-        Content, // º¸»ó ¾ÆÀÌÅÛ ¸®½ºÆ®°¡ ¹èÄ¡µÉ ºÎ¸ğ ÄÁÅÙÃ÷ ¿µ¿ª
-        Reward   // º¸»ó ¿µ¿ª ÀüÃ¼ ºÎ¸ğ (½Â¸® ½Ã¿¡¸¸ È°¼ºÈ­)
+        Content,
+        Reward
     }
 
-    // ====== Properties (ÆíÀÇ¸¦ À§ÇÑ Ä³½Ì Á¢±ÙÀÚ) ======
     private GameObject RewardObject => Get<GameObject>((int)GameObjects.Reward);
     private TextMeshProUGUI Title => Get<TextMeshProUGUI>((int)TextMeshProUGUIs.Title);
 
-    /// <summary> »ı¼ºµÈ º¸»ó ¾ÆÀÌÅÛ ½ºÅ©¸³Æ®µéÀ» °ü¸®ÇÏ´Â ¸®½ºÆ® (Àç»ç¿ë ¸ñÀû) </summary>
     private List<RewardItem> m_itemList = new();
-
-    // ----------------------------------------------------------------------
-    // ## Initialization
-    // ----------------------------------------------------------------------
 
     protected override void Awake()
     {
-        // 1. UI ¿ä¼Ò ¹× ÄÄÆ÷³ÍÆ® ÀÚµ¿ ¹ÙÀÎµù
         Bind<TextMeshProUGUI>(typeof(TextMeshProUGUIs));
-        Bind<RewardItem>(); // ¸®½ºÆ® Ç×¸ñ ÅÛÇÃ¸´ ¹ÙÀÎµù
+        Bind<RewardItem>();
         Bind<GameObject>(typeof(GameObjects));
 
-        // 2. ÅÛÇÃ¸´À¸·Î »ç¿ëµÉ ¿øº» ¾ÆÀÌÅÛÀº ºñÈ°¼ºÈ­ Ã³¸®
         Get<RewardItem>().gameObject.SetActive(false);
     }
 
-    // ----------------------------------------------------------------------
-    // ## Result Logic
-    // ----------------------------------------------------------------------
-
-    /// <summary>
-    /// °ÔÀÓ °á°ú¸¦ ÆÇ´ÜÇÏ¿© ÆĞ³ÎÀ» È°¼ºÈ­ÇÕ´Ï´Ù.
-    /// </summary>
-    /// <param name="isWin">½Â¸® ¿©ºÎ</param>
-    /// <param name="itemsCount">È¹µæÇÑ ¾ÆÀÌÅÛ µ¥ÀÌÅÍ ¹è¿­</param>
     public void ResultGame(bool isWin, ItemData[] itemsCount)
     {
         gameObject.SetActive(true);
 
-        // °ÔÀÓ Á¤Áö (°á°ú È­¸é ¿¬ÃâÀ» À§ÇØ Å¸ÀÓ½ºÄÉÀÏ Á¶Àı)
         Time.timeScale = 0;
 
         if (isWin)
@@ -64,40 +42,29 @@ public class GameEndPanel : UIBase
             ResultLose();
     }
 
-    /// <summary> ½Â¸® ½Ã Ã³¸®: Å¸ÀÌÆ² º¯°æ ¹× º¸»ó ¸ñ·Ï Ãâ·Â </summary>
     private void ResultWin(ItemData[] itemsCount)
     {
-        Title.text = "º¹±¸ ¼º°ø";
+        Title.text = "ìŠ¤í…Œì´ì§€ í´ë¦¬ì–´";
         RewardObject.SetActive(true);
 
         ShowRewardList(itemsCount);
     }
 
-    /// <summary> ÆĞ¹è ½Ã Ã³¸®: Å¸ÀÌÆ² º¯°æ ¹× º¸»ó ¿µ¿ª ¼û±è </summary>
     private void ResultLose()
     {
-        Title.text = "º¹±¸ ½ÇÆĞ";
+        Title.text = "ìŠ¤í…Œì´ì§€ ì‹¤íŒ¨";
         RewardObject.SetActive(false);
     }
 
-    // ----------------------------------------------------------------------
-    // ## Reward List UI Management
-    // ----------------------------------------------------------------------
-
-    /// <summary>
-    /// º¸»ó ¾ÆÀÌÅÛ ¸ñ·ÏÀ» »ı¼ºÇÏ°Å³ª ±âÁ¸ °´Ã¼¸¦ Àç»ç¿ëÇÏ¿© UI¸¦ °»½ÅÇÕ´Ï´Ù.
-    /// </summary>
     private void ShowRewardList(ItemData[] itemsCount)
     {
         for (int i = 0; i < itemsCount.Length; i++)
         {
-            // 1. ÀÌ¹Ì ¸®½ºÆ®¿¡ »ı¼ºµÈ °´Ã¼°¡ ÀÖ´Ù¸é Àç»ç¿ë
             if (m_itemList.Count > i)
             {
                 m_itemList[i].gameObject.SetActive(true);
                 m_itemList[i].SetItem(itemsCount[i]);
             }
-            // 2. ºÎÁ·ÇÏ´Ù¸é »õ·Î »ı¼º(Instantiate)ÇÏ¿© ¸®½ºÆ®¿¡ Ãß°¡
             else
             {
                 var item = Instantiate(Get<RewardItem>(), Get<GameObject>((int)GameObjects.Content).transform);
@@ -106,24 +73,13 @@ public class GameEndPanel : UIBase
                 m_itemList.Add(item);
             }
         }
-
-        // 3. (¼±ÅÃ »çÇ×) ¸¸¾à ÀÌÀü °ÔÀÓº¸´Ù º¸»óÀÌ Àû´Ù¸é ³²´Â °´Ã¼´Â ºñÈ°¼ºÈ­ Ã³¸®ÇÏ´Â ·ÎÁ÷À» Ãß°¡ÇÒ ¼ö ÀÖ½À´Ï´Ù.
     }
 
-    // ----------------------------------------------------------------------
-    // ## Lifecycle & Transition
-    // ----------------------------------------------------------------------
-
-    /// <summary>
-    /// °á°ú È­¸éÀ» ´İ°í ÀÎ°ÔÀÓ ¸Å´ÏÀú¸¦ ÅëÇØ Á¾·á Ã³¸®¸¦ ¼öÇàÇÕ´Ï´Ù.
-    /// </summary>
     public override void CloseUI(bool isClosetAll = false)
     {
-        // ½Ã°£ Èå¸§ º¹±¸
         Time.timeScale = 1;
 
-        // ÀÎ°ÔÀÓ UI ¸Å´ÏÀú¸¦ °æÀ¯ÇÏ¿© °ÔÀÓ ³ª°¡±â Ã³¸® ½ÇÇà
-        GameMaster.Instance.uiManager.AutoUIManager
+        GameMaster.Instance.uiManager.GetAutoUIManager()
             .GetCompoent<InGameUIManager>(UIBaseData.UIType.InGameUI)
             .ExitGame();
     }
