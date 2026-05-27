@@ -8,6 +8,7 @@ public class CharacterState
     public int atkPower;
     public int defPower;
     public int atkSpeed;
+    public int atkRang;
 }
 
 [Serializable]

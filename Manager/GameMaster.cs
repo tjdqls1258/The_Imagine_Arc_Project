@@ -19,6 +19,27 @@ public class GameMaster : MonoSingleton<GameMaster>
     public PopupManager popupManager;
     public UserDataManager dataManager;
     [HideInInspector] public ObjectPoolManager objectPoolManager;
+    [SerializeField] private GameObject lodingObject;
+
+    private string _uuid = string.Empty;
+    public string UUID 
+    {
+        get
+        {
+            if(_uuid == string.Empty)
+            {
+                _uuid = PlayerPrefs.GetString("UUID", Guid.NewGuid().ToString());
+                PlayerPrefs.SetString("UUID", _uuid);
+            }
+
+            return _uuid;
+        }
+        set
+        {
+            PlayerPrefs.SetString("UUID", value);
+            _uuid = value;
+        }
+    }
     public CSVHelper csvHelper => m_csvHelper;
 
     // ----------------------------------------------------------------------
@@ -27,8 +48,6 @@ public class GameMaster : MonoSingleton<GameMaster>
     public void InitBaseSystems()
     {
         base.Init();
-
-        // 어드레서블과 무관하게 최초로 세팅되어야 하는 로컬 팝업/데이터
         popupManager.Init();
         soundManager.Init();
         popupManager.SettingLocalData();
@@ -54,6 +73,8 @@ public class GameMaster : MonoSingleton<GameMaster>
         uiManager = new UIManager();
         dataManager = new UserDataManager();
         objectPoolManager = gameObject.AddComponent<ObjectPoolManager>();
+
+        uiManager.SetLodingObject(lodingObject);
 
         // 어드레서블 에셋(CSV, 프리팹 등)을 실제로 로드하는 구간
         await popupManager.SettingPopupDataAsync();
@@ -105,5 +126,14 @@ public class GameMaster : MonoSingleton<GameMaster>
 #endif
     }
 
-    public string GetUUID() => PlayerPrefs.GetString("UUID", Guid.NewGuid().ToString());
+    public string GetUUID()
+    {
+        if (UUID == string.Empty)
+        {
+            UUID = PlayerPrefs.GetString("UUID", Guid.NewGuid().ToString());
+            PlayerPrefs.SetString("UUID", UUID);
+        }
+
+        return UUID;
+    }
 }

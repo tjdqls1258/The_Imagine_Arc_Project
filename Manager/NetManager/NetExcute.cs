@@ -7,11 +7,18 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.Networking;
 
 namespace NetExcute
 {
+    [Serializable]
+    public class DownloadClass<T> where T : Response
+    {
+        public T data;
+    }
+
     public class NetExcute : Singleton<NetExcute>
     {
        
@@ -32,6 +39,7 @@ namespace NetExcute
                 }
             }
 
+            GameMaster.Instance.uiManager.ShowLoadingImage(true);
             using (UnityWebRequest unityWeb = new UnityWebRequest(url, method))
             {
                 if (method != "GET")
@@ -53,10 +61,11 @@ namespace NetExcute
                     {
                         string downLoadValue = unityWeb.downloadHandler.text;
                         Logger.Log($"Web Request Success : {downLoadValue}");
+                        DownloadClass<T> downloadClass = JsonConvert.DeserializeObject<DownloadClass<T>>(downLoadValue);
 
                         if (downLoadValue != string.Empty)
                         {
-                            T res = JsonConvert.DeserializeObject<T>(downLoadValue);
+                            T res = downloadClass.data;
 
                             if (requsetAction != null)
                                 requsetAction.Invoke(res);
@@ -72,7 +81,17 @@ namespace NetExcute
                 catch (OperationCanceledException)
                 {
                     Logger.Log("[NetExcute] Request was canceled.");
+                    if (fail != null)
+                        fail.Invoke();
                 }
+                catch(Exception ex)
+                {
+                    Logger.LogError(ex.ToString());
+                    if (fail != null)
+                        fail.Invoke();
+                }
+
+                GameMaster.Instance.uiManager.ShowLoadingImage(false);
             }
         }
     }
@@ -102,7 +121,7 @@ namespace NetExcute
 
         public virtual byte[] GetData()
         {
-            return Encoding.UTF8.GetBytes(JsonUtility.ToJson(this));
+            return Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(this));
         }
 
         public virtual string RequsetStaringData()

@@ -2,8 +2,7 @@ using Cysharp.Threading.Tasks;
 using NetExcute;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using UnityEngine;
+
 
 /// <summary>
 /// 사용자의 계정 정보(UserInfo) 및 캐릭터 인벤토리, 덱 정보를 총괄 관리하는 클래스입니다.
@@ -25,13 +24,13 @@ public class UserData : IAsyncUserData
     /// 사용자가 소지 중인 전체 캐릭터 인벤토리입니다.
     /// Key: 캐릭터 고유 ID, Value: 성장 데이터(레벨, 강화 등)
     /// </summary>
-    public Dictionary<int, UserCharacterData> oderCharacter = new();
+    public Dictionary<long, UserCharacterData> oderCharacter = new();
 
     /// <summary> 
     /// 각 페이지별로 설정된 덱 리스트입니다.
     /// Key: 덱 인덱스(0~MAX_DECKCOUNT), Value: 배치된 캐릭터 배열
     /// </summary>
-    public Dictionary<int, UserCharacterData[]> characterDeckList
+    public Dictionary<long, UserCharacterData[]> characterDeckList
     {
         get;
         set;
@@ -59,16 +58,43 @@ public class UserData : IAsyncUserData
     /// <summary>
     /// 서버(또는 로컬 스토리지)로부터 유저 데이터를 비동기로 불러옵니다.
     /// </summary>
-    public UniTask LoadData()
+    public async UniTask LoadData()
     {
         Logger.Log($"{GetType()}::Load Data");
 
         try
         {
-            // 에디터 환경에서는 테스트를 위한 더미 데이터를 생성합니다.
-#if UNITY_EDITOR
-            SetTestCharacterData();
-#endif
+            //테스트 로그인
+            await NetExcute.NetExcute.Instance.Requset<SetUserInfoResponse>(new SetUserInfoRequest() { nickName = "amanTest" }, (res) =>
+            {
+                GameMaster.Instance.UUID = res.uuid;
+
+                NetExcute.NetExcute.Instance.Requset<UserDeckCharacterListResponse>(new UserDeckCharacterListRequset(), (res) =>
+                {
+                    int deckNumber = 0;
+
+                    foreach (var character in res.champions)
+                        oderCharacter.Add(character.championId, new() { ID = character.championId, Enforce = 1, passiveSkillID = character.passiveSkillId, activeSkillID = character.activeSkillId });
+
+                    foreach (var item in res.decks)
+                    {
+                        int count = 0;
+                        foreach (var id in item)
+                        {
+                            if (characterDeckList.ContainsKey(id) == false)
+                                characterDeckList.Add(deckNumber, new UserCharacterData[MAX_CHARACTER_SETTING]);
+
+                            if (oderCharacter.ContainsKey(id))
+                                characterDeckList[deckNumber][count] = oderCharacter[id];
+                            count++;
+                        }
+                        deckNumber++;
+                    }
+                }, null).Forget();
+            },  ()=> SetTestCharacterData());
+
+           
+
             // TODO: API 요청을 통해 실제 서버 DB의 데이터를 myUserInfo에 할당
             // 예: myUserInfo = await WebRequest.GetUserInfo();
         }
@@ -77,8 +103,6 @@ public class UserData : IAsyncUserData
             // 네트워크 단절, 파싱 오류 등 로드 실패 시 예외 처리
             Logger.LogError($"Load Error : {e.ToString()}");
         }
-
-        return UniTask.CompletedTask;
     }
 
     /// <summary>
@@ -118,10 +142,7 @@ public class UserData : IAsyncUserData
     // ## Editor Debugging (테스트 데이터)
     // ----------------------------------------------------------------------
 
-#if UNITY_EDITOR
-    /// <summary>
-    /// [Editor Only] 서버 연동 전 원활한 개발을 위해 더미 유저 데이터를 생성합니다.
-    /// </summary>
+//#if UNITY_EDITOR
     public void SetTestCharacterData()
     {
         // 0번 덱에 테스트용 캐릭터 4종 배치
@@ -130,7 +151,7 @@ public class UserData : IAsyncUserData
         characterDeckList[0][3] = new() { ID = 3, Enforce = 0, level = 1, Rank = 1 };
         characterDeckList[0][5] = new() { ID = 4, Enforce = 0, level = 1, Rank = 1 };
 
-        // 소지품(인벤토리)에 테스트 캐릭터 11종 추가
+        //// 소지품(인벤토리)에 테스트 캐릭터 11종 추가
         oderCharacter.Add(1, new() { ID = 1, Enforce = 0, level = 1, Rank = 1 });
         oderCharacter.Add(2, new() { ID = 2, Enforce = 0, level = 1, Rank = 1 });
         oderCharacter.Add(3, new() { ID = 3, Enforce = 0, level = 1, Rank = 1 });
@@ -143,5 +164,4 @@ public class UserData : IAsyncUserData
         oderCharacter.Add(14, new() { ID = 14, Enforce = 0, level = 1, Rank = 1 });
         oderCharacter.Add(16, new() { ID = 16, Enforce = 0, level = 1, Rank = 1 });
     }
-#endif
 }

@@ -34,7 +34,6 @@ namespace Util_Patten
                     m_stateList.Add(state.stateType, state);
             }
 
-            // 2. 초기 상태 설정
             if (m_stateList.TryGetValue(m_currentState, out var startState))
             {
                 m_activeState = startState;
@@ -43,18 +42,14 @@ namespace Util_Patten
 
         public void ChangeState(T nextState)
         {
-            // 동일한 상태로 변경 요청 시 무시
             if (EqualityComparer<T>.Default.Equals(m_currentState, nextState))
                 return;
 
             if (m_stateList.TryGetValue(nextState, out var newState))
             {
-                // m_activeState?.Exit(); // 기존 상태 종료
-
                 m_currentState = nextState;
                 m_activeState = newState;
 
-                // m_activeState.Enter(); // 새 상태 시작
                 Debug.Log($"State Changed to: {nextState}");
             }
         }

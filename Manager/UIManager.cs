@@ -18,6 +18,7 @@ public class UIManager
     }
 
     private Transform MasterCanvas;
+    private GameObject m_lodingImage;
     public AutoUIManager AutoUIManager { get; protected set; }
 
     public readonly Dictionary<UISequence, GameObject> m_openUIPool = new();
@@ -94,6 +95,19 @@ public class UIManager
             from.Add(Item, where[Item]);
             where.Remove(Item);
         }
+    }
+
+    public void SetLodingObject(GameObject lodingImage)
+    {
+        m_lodingImage = lodingImage;
+    }
+
+    public void ShowLoadingImage(bool isShow)
+    {
+        if (m_lodingImage == null)
+            return;
+
+        m_lodingImage.SetActive(isShow);
     }
 
     public AutoUIManager GetAutoUIManager() => AutoUIManager;

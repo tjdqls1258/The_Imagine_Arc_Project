@@ -60,19 +60,9 @@ public class MpHpController : HPController
     /// <param name="dieAction">사망 시 실행할 함수</param>
     public override void InitController(CharacterState characterState, Action dieAction)
     {
-        // 부모 클래스(HPController)의 초기화 로직 실행 (HP 설정 및 사망 액션 등록)
         base.InitController(characterState, dieAction);
 
-        // MpCharacterState로 형변환하여 마나 관련 데이터를 추출
-        var mpCharacter = characterState as MpCharacterState;
-
-        if (mpCharacter != null)
-        {
-            m_maxMP = mpCharacter.maxMp;
-
-            // 프로퍼티를 통해 현재 마나를 최대치로 설정하고 UI를 갱신
-            currentMp = mpCharacter.maxMp;
-        }
+        var mpCharacter = characterState as CharacterState;
     }
 
     /// <summary>

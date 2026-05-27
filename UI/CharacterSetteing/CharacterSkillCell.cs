@@ -26,6 +26,5 @@ public class CharacterSkillCell : MonoBehaviour
     private void OnClickSkill()
     {
         GameMaster.Instance.popupManager.ShowToolTipPopup(m_skillBase);
-        Logger.Log($"{m_skillBase.SkillDescription}");
     }
 }

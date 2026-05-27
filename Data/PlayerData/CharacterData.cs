@@ -23,15 +23,8 @@ public class InGameCharacterData
         userCharacterDatas = userCharacterData;
         upgradeCount = 0;
 
-        if (passive.Type != SkillBase.SkillType.Passive)
-            Debug.LogError($"{passive.ID} : {passive.name} Is Not Passive");
-        else
-            this.passive = passive;
-
-        if (active.Type == SkillBase.SkillType.Passive)
-            Debug.LogError($"{active.ID} : {active.name} Is Not Active");
-        else
-            activeSkill = active;
+        this.passive = passive;
+        activeSkill = active;
     }
 
     public float GetAtk()
@@ -52,7 +45,7 @@ public class CharacterData : CSVData
     public int cost;
     public int rating;
     public string characterName;
-    public MpCharacterState characterState;
+    public CharacterState characterState;
 
     public int[] passiveSkill;
     public int[] activeSkill;

@@ -38,12 +38,12 @@ public class DrawShopPanel : UIBase
 
         Get<Button>((int)DrawButton.Draw1).onClick.AddListener(() =>
         {
-            DrawCharacter(1);
+            ExcuteDraw(1);
         });
 
         Get<Button>((int)DrawButton.Draw10).onClick.AddListener(() =>
         {
-            DrawCharacter(10);
+            ExcuteDraw(10);
         });
     }
 
@@ -57,17 +57,29 @@ public class DrawShopPanel : UIBase
         }
     }
 
-    private void DrawCharacter(int drawCount)
+    private void ExcuteDraw(int count)
     {
         UnLoadCurrentData();
-        List<int> ids = new();
 
+        var drawRequset = new DrawCharacterRequest();
+        drawRequset.uuid = GameMaster.Instance.GetUUID();
+        drawRequset.count = count;
+
+#if UNITY_EDITOR
+        NetExcute.NetExcute.Instance.Requset<DrawCharacterResponse>(drawRequset, DrawCharacter, ()=> DrawCharacter_Test(count)).Forget();
+#else
+        NetExcute.NetExcute.Instance.Requset<DrawCharacterResponse>(drawRequset, DrawCharacter,  ()=> DrawCharacter_Test(count)).Forget();
+#endif
+    }
+
+    private void DrawCharacter(DrawCharacterResponse draw)
+    {
         int count = 0;
         currentData = new List<CharacterData>();
 
         Get<DrawTimeLine>(0).gameObject.SetActive(true);
 
-        foreach (int id in ids)
+        foreach (int id in draw.data)
         {
             var characterDtat = GameMaster.Instance.csvHelper.GetScripteData<CharacterDataList>().GetData(id);
             currentData.Add(characterDtat);
@@ -109,7 +121,42 @@ public class DrawShopPanel : UIBase
     [UnityEditor.MenuItem("Test/draw")]
     public static void TestCharacterDraw()
     {
-        NetExcute.NetExcute.Instance.Requset<DrawCharacterResponse>(new DrawCharacterRequest() { userId = GameMaster.Instance.GetUUID(),count = 1 }, (res) => { }, null);
+        NetExcute.NetExcute.Instance.Requset<DrawCharacterResponse>(new DrawCharacterRequest() { uuid = GameMaster.Instance.GetUUID(),count = 10 }, (res) => { }, null);
     }
 #endif
+
+    private void DrawCharacter_Test(int counts)
+    {
+        int count = 0;
+        currentData = new List<CharacterData>();
+        List<int> ids = new List<int>(counts);
+
+        for (int i = 0; i < counts; i++)
+        {
+            ids.Add(Random.Range(1, 30));
+        }
+
+        Get<DrawTimeLine>(0).gameObject.SetActive(true);
+
+        foreach (int id in ids)
+        {
+            var characterDtat = GameMaster.Instance.csvHelper.GetScripteData<CharacterDataList>().GetData(id);
+            currentData.Add(characterDtat);
+
+            int currentCount = count;
+
+            Get<Image>(currentCount).gameObject.SetActive(true);
+            characterDtat.GetCharacterSprite(targetImage: Get<Image>(currentCount)).Forget();
+
+            count += 1;
+        }
+
+        for (int i = count; i < 10; i++)
+        {
+            Get<Image>(i).gameObject.SetActive(false);
+        }
+
+        Get<DrawTimeLine>(0).DrawCharacter(currentData.ToArray());
+    }
+
 }

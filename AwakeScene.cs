@@ -13,10 +13,8 @@ public class AwakeScene : MonoBehaviour
 
     private async UniTask StartAppFlowAsync()
     {
-        // 1. [어드레서블 이전] 뼈대 및 로컬 데이터 세팅
         GameMaster.Instance.InitBaseSystems();
 
-        // 2. [어드레서블 단독] 매니저 생성 및 초기화
         await GameMaster.Instance.InitAddressableSystemAsync();
 
         // 3. [다운로드 체크] 팝업 발생 및 대기

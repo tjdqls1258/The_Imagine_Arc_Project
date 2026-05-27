@@ -1,176 +1,105 @@
+using Character_State;
 using Cysharp.Threading.Tasks;
+using System;
 using System.Collections.Generic;
 using System.Threading;
-using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.Events;
+using UnityEngine.UI;
 
-/// <summary>
-/// 플레이어 캐릭터의 전체적인 상태와 컴포넌트(공격, 애니메이션, 스킬)를 총괄하는 메인 컨트롤러입니다.
-/// 캐릭터 스폰 상태 관리 및 사용자 인터랙션(클릭 등)에 따른 시각적 피드백을 제어합니다.
-/// </summary>
 public class PlayerCharacterContrroller : MonoBehaviour
 {
-    // ====== Runtime Components & Data ======
-
-    /// <summary> 캐릭터가 보유한 스킬 </summary>
-    private SkillBase m_activeSkill;
-    private SkillBase m_passiveSkill;
-
-    /// <summary> 캐릭터의 인게임 스탯 및 설정 데이터 </summary>
+    public SkillBase m_activeSkill { private set; get; }
+    public SkillBase m_passiveSkill { private set; get; }
     private InGameCharacterData m_characterData;
-
-    /// <summary> 전투 및 타겟팅 로직을 담당하는 컴포넌트 </summary>
     private PlayerAttackController m_atkController;
-
-    /// <summary> 애니메이션 재생 및 이벤트를 관리하는 컴포넌트 </summary>
     private CharacterAnimationController m_characterAniumationController;
-
-    // ====== State & Events ======
-
-    /// <summary> 유닛이 사망했을 때 호출될 유니티 이벤트 액션 </summary>
     private UnityAction m_unitDieAction;
 
-    /// <summary> 마우스/터치로 캐릭터를 클릭 중인지 여부 </summary>
     private bool m_onClick = false;
-
-    /// <summary> 현재 맵에 정식으로 배치(스폰)되어 작동 중인지 여부 </summary>
     private bool m_isSpawn = false;
-
     private float m_lastSkillTime;
-
     private CancellationTokenSource cancel;
 
-    // ----------------------------------------------------------------------
-    // ## Initialization
-    // ----------------------------------------------------------------------
+    public CharacterStateManager stateManager; // FSM 제어기
+
+    private Image m_skillRange;
+    List<IGamePlayCharacter> m_target;
 
     private void Awake()
     {
-        // 내부 컴포넌트 캐싱
+        stateManager = GetComponent<CharacterStateManager>();
         m_atkController = GetComponent<PlayerAttackController>();
         m_characterAniumationController = GetComponentInChildren<CharacterAnimationController>();
     }
 
     private void OnDestroy()
     {
-        cancel.Cancel();
-        cancel.Dispose();
+        cancel?.Cancel();
+        cancel?.Dispose();
     }
 
-    /// <summary>
-    /// 캐릭터 데이터를 주입하고 하위 컴포넌트들을 초기화합니다.
-    /// </summary>
-    /// <param name="characterData">주입할 인게임 캐릭터 데이터</param>
     public void SetCharacter(InGameCharacterData characterData)
     {
-        cancel = new();
+        cancel = new CancellationTokenSource();
         m_characterData = characterData;
 
-        // 공격 컨트롤러 초기화 (데이터 및 애니메이터 전달)
-        m_atkController.InitCharacterData(m_characterData, m_characterAniumationController);
+        // 공격 컨트롤러 세팅
+        if(m_target == null)
+            m_target = new() { m_atkController };
+        m_target.Clear();
 
+        m_target.Add(m_atkController);
+        m_atkController.InitCharacterData(m_characterData, m_characterAniumationController);
         SetSkill(characterData.activeSkill, characterData.passive);
+
+        // FSM에 캐릭터 데이터 주입 (내부적으로 Context 세팅)
+        stateManager.SetCharacter(characterData);
     }
 
-    /// <summary>
-    /// 캐릭터의 스킬 시스템을 초기화합니다.
-    /// </summary>
     public void SetSkill(SkillBase active, SkillBase passive)
     {
-        // 스킬 생성 및 리스트 관리 로직 구현부
         m_activeSkill = active;
         m_passiveSkill = passive;
     }
 
-    // ----------------------------------------------------------------------
-    // ## Public Interface
-    // ----------------------------------------------------------------------
-
-    /// <summary> 현재 캐릭터의 데이터를 반환합니다. </summary>
-    public InGameCharacterData GetCharacterData() => m_characterData;
-
-    /// <summary> 사망 시 호출될 외부 액션을 구독합니다. </summary>
-    public void AddDieAction(UnityAction action)
-    {
-        m_unitDieAction += action;
-    }
-
-    /// <summary> 현재 배치(스폰) 상태를 반환합니다. </summary>
-    public bool CheckSpawn() => m_isSpawn;
-
-    // ----------------------------------------------------------------------
-    // ## Interaction & Feedback (UI/UX)
-    // ----------------------------------------------------------------------
-
-    /// <summary>
-    /// 마우스 클릭/터치가 시작되었을 때 호출되어 공격 사거리를 표시합니다.
-    /// </summary>
-    public void OnPointerDownAction()
-    {
-        m_onClick = true;
-        AtkAreaActive(m_onClick);
-    }
-
-    /// <summary>
-    /// 마우스 클릭/터치가 떼어졌을 때 호출되어 공격 사거리를 숨깁니다.
-    /// </summary>
-    public void OnPointerUpAction()
-    {
-        m_onClick = false;
-        AtkAreaActive(m_onClick);
-    }
-
-    /// <summary>
-    /// 공격 사거리 시각화 오브젝트를 활성화 또는 비활성화합니다.
-    /// </summary>
-    /// <param name="Active">활성화 여부</param>
-    public void AtkAreaActive(bool Active)
-    {
-        if (m_atkController == null) return;
-        // 공격 컨트롤러에 저장된 Range Object를 제어
-        m_atkController.GetAtkRangeObject().SetActive(Active);
-    }
-
-    // ----------------------------------------------------------------------
-    // ## Lifecycle Control
-    // ----------------------------------------------------------------------
-
-    /// <summary>
-    /// 캐릭터를 활성화하여 실제 전투 로직(공격 등)이 작동하도록 설정합니다.
-    /// </summary>
-    /// <param name="isSpawn">true 시 전투 시작, false 시 대기 상태</param>
     public void SetSpawn(bool isSpawn)
     {
-        // 드래그 중에는 로직이 돌지 않도록 공격 컴포넌트 자체를 On/Off 함
         m_atkController.enabled = isSpawn;
         m_isSpawn = isSpawn;
+
+        stateManager.SetSpawn(isSpawn);
 
         UpdateFunc().Forget();
     }
 
-    public void UpgradeCharacter()
+    // 패시브 스킬은 상태와 무관하게 계속 돌아야 하므로 UniTask 루프
+    protected async UniTask UpdateFunc()
     {
-        m_atkController.Upgrade();
-        Logger.Log($"UpgradeCharacter {m_characterData.GetAtk()}");
+        while (m_isSpawn && cancel != null && !cancel.IsCancellationRequested)
+        {
+            await UniTask.WaitForEndOfFrame(this.GetCancellationTokenOnDestroy());
+            m_passiveSkill?.TryExecutePassive(TriggerType_Passive.OnTick, stateManager.skillContext);
+        }
     }
 
-    public bool Skill()
+    public InGameCharacterData GetCharacterData() => m_characterData;
+    public void OnPointerDownAction() { m_onClick = true; AtkAreaActive(m_onClick); }
+    public void OnPointerUpAction() { m_onClick = false; AtkAreaActive(m_onClick); }
+    public void AtkAreaActive(bool Active) { if (m_atkController != null) m_atkController.GetAtkRangeObject().SetActive(Active); }
+    public void UpgradeCharacter() { m_atkController.Upgrade(); }
+    public bool Skill() 
     {
-        m_lastSkillTime = Time.time;
-        return m_atkController.UseSkill();
+        m_lastSkillTime = Time.time + m_atkController.SkillLastTime(); 
+        return m_atkController.UseSkill(stateManager.skillContext); 
     }
 
     public float GetLastSkillTime() => m_lastSkillTime;
+    public float GetSkillCoolTime() => m_activeSkill.Cooldown;
+    public bool IsSpwan() => m_isSpawn;
 
-    public float GetSkillCoolTime() => m_activeSkill.SkillCoolTime; //추후 스킬 쿨타임 감소등 버프 효과가 있을 경우 추가
-
-    protected async UniTask UpdateFunc()
+    public void AddDieAction(UnityAction dieAction)
     {
-        while(m_isSpawn && cancel.IsCancellationRequested == false)
-        {
-            await UniTask.WaitForEndOfFrame(cancellationToken:cancel.Token);
-            m_passiveSkill.SkillUse(m_characterData, m_atkController);
-        }
+        m_unitDieAction += dieAction;
     }
 }
