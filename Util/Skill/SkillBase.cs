@@ -54,7 +54,7 @@ public class SkillBase : ScriptableObject, IToolTip
     private bool ExecutePipeline(SkillContext context)
     {
         if(Type != SkillType.Passive)
-            Debug.Log($"스킬 사용! [{SkillName}] - 시전자: {context.Caster.GetTransform().gameObject.name}");
+            Logger.Log($"스킬 사용! [{SkillName}] - 시전자: {context.Caster.GetTransform().gameObject.name}");
 
         bool skillResult = false;
         if (TargetingMode != null)
@@ -65,7 +65,7 @@ public class SkillBase : ScriptableObject, IToolTip
         {
             foreach (var effect in EffectModes)
             {
-                if (context.Caster is ITargetable selfTarget)
+                if (context.PrimaryTarget is ITargetable selfTarget)
                 {
                     effect.Apply(context, selfTarget);
                 }

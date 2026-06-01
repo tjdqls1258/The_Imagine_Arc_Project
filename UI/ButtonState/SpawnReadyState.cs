@@ -11,6 +11,8 @@ public class SpawnReadyState : IButtonState
 
     public void Enter()
     {
+        //TO COOLTIME
+        m_btn.PreviewCharacter.SetSpawn(false);
         m_btn.ToggleSkillUI(false);
     }
 

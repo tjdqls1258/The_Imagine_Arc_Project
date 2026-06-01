@@ -35,7 +35,7 @@ public class SkillIdleState : IButtonState
     public void Update()
     {
         if (m_btn.PreviewCharacter == null) return;
-        if (m_btn.PreviewCharacter.IsSpwan() == false) return; // 맵에서 사라지면 루프 종료
+        if (m_btn.PreviewCharacter.IsSpawn() == false) return; // 맵에서 사라지면 루프 종료
 
         if (m_btn.SkillReadyTime <= Time.time)
         {

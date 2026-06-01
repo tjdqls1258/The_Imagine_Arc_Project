@@ -3,7 +3,7 @@ using Util_Patten.FSM;
 
 namespace Character_State
 {
-    [CreateAssetMenu(menuName = "FSM/Actions/Attack")]
+    [CreateAssetMenu(menuName = "FSM/Unit/Actions/Attack")]
     public class AttackAction_Unit : ActionSO<CharacterContext>
     {
         public override void OnEnter(CharacterContext context)

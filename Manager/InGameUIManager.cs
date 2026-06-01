@@ -66,11 +66,12 @@ public class InGameUIManager : UIBaseFormMaker
             var characterData = data.GetCharacterData();
             var activeSkillID = characterData.activeSkill[data.activeSkillID];
             var passiveSkillID = characterData.passiveSkill[data.passiveSkillID];
+            var nomalAtkDataID = characterData.nomalAtk;
 
             var activeSkillData = await GameMaster.Instance.addressableManager.LoadAssetAndCacheAsync<SkillBase>(string.Format(Util.CHARACTER_SKILL_PATH, activeSkillID));
             var passiveSkillData = await GameMaster.Instance.addressableManager.LoadAssetAndCacheAsync<SkillBase>(string.Format(Util.CHARACTER_SKILL_PATH, passiveSkillID));
-
-            InGameCharacterData ingameData = new InGameCharacterData(characterData, data, passiveSkillData, activeSkillData);
+            var nomalAtkData = await GameMaster.Instance.addressableManager.LoadAssetAndCacheAsync<SkillBase>(string.Format(Util.CHARACTER_SKILL_PATH, nomalAtkDataID));
+            InGameCharacterData ingameData = new InGameCharacterData(characterData, data, nomalAtkData, passiveSkillData, activeSkillData);
 
             characterDeckList.Add(ingameData);
         }

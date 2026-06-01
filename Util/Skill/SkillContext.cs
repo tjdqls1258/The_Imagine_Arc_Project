@@ -16,8 +16,10 @@ public interface ITargetable
 {
     Transform GetTransform();
     void ApplyEffect(EffectPayload payload);
-
     void HighlightTarget(bool show);
+    public void DieAction();
+    public ITargetable GetSelf();
+    public bool IsDie();
 }
 
 [Serializable]
@@ -31,8 +33,10 @@ public class SkillContext
     public List<ITargetable> DetectedTargets { get; set; } = new List<ITargetable>();
     public Vector3 Direction { get; set; }
     public float SkillRange { get; set; } = 1f;
+    
     // 패시브 발동 정보
-    public object TriggerEventData { get; set; }
+    public float Damage { get; set; }
+    public ConditionBuffeManager Condition { get; set; }
 
     public Dictionary<Type, IndicatorObject> IndicatorDic = new();
     public Dictionary<Type, IndicatorObject> MaxRangeIndcatorDic = new();

@@ -13,6 +13,7 @@ namespace NetExcute
         public int Enforce; // 강화 수치
         public int Rank;    // 희귀도/진화 등급
 
+        public long nomalAtk;
         public long activeSkillID = 1;
         public long passiveSkillID = 0;
 
@@ -32,9 +33,61 @@ namespace NetExcute
         }
 
         // ====== Client Only ======>
+
+        private BaseCharacterStat baseCharacterStat;
+        private bool m_isDirty = true;
+        public int Level
+        {
+            get => level;
+            set
+            {
+                if (level != value)
+                {
+                    level = value;
+                    m_isDirty = true;
+                }
+            }
+        }
+
         public CharacterData GetCharacterData()
         {
             return GameMaster.Instance.csvHelper.GetScripteData<CharacterDataList>().GetData(ID);
+        }
+
+        public BaseCharacterStat GetInGameBaseStat()
+        {
+            CharacterData baseData = GetCharacterData();
+
+            if (baseCharacterStat != null && m_isDirty == false)
+                return baseCharacterStat;
+
+            baseCharacterStat = new BaseCharacterStat(baseData.characterState);
+
+            baseCharacterStat.SetStat(StatType.MaxHp, baseData.characterState.maxHp);
+            baseCharacterStat.SetStat(StatType.AttackDamage, baseData.characterState.atkPower);
+            baseCharacterStat.SetStat(StatType.Defense, baseData.characterState.defPower);
+            baseCharacterStat.SetStat(StatType.AttackSpeed, baseData.characterState.atkSpeed);
+            baseCharacterStat.SetStat(StatType.AttackRange, baseData.characterState.atkRang);
+
+            int levelUps = level - 1;
+
+            if (levelUps > 0)
+            {
+                // TODO: 해당 캐릭터의 성장 데이터 ID를 가져오는 방식에 맞게 수정
+                //string growthID = "Attacker_Level"; // 테스트용 임시 ID
+                //GrowthData growth = DataManager.Instance.GetGrowthData(growthID);
+
+                //if (growth != null)
+                //{
+                //    finalStat.AddStat(StatType.MaxHp, growth.MaxHpAdd * levelUps);
+                //    finalStat.AddStat(StatType.AttackDamage, growth.AtkPowerAdd * levelUps);
+                //    finalStat.AddStat(StatType.Defense, growth.DefPowerAdd * levelUps);
+                //    finalStat.AddStat(StatType.AttackSpeed, growth. * levelUps);
+                //}
+            }
+
+            m_isDirty = false;
+            return baseCharacterStat;
         }
     }
 
@@ -214,40 +267,3 @@ namespace NetExcute
 
     }
 }
-
-#if UNITY_EDITOR
-
-public class TestEditor
-{
-    [UnityEditor.MenuItem("Test/Get PlayerInfo")]
-    public static void TestUserGet()
-    {
-        NetExcute.NetExcute.Instance.Requset<UserInfoResopnse>(new UserInfoRequest(), (res) =>
-        {
-
-        }, null);
-    }
-
-    [UnityEditor.MenuItem("Test/Set PlayerInfo")]
-    public static void TestPlayerInfo()
-    {
-        NetExcute.NetExcute.Instance.Requset<SetUserInfoResponse>(new SetUserInfoRequest() { nickName = "amanTest" }, (res) =>
-        {
-            GameMaster.Instance.UUID = res.uuid;
-        }, null);
-    }
-
-    [UnityEditor.MenuItem("Test/PlayerDeck")]
-    public static void TestUserDeckList()
-    {
-        NetExcute.NetExcute.Instance.Requset<GetUserChampionsListResponse>(new GetUserChampionsListRequest() { uuid = GameMaster.Instance.GetUUID()}, null, null);
-    }
-
-    [UnityEditor.MenuItem("Test/PlayerDeck CharacterList")]
-    public static void TestUserList()
-    {
-        NetExcute.NetExcute.Instance.Requset<UserDeckCharacterListResponse>(new UserDeckCharacterListRequset(), null, null);
-    }
-}
-
-#endif

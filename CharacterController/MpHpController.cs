@@ -58,9 +58,9 @@ public class MpHpController : HPController
     /// </summary>
     /// <param name="characterState">캐릭터 상태 데이터 (MP 정보가 포함된 MpCharacterState여야 함)</param>
     /// <param name="dieAction">사망 시 실행할 함수</param>
-    public override void InitController(CharacterState characterState, Action dieAction)
+    public override void InitController(CharacterState characterState, Action dieAction, ConditionBuffeManager manager)
     {
-        base.InitController(characterState, dieAction);
+        base.InitController(characterState, dieAction, manager);
 
         var mpCharacter = characterState as CharacterState;
     }

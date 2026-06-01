@@ -20,17 +20,12 @@ public class UnitButton : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDr
     [SerializeField] private Button m_skillButton;
     [SerializeField] private TextMeshProUGUI m_coolTimeText;
 
-    [Tooltip("스킬 사거리/타겟을 표시할 미리보기 UI 또는 데칼")]
-    [SerializeField] private RectTransform m_skillTargetIndicator;
-
     public Camera MainCamera => GameUtil.mainCamera;
     public LayerMask TileMask => 1 << 8;
 
     public InGameCharacterData CharacterData { get; private set; }
     public InGameUIManager InGameUIManager { get; private set; }
-    public PlayerCharacterContrroller PreviewCharacter { get; private set; }
-
-    public RectTransform SkillTargetIndicator => m_skillTargetIndicator;
+    public PlayerCharacterController PreviewCharacter { get; private set; }
     public bool HasEnoughCost { get; private set; }
     public float SkillReadyTime { get; set; }
 
@@ -43,6 +38,7 @@ public class UnitButton : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDr
     public SpawnDragState SpawnDrag { get; private set; }
     public SkillIdleState SkillIdle { get; private set; }
     public SkillDragState SkillDrag { get; private set; }
+    public SpawnCoolTimeState SpawnCoolTimeState { get; private set; }
 
     private void Awake()
     {
@@ -50,9 +46,9 @@ public class UnitButton : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDr
         SpawnDrag = new SpawnDragState(this);
         SkillIdle = new SkillIdleState(this);
         SkillDrag = new SkillDragState(this);
+        SpawnCoolTimeState = new SpawnCoolTimeState(this);
 
         SetBlockState(true);
-        if (m_skillTargetIndicator != null) m_skillTargetIndicator.gameObject.SetActive(false);
     }
 
     public void SetCharacter(InGameCharacterData characterData, InGameUIManager ingameManager = null)
@@ -66,7 +62,6 @@ public class UnitButton : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDr
         CharacterData.characterData.LoadSprite().Forget();
         CreateCharacterPreviewAsync().Forget();
 
-        ChangeState(SpawnReady);
     }
 
     public void ChangeState(IButtonState newState)
@@ -86,6 +81,8 @@ public class UnitButton : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDr
     public bool IsSkillReady => SkillReadyTime <= Time.time;
     public void UpdateSkillCoolTimeText() => m_coolTimeText.text = (SkillReadyTime - Time.time).ToString("N1");
 
+    public void UpdateCoolTimeText(float time) => m_coolTimeText.text = time.ToString("N1");
+
     private async UniTask CreateCharacterPreviewAsync()
     {
         if (PreviewCharacter != null) Destroy(PreviewCharacter.gameObject);
@@ -93,18 +90,24 @@ public class UnitButton : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDr
         string path = string.Format(Util.CHARACTER_MODLED_PATH, CharacterData.characterData.modelObjectName);
         var obj = await GameMaster.Instance.addressableManager.InstantiateObjectAsync(path);
 
-        PreviewCharacter = obj.GetComponent<PlayerCharacterContrroller>();
+        PreviewCharacter = obj.GetComponent<PlayerCharacterController>();
         PreviewCharacter.SetCharacter(CharacterData);
 
-        PreviewCharacter.AddDieAction(() => ChangeState(SpawnReady));
+        PreviewCharacter.AddDieAction(() =>
+        { 
+            ChangeState(SpawnCoolTimeState);
+            PreviewCharacter.gameObject.SetActive(false);
+        });
         PreviewCharacter.gameObject.SetActive(false);
 
         m_skillButton.image.sprite = CharacterData.activeSkill.SkillIcon;
+
+        ChangeState(SpawnReady);
     }
 
     public void UpdateCostAction(int currentCost)
     {
-        if (PreviewCharacter == null || PreviewCharacter.IsSpwan()) return;
+        if (PreviewCharacter == null || PreviewCharacter.IsSpawn()) return;
 
         HasEnoughCost = currentCost >= CharacterData.characterData.cost;
 

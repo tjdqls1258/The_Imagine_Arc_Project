@@ -52,6 +52,8 @@ public class SkillDragState : IButtonState
             return;
         }
 
+        m_aimContext.Damage = m_btn.PreviewCharacter.stateManager.GetDamage();
+
         m_btn.UpdateSkillContextPosition(m_aimContext, e.position);
         if(m_btn.CharacterData.activeSkill.EndAimingAndExecute(m_aimContext))
             m_btn.SkillReadyTime = Time.time + m_btn.CharacterData.activeSkill.Cooldown;

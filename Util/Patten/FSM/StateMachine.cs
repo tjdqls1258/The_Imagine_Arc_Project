@@ -45,7 +45,7 @@ namespace Util_Patten.FSM
 
         protected virtual void ForeChangeState(TState state)
         {
-            currentState.OnExit(context);
+            currentState?.OnExit(context);
             currentState = state;
             currentState.OnEnter(context);
         }

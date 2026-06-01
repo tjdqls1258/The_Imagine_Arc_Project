@@ -58,7 +58,7 @@ public class SpawnDragState : IButtonState
 
         if (hit.collider != null)
         {
-            var spawnTile = hit.collider.GetComponent<SpawnPlayerCharacterTile>();
+            var spawnTile = hit.collider.GetComponent<SpawnableTileBase>();
             if (spawnTile != null && !spawnTile.CheckSpawn())
             {
                 onHit?.Invoke(hit.transform.position);
@@ -79,9 +79,9 @@ public class SpawnDragState : IButtonState
             return;
         }
 
-        var spawnTile = hit.collider.GetComponent<SpawnPlayerCharacterTile>();
+        var spawnTile = hit.collider.GetComponent<SpawnableTileBase>();
 
-        if (spawnTile == null || spawnTile.CheckSpawn() || !spawnTile.CheckSpawnPoint(false) ||
+        if (spawnTile == null || spawnTile.CheckSpawn() || !spawnTile.CheckSpawnPoint(m_btn.CharacterData.characterData.spawnType == SpawnType.Path) ||
             !m_btn.InGameUIManager.m_inGameManager.UseCost(m_btn.CharacterData.characterData.cost))
         {
             CancelSpawn();

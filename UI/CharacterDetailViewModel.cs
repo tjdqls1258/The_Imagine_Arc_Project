@@ -15,9 +15,12 @@ public class CharacterDetailViewModel
     public async UniTask LoadDataAsync(UserCharacterData userData)
     {
         CharacterData rawData = userData.GetCharacterData();
-
+        BaseCharacterStat characterStat = userData.GetInGameBaseStat();
         LevelText.Value = $"LV. {userData.level}";
-        InfoText.Value = $"{rawData.characterName} data Not Ready\nCost : {rawData.cost}\nRating : {rawData.rating}\ntest Data : {rawData.characterState.maxHp}";
+        InfoText.Value = 
+            @$"{rawData.characterName} data Not Ready
+Cost : {rawData.cost}\nRating : {rawData.rating}
+test Data : {characterStat.GetStat(StatType.MaxHp)}";
 
         ActiveSkills.Value = rawData.activeSkill;
         PassiveSkills.Value = rawData.passiveSkill;

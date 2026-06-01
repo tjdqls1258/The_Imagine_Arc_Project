@@ -27,7 +27,7 @@ public class StageRule
         if (m_enemySpawnManager.GetCurrentCount() <= 0)
         {
             GameMaster.Instance.uiManager.GetAutoUIManager().GetCompoent<InGameUIManager>(UIBaseData.UIType.InGameUI).EndGame(true);
-            Debug.Log("Enemy Clear");
+            Logger.Log("Enemy Clear");
         }
     }
 

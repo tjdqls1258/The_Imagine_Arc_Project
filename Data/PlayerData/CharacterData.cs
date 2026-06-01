@@ -8,33 +8,77 @@ using UnityEngine;
 using UnityEngine.U2D;
 using UnityEngine.UI;
 
-public class InGameCharacterData
+public enum SpawnType
+{
+    Up,
+    Path
+}
+
+public class InGameCharacterData : BaseCharacterStat
 {
     private NetExcute.UserCharacterData userCharacterDatas;
     protected int upgradeCount;
 
     public CharacterData characterData;
+    public SkillBase nomalAtkSkill;
     public SkillBase passive;
     public SkillBase activeSkill;
 
-    public InGameCharacterData(CharacterData data, NetExcute.UserCharacterData userCharacterData, SkillBase passive = null, SkillBase active = null)
+    public InGameCharacterData(CharacterData data, NetExcute.UserCharacterData userCharacterData,SkillBase nomalAtk = null, SkillBase passive = null, SkillBase active = null) : base(data.characterState)
     {
         characterData = data;
         userCharacterDatas = userCharacterData;
         upgradeCount = 0;
 
+        nomalAtkSkill = nomalAtk;
         this.passive = passive;
         activeSkill = active;
+
+        ApplyLobbyGrowth();
+    }
+
+    private void ApplyLobbyGrowth()
+    {
+        // 예: "Attacker_Level" 같은 CSV 키값을 생성 (SpawnType이나 클래스 기반)
+        //string growthID = $"{characterData.spawnType}_Level";
+        //GrowthData growth = DataManager.Instance.GetGrowthData(growthID);
+
+        //if (growth != null)
+        //{
+        //    // 1레벨은 기본 스탯이므로 (현재 레벨 - 1) 번 성장합니다.
+        //    int levelUps = userCharacterDatas.level - 1;
+
+        //    if (levelUps > 0)
+        //    {
+        //        AddStat(StatType.MaxHp, growth.MaxHpAdd * levelUps);
+        //        AddStat(StatType.AtkPower, growth.AtkPowerAdd * levelUps);
+        //        AddStat(StatType.DefPower, growth.DefPowerAdd * levelUps);
+        //    }
+
+        //    // TODO: Enforce(강화)나 Rank(진화)에 따른 추가 스탯 보너스도 여기서 AddStat으로 처리
+        //}
+    }
+
+    public void UpgradeCharacter(int count = 1)
+    {
+        upgradeCount += count;
+
+        //string upgradeID = $"{characterData.spawnType}_Upgrade";
+        //GrowthData growth = DataManager.Instance.GetGrowthData(upgradeID);
+
+        //if (growth != null)
+        //{
+        //    // 업그레이드 횟수(count)만큼 CSV 수치를 더해줍니다.
+        //    AddStat(StatType.MaxHp, growth.MaxHpAdd * count);
+        //    AddStat(StatType.AttackDamage, growth.AtkPowerAdd * count);
+        //    AddStat(StatType.Defense, growth.DefPowerAdd * count);
+        //AddStat(StatType.AttackSpeed, growth.AtkSpeedAdd * count);
+        //}
     }
 
     public float GetAtk()
     {
         return StatCalculator.Calculate(characterData.characterState.atkPower, userCharacterDatas.level, userCharacterDatas.Enforce, userCharacterDatas.Rank, upgradeCount);
-    }
-
-    public void UpgradeCharacter(int count)
-    {
-        upgradeCount = upgradeCount + count;
     }
 }
 
@@ -47,12 +91,17 @@ public class CharacterData : CSVData
     public string characterName;
     public CharacterState characterState;
 
+    public int nomalAtk;
     public int[] passiveSkill;
     public int[] activeSkill;
 
     [Header("Resource Keys")]
     public string modelObjectName;
     public string modelSpriteName;
+
+    public SpawnType spawnType;
+
+    public int blockCount = 1;
 
     [Header("Runtime State (Caching)")]
     private Sprite modelSprite;

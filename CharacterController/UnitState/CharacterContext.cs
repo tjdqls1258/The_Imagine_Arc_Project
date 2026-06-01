@@ -8,7 +8,7 @@ namespace Character_State
     public class CharacterContext : Context
     {
         public InGameCharacterData characterData;
-        public PlayerAttackController atkController;
+        public PlayerCombatController atkController;
         public CharacterAnimationController animController;
         public Transform transform;
 

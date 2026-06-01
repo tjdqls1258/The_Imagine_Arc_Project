@@ -4,7 +4,7 @@
 [System.Serializable]
 public class InstantDamageEffect : EffectModule
 {
-    public float DamageAmount = 50f;
+    public float DamageMultiply = 1f;
 
     public override void Apply(SkillContext context, ITargetable target)
     {
@@ -12,7 +12,7 @@ public class InstantDamageEffect : EffectModule
         {
             CasterID = context.Caster.GetCasterID(),
             Category = EffectCategory.InstantDamage,
-            Value = DamageAmount
+            Value = context.Damage * DamageMultiply
         };
 
         target.ApplyEffect(payload);

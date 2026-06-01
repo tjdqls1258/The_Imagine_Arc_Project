@@ -6,10 +6,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using UnityEngine;
 
-/// <summary>
-/// ���������� �� ����(Spawn)�� ������Ʈ Ǯ���� �����ϴ� Ŭ�����Դϴ�.
-/// ������ �ð��� ���� ���� �����ϰ�, ����� ���� ��Ȱ���Ͽ� �޸� ���ϸ� ���Դϴ�.
-/// </summary>
 public class EnemySpawnManager : MonoBehaviour
 {
     private EnemySpawnData[] m_enemySpawnDatas; 
@@ -21,7 +17,7 @@ public class EnemySpawnManager : MonoBehaviour
     private int m_remmantCount = 0;           
     private int m_currentCount = 0;
 
-    private CancellationTokenSource m_cancellationTokenSource = new(); // �񵿱� ���� ��ҿ� ��ū
+    private CancellationTokenSource m_cancellationTokenSource = new(); 
 
     private Dictionary<int, List<EnemyController>> m_enemyList = new();
     private Dictionary<int, List<EnemyController>> m_disableList = new();

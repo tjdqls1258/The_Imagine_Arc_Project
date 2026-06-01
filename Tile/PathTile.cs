@@ -1,6 +1,7 @@
 using UnityEngine;
+using UnityEngine.EventSystems;
 
-public class PathTile : TileBase
+public class PathTile : SpawnableTileBase
 {
-    
+   
 }

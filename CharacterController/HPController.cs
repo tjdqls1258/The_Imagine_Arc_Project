@@ -8,8 +8,7 @@ public class HPController : MonoBehaviour
     [Tooltip("체력 수치를 시각적으로 표시할 UI 이미지 (Fill Amount 방식)")]
     [SerializeField] protected Image m_hpBar;
 
-    [Tooltip("최대 체력 수치")]
-    [SerializeField] protected float m_maxHP;
+    protected float m_maxHP;
     protected float m_currentHp = 0;
 
     protected Action m_dieAction;
@@ -31,12 +30,10 @@ public class HPController : MonoBehaviour
         }
     }
 
-    public virtual void InitController(CharacterState characterStateData, Action dieAction)
+    public virtual void InitController(CharacterState characterStateData, Action dieAction, ConditionBuffeManager statProvider)
     {
-        m_maxHP = characterStateData.maxHp;
-
-        currentHp = characterStateData.maxHp;
-
+        m_maxHP = statProvider.GetStat(StatType.MaxHp);
+        currentHp = m_maxHP;
         m_dieAction = dieAction;
     }
 
@@ -52,9 +49,9 @@ public class HPController : MonoBehaviour
         }
     }
 
-    public virtual void UpgradeCharacter(int count)
+    public virtual void UpgradeCharacter(float changeMaxHp)
     {
-        float addValue = m_maxHP * (0.1f * count);
+        float addValue = m_maxHP * (0.1f * changeMaxHp);
         m_maxHP = m_maxHP + addValue;
         currentHp = currentHp + addValue;
     }
