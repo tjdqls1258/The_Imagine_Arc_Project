@@ -78,4 +78,4 @@
 
 ## 📝 License
 
-This project is licensed under the MIT License - see the [LICENSE](https://www.google.com/search?q=LICENSE) file for details.
+This project is licensed under the MIT License - see the [LICENSE](https://github.com/tjdqls1258/The_Imagine_Arc_Project/blob/main/LICENSE) file for details.
