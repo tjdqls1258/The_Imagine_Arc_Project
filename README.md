@@ -61,7 +61,7 @@
  ┃ ┗ 📜 InGameCharacterData.cs        # 인게임 스폰 시 생성되는 전투 전용 데이터 컨테이너
  ┣ 📂 FSM
  ┃ ┣ 📜 CharacterStateManager.cs      # FSM Context 관리 및 상태 전이 제어
- ┃ ┗ 📜 CharacterStateScriptableObjectBase.cs # 무상태(Stateless) 로직 베이스
+ ┃ ┗ 📜 CharacterStateScriptableObjectBase.cs # 상태(Stateless) 로직 베이스
  ┗ 📂 StatSystem
    ┣ 📜 ConditionBuffeManager.cs      # 실시간 버프/디버프 및 스탯 연산 코어
    ┗ 📜 ConditionBuffeBase.cs         # 틱 데미지, 스탯 증감 모디파이어 베이스
