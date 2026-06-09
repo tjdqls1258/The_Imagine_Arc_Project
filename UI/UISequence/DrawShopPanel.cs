@@ -133,7 +133,7 @@ public class DrawShopPanel : UIBase
 
         for (int i = 0; i < counts; i++)
         {
-            ids.Add(Random.Range(1, 30));
+            ids.Add(Random.Range(1, 19));
         }
 
         Get<DrawTimeLine>(0).gameObject.SetActive(true);

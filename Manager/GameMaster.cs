@@ -5,6 +5,9 @@ using UnityEngine;
 
 public class GameMaster : MonoSingleton<GameMaster>
 {
+#if UNITY_EDITOR
+    public bool isAddressableLoad_Start = false;
+#endif
     // ====== Constants & Labels ======
     public readonly string[] ADDRESSABLE_LABEL = { "InGameData", "SpriteAltas", "JsonData", "UI", "CharacterSprite" };
 
@@ -42,9 +45,14 @@ public class GameMaster : MonoSingleton<GameMaster>
     }
     public CSVHelper csvHelper => m_csvHelper;
 
-    // ----------------------------------------------------------------------
-    // [단계 1] 어드레서블 이전 초기화 (로컬 데이터 기반)
-    // ----------------------------------------------------------------------
+    private void Start()
+    {
+#if UNITY_EDITOR
+        if(isAddressableLoad_Start)
+            InitAddressableSystemAsync();
+#endif
+    }
+
     public void InitBaseSystems()
     {
         base.Init();
@@ -53,18 +61,12 @@ public class GameMaster : MonoSingleton<GameMaster>
         popupManager.SettingLocalData();
     }
 
-    // ----------------------------------------------------------------------
-    // [단계 2] 어드레서블 단독 초기화
-    // ----------------------------------------------------------------------
     public async UniTask InitAddressableSystemAsync()
     {
         addressableManager = new AddressableManager();
         await addressableManager.InitAsync();
     }
 
-    // ----------------------------------------------------------------------
-    // [단계 3] 어드레서블 이후 초기화 (에셋 로드 종속성)
-    // ----------------------------------------------------------------------
     public async UniTask InitAssetDependentSystemsAsync()
     {
         Logger.Log("Starting GameMaster System Initialization...");
@@ -76,7 +78,6 @@ public class GameMaster : MonoSingleton<GameMaster>
 
         uiManager.SetLodingObject(lodingObject);
 
-        // 어드레서블 에셋(CSV, 프리팹 등)을 실제로 로드하는 구간
         await popupManager.SettingPopupDataAsync();
         await csvHelper.InitCSVDataAsync();
         await LoadBaseResource();
@@ -94,9 +95,6 @@ public class GameMaster : MonoSingleton<GameMaster>
         await UniTask.WhenAll(loadingTasks);
     }
 
-    // ----------------------------------------------------------------------
-    // ## Data & Exit Logic
-    // ----------------------------------------------------------------------
     private async UniTask AsyncLoadUserData()
     {
         dataManager.Init();

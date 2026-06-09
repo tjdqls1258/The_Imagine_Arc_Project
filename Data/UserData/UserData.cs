@@ -12,7 +12,7 @@ public class UserData : IAsyncUserData
 {
     // ====== 시스템 상수 (제약 조건) ======
     /// <summary> 하나의 덱에 배치할 수 있는 최대 캐릭터 수 </summary>
-    public const int MAX_CHARACTER_SETTING = 12;
+    public const int MAX_CHARACTER_SETTING = 16;
     /// <summary> 사용자가 생성 및 관리할 수 있는 총 덱 페이지 수 </summary>
     public const int MAX_DECKCOUNT = 3;
 
