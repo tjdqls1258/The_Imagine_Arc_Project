@@ -8,6 +8,7 @@ public static class Util
     //######### Character Data
     public const string CHARACTER_SPRITE_PATH = "Assets/Sprite/TestCharacterImage/{0}.spriteatlas";
     public const string CHARACTER_IMAGE_NAME = "CharacterImage";
+    public const string CHARACTERFACE_IMAGE_NAME = "CharacterImage_Face";
     public const string CHARACTER_MODLED_PATH = "Character/{0}.prefab";
     public const string CHARACTER_SKILL_PATH = "ScriptableObject/SkillBase/SkillBase_{0}.asset";
 

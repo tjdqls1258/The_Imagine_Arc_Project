@@ -1,108 +1,152 @@
 using UnityEngine;
 
-public abstract class ConditionBuffeBase
+public abstract class ConditionBuffeSO : ScriptableObject
 {
-    public string ConditionID; // 동일 버프인지 식별하기 위한 고유 ID
+    [Header("Basic Info")]
+    public string ConditionID;
     public string ConditionName;
-
-    public float Duration;          // 현재 남은 시간
-    public float MaxDuration;       // 최대 지속 시간 (초기화용)
+    public float MaxDuration;
     public float TickInterval = 1f;
-    private float m_tickTimer = 0f;
 
     [Header("Stack Settings")]
-    public int CurrentLevel = 1;
-    public int MaxLevel = 5; // 최대 중첩 횟수
-    public bool RefreshDurationOnStack = true; // 중첩 시 지속 시간 초기화 여부
+    public int MaxLevel = 5;
+    public bool RefreshDurationOnStack = true;
+    public float BaseValue = 1;
+
+    public virtual void OnTick(ITargetable target, int currentLevel, float value) { }
+    public virtual float GetFlatModifier(StatType type, int currentLevel, float value) => 0f;
+    public virtual float GetPercentModifier(StatType type, int currentLevel, float value) => 0f;
+}
+public class ActiveCondition
+{
+    public ConditionBuffeSO Data { get; private set; }
+
+    public float Duration { get; private set; }
+    public int CurrentLevel { get; private set; }
+    public float Value { get; private set; }
+    private float m_tickTimer = 0f;
+
+    public ActiveCondition(ConditionBuffeSO soData, float Value)
+    {
+        Data = soData;
+        Duration = soData.MaxDuration;
+        CurrentLevel = 1;
+        m_tickTimer = 0f;
+        this.Value = Value * soData.BaseValue;
+    }
 
     public void UpdateCondition(ITargetable target, float deltaTime)
     {
         Duration -= deltaTime;
         m_tickTimer += deltaTime;
 
-        if (m_tickTimer >= TickInterval)
+        if (m_tickTimer >= Data.TickInterval)
         {
-            m_tickTimer -= TickInterval;
-            OnTick(target);
+            m_tickTimer -= Data.TickInterval;
+
+            Data.OnTick(target, CurrentLevel, Value);
         }
     }
 
     public void AddStack()
     {
-        if (CurrentLevel < MaxLevel)
+        if (CurrentLevel < Data.MaxLevel)
         {
             CurrentLevel++;
-            Debug.Log($"[{ConditionName}] 중첩! 현재 레벨: {CurrentLevel}");
+            Debug.Log($"[{Data.ConditionName}] 중첩! 현재 레벨: {CurrentLevel}");
         }
 
-        // bool 값에 따라 시간 초기화 여부 결정
-        if (RefreshDurationOnStack)
+        if (Data.RefreshDurationOnStack)
         {
-            Duration = MaxDuration;
+            Duration = Data.MaxDuration;
         }
     }
 
-    protected virtual void OnTick(ITargetable target) { }
-    public virtual float GetFlatModifier(StatType type) => 0f;
-    public virtual float GetPercentModifier(StatType type) => 0f;
+    public float GetFlatModifier(StatType type) => Data.GetFlatModifier(type, CurrentLevel, Value);
+    public float GetPercentModifier(StatType type) => Data.GetPercentModifier(type, CurrentLevel, Value);
 }
-
 /*
 
-public class AttackBoostCondition : ConditionBuffeBase
+[CreateAssetMenu(fileName = "StatBoostCondition", menuName = "Condition/Stat Boost")]
+public class StatBoostConditionSO : ConditionBuffeSO
 {
-    public override float GetFlatModifier(StatType statType)
+    [Header("Modifiers Per Stack")]
+    public float AtkPowerBonusPerLevel = 20f;   // 1중첩당 공격력 +20
+    public float MoveSpeedPenaltyPerLevel = -0.1f; // 1중첩당 이속 -10%
+
+    // 고정치 스탯 합산
+    public override float GetFlatModifier(StatType statType, int currentLevel)
     {
-        if (statType == StatType.AtkPower) return 20f; // 공격력 고정치 +20
+        if (statType == StatType.AtkPower) 
+            return AtkPowerBonusPerLevel * currentLevel; 
+            
         return 0f;
     }
 
-    public override float GetPercentModifier(StatType statType)
+    // 퍼센트 스탯 합산
+    public override float GetPercentModifier(StatType statType, int currentLevel)
     {
-        if (statType == StatType.MoveSpeed) return -0.1f; // 이동속도 -10% (페널티)
+        if (statType == StatType.MoveSpeed) 
+            return MoveSpeedPenaltyPerLevel * currentLevel; 
+            
         return 0f;
     }
 }
 
-
-public class TickDamageCondition : ConditionBuffeBase
+[CreateAssetMenu(fileName = "TickDamageCondition", menuName = "Condition/Tick Damage")]
+public class TickDamageConditionSO : ConditionBuffeSO
 {
-    private float m_tickInterval; // 몇 초마다 데미지를 줄 것인가 (예: 1초)
-    private float m_tickDamage;   // 1틱당 데미지
-    private float m_timer;        // 내부 타이머
+    [Header("Tick Settings")]
+    public float BaseTickDamage = 10f;
+    public float DamageIncreasePerLevel = 5f; // 중첩될수록 5씩 더 아파짐
 
-    public TickDamageCondition(string id, string name, float duration, float interval, float damage)
+    // ActiveCondition이 TickInterval마다 알아서 이 함수를 찔러줍니다.
+    public override void OnTick(ITargetable target, int currentLevel)
     {
-        ConditionID = id;
-        ConditionName = name;
-        Duration = duration;
-        
-        m_tickInterval = interval;
-        m_tickDamage = damage;
-        m_timer = 0f;
+        if (target == null) return;
+
+        // 최종 틱 데미지 계산 (기본 10 + 중첩당 5)
+        float finalDamage = BaseTickDamage + (DamageIncreasePerLevel * (currentLevel - 1));
+
+        EffectPayload payload = new EffectPayload 
+        { 
+            Category = EffectCategory.Damage,
+            Value = finalDamage 
+        };
+
+        target.ApplyEffect(payload);
     }
+}
 
-    public override void UpdateCondition(ITargetable target, float dt)
+[CreateAssetMenu(fileName = "PoisonSlowCondition", menuName = "Condition/Poison Slow")]
+public class PoisonSlowConditionSO : ConditionBuffeSO
+{
+    [Header("Poison Settings")]
+    public float TickDamage = 15f;
+    
+    [Header("Slow Settings")]
+    [Tooltip("중첩과 무관하게 적용될 고정 둔화율")]
+    public float MoveSpeedPenalty = -0.3f; // -30%
+
+    public override void OnTick(ITargetable target, int currentLevel)
     {
-        base.UpdateCondition(target, dt); // (Duration -= dt; 가 구현되어 있다고 가정)
-
-        m_timer += dt;
-
-        if (m_timer >= m_tickInterval)
+        if (target != null)
         {
-            m_timer -= m_tickInterval;
-
-            if (target != null)
-            {
-                EffectPayload payload = new EffectPayload { Value = m_tickDamage };
-                target.ApplyEffect(payload); 
-                
-                // Debug.Log($"[{ConditionName}] 틱 데미지 발동! {m_tickDamage} 피해량 적용");
-            }
+            target.ApplyEffect(new EffectPayload 
+            { 
+                Category = EffectCategory.Damage, 
+                Value = TickDamage * currentLevel // 독은 중첩될수록 데미지만 증가
+            });
         }
     }
 
-    public override float GetFlatModifier(StatType statType) => 0f;
-    public override float GetPercentModifier(StatType statType) => 0f;
+    public override float GetPercentModifier(StatType statType, int currentLevel)
+    {
+        // 이동속도 감소는 중첩 레벨을 무시하고 무조건 30%만 깎음
+        if (statType == StatType.MoveSpeed) 
+            return MoveSpeedPenalty;
+            
+        return 0f;
+    }
 }
  */

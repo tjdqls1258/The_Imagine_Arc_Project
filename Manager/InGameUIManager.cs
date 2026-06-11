@@ -13,7 +13,7 @@ public class InGameUIManager : UIBaseFormMaker
     [SerializeField] private InGameUIView m_inGameView;
     [SerializeField] private GameEndPanel m_endPanel;
 
-    public InGameManager m_inGameManager { get; private set; }
+    public InGameManager inGameManager { get; private set; }
 
     private Camera m_camera;
     public Camera mainCamera
@@ -52,14 +52,14 @@ public class InGameUIManager : UIBaseFormMaker
             await SetCharacterData(characterData);
         }
 
-        m_inGameManager = FindAnyObjectByType<InGameManager>();
+        inGameManager = FindAnyObjectByType<InGameManager>();
 
-        m_inGameManager.SetChargeAction(m_inGameView.UpdateCostDisplay);
+        inGameManager.SetChargeAction(m_inGameView.UpdateCostDisplay);
 
         m_inGameView.CreateUnitButtons(characterDeckList.ToArray(), this);
-        m_inGameView.UpdateCostDisplay((m_inGameManager.GetCurrentCost()));
+        m_inGameView.UpdateCostDisplay((inGameManager.GetCurrentCost()));
 
-        Get<OnClickCharacterPaenl>(0).SetInGameManager(m_inGameManager);
+        Get<OnClickCharacterPaenl>(0).SetInGameManager(inGameManager);
 
         async UniTask SetCharacterData(NetExcute.UserCharacterData data)
         {
@@ -99,8 +99,8 @@ public class InGameUIManager : UIBaseFormMaker
         Get<OnClickCharacterPaenl>(0).ClosePanel();
         m_inGameView.Clear();
 
-        m_inGameManager.ExitGame();
-        m_inGameManager = null;
+        inGameManager.ExitGame();
+        inGameManager = null;
 
         GameMaster.Instance.sceneLoadManager.SceneLoad(SceneInfo.SceneType.HomeScene).Forget();
         GameMaster.Instance.objectPoolManager.ClearNullPoolObject();

@@ -16,6 +16,7 @@ public class SpawnDragState : IButtonState
         m_btn.PreviewCharacter.gameObject.SetActive(true);
         m_btn.PreviewCharacter.SetSpawn(false);
         m_btn.PreviewCharacter.AtkAreaActive(true);
+        m_btn.InGameUIManager.inGameManager.dragCharacter.Invoke(m_btn.CharacterData.characterData.spawnType == SpawnType.Path, true);
     }
 
     public void OnDrag(PointerEventData e)
@@ -41,6 +42,7 @@ public class SpawnDragState : IButtonState
         if (m_btn.PreviewCharacter != null)
         {
             m_btn.PreviewCharacter.AtkAreaActive(false);
+            m_btn.InGameUIManager.inGameManager.dragCharacter.Invoke(false, false);
         }
     }
 
@@ -59,7 +61,7 @@ public class SpawnDragState : IButtonState
         if (hit.collider != null)
         {
             var spawnTile = hit.collider.GetComponent<SpawnableTileBase>();
-            if (spawnTile != null && !spawnTile.CheckSpawn())
+            if (spawnTile != null && !spawnTile.CheckSpawn() && spawnTile.tileData.type == GetSpawnObjectType())
             {
                 onHit?.Invoke(hit.transform.position);
                 return;
@@ -82,7 +84,7 @@ public class SpawnDragState : IButtonState
         var spawnTile = hit.collider.GetComponent<SpawnableTileBase>();
 
         if (spawnTile == null || spawnTile.CheckSpawn() || !spawnTile.CheckSpawnPoint(m_btn.CharacterData.characterData.spawnType == SpawnType.Path) ||
-            !m_btn.InGameUIManager.m_inGameManager.UseCost(m_btn.CharacterData.characterData.cost))
+            !m_btn.InGameUIManager.inGameManager.UseCost(m_btn.CharacterData.characterData.cost))
         {
             CancelSpawn();
             return;
@@ -105,4 +107,9 @@ public class SpawnDragState : IButtonState
     public void OnPointerUp(PointerEventData e) { }
     public void OnBeginDrag(PointerEventData e) { }
     public void Update() { }
+
+    private MapData.MapObject GetSpawnObjectType()
+    {
+        return m_btn.CharacterData.characterData.spawnType == SpawnType.Path ? MapData.MapObject.Path : MapData.MapObject.Spawn;
+    }
 }

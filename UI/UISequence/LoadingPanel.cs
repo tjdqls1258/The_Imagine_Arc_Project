@@ -7,7 +7,7 @@ public partial class LoadingPanel : CachObject
     public enum CanvasGroups
     {
         DownloadPaenl,
-        StartPaenl,
+        StartPanel,
         CheckDownload
     }
 

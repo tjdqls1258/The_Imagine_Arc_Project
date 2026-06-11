@@ -36,11 +36,11 @@ public class InGameOptionPanel : UIBaseFormMaker
         m_deactiveOptionSequence = DOTween.Sequence()
             .Append(Get<CanvasGroup>((int)CanvasGroups.OptionPanel).DOFade(0, 0.3f))
             .SetAutoKill(false)
-            .OnComplete(CanvaseClose_TweenEnd)
+            .OnComplete(CanvasClose_TweenEnd)
             .SetUpdate(true)
             .Pause();
 
-        void CanvaseClose_TweenEnd()
+        void CanvasClose_TweenEnd()
         {
             Get<CanvasGroup>((int)CanvasGroups.OptionPanel).gameObject.SetActive(false);
             Time.timeScale = 1f;

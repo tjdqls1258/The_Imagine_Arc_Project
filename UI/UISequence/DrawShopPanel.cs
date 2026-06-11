@@ -65,11 +65,7 @@ public class DrawShopPanel : UIBase
         drawRequset.uuid = GameMaster.Instance.GetUUID();
         drawRequset.count = count;
 
-#if UNITY_EDITOR
         NetExcute.NetExcute.Instance.Requset<DrawCharacterResponse>(drawRequset, DrawCharacter, ()=> DrawCharacter_Test(count)).Forget();
-#else
-        NetExcute.NetExcute.Instance.Requset<DrawCharacterResponse>(drawRequset, DrawCharacter,  ()=> DrawCharacter_Test(count)).Forget();
-#endif
     }
 
     private void DrawCharacter(DrawCharacterResponse draw)

@@ -18,7 +18,6 @@ public class DamageOverTimeEffect : EffectModule
             CasterID = context.Caster.GetCasterID(),
             Category = EffectCategory.DamageOverTime,
             Value = (context.Damage * DamageMultiply) / (Duration / TickRate), // 1틱당 데미지 계산
-            Duration = Duration,
             TickRate = TickRate
         };
 

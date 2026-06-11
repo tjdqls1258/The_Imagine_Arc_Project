@@ -8,16 +8,10 @@ using System.Collections.Generic;
 using UnityEditor;
 #endif
 
-/// <summary>
-/// 게임의 스테이지별 타일 데이터 및 경로 정보를 저장하는 ScriptableObject입니다.
-/// JSON 직렬화를 통해 데이터 시트(StageList) 업데이트 기능도 포함하고 있습니다.
-/// </summary>
 [CreateAssetMenu(menuName = "ScriptableObject/MapData")]
 [Serializable]
 public class MapData : ScriptableObject
 {
-    // ====== Inspector Settings (ScriptableObject 전용) ======
-
     [Header("MainStageData"), JsonIgnore] // JSON 저장 시 실제 에셋 참조는 무시합니다.
     [SerializeField] private SpriteAtlas m_atlas;
 
@@ -31,7 +25,6 @@ public class MapData : ScriptableObject
     public int m_height = 10;    // 맵의 세로 타일 개수
     public int m_life = 1;
 
-    // ====== Data Lists ======
 
     [Space, Tooltip("맵을 구성하는 개별 타일들의 위치와 타입 정보입니다.")]
     public TileData[] tileDatas;
@@ -42,9 +35,6 @@ public class MapData : ScriptableObject
     [Space, Tooltip("몬스터 스폰 데이터 목록 입니다.")]
     public EnemySpawnData[] enemySpawnDatas;
 
-    // ====== Internal Structures ======
-
-    /// <summary> 타일이나 오브젝트의 역할을 정의하는 열거형입니다. </summary>
     [Serializable]
     public enum MapObject
     {
@@ -57,7 +47,6 @@ public class MapData : ScriptableObject
         Delete = 999,       // 에디터에서 제거용
     }
 
-    /// <summary> 개별 타일의 좌표 및 속성 데이터 클래스입니다. </summary>
     [Serializable]
     public class TileData
     {
@@ -66,7 +55,6 @@ public class MapData : ScriptableObject
         public string spriteName;   // 아틀라스 내 스프라이트 이름
     }
 
-    /// <summary> 특정 인덱스를 가진 연속된 좌표 리스트(경로) 데이터 클래스입니다. </summary>
     [Serializable]
     public class PathData
     {
@@ -74,38 +62,22 @@ public class MapData : ScriptableObject
         public List<SerializeableVector2Int> path = new(); // 좌표 리스트
     }
 
-    /// <summary> 
-    /// Unity의 Vector2Int는 JSON 직렬화 시 문제가 발생할 수 있어 정의한 직렬화용 구조체입니다. 
-    /// </summary>
     [Serializable]
     public struct SerializeableVector2Int
     {
         public int x, y;
 
-        /// <summary> 실제 연산에 필요한 Unity Vector2Int 타입으로 변환합니다. </summary>
         public Vector2Int GetVector2Int()
         {
             return new Vector2Int(x, y);
         }
     }
 
-    // ====== Data Setting Methods ======
-
-    /// <summary>
-    /// 에디터에서 아틀라스 참조 및 이름을 일괄 설정합니다.
-    /// </summary>
     public void SetImageSetting(SpriteAtlas atlas)
     {
         m_atlas = atlas;
         m_atlasName = atlas.name;
     }
-
-    public void SetEnemySpawnData()
-    {
-
-    }
-
-    // ====== Editor Methods (JSON Serialization) ======
 
 #if UNITY_EDITOR
     /// <summary> 맵 데이터 에셋들이 저장된 폴더 경로입니다. </summary>

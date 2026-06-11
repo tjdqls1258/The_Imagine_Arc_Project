@@ -10,7 +10,7 @@ public class SingleTargetModule : TargetingModule
     [Tooltip("타겟으로 인식할 레이어 (적군 or 아군)")]
     public LayerMask TargetLayer;
     [Tooltip("마우스 주변 타겟 인식 반경 (터치/마우스 조작 편의성 보정)")]
-    public float SearchRadius = 1.0f;
+    public float SearchRadius = 0.2f;
 
     [Header("Visual Effects")]
     [Tooltip("타겟의 머리 위나 몸에 즉시 발생하는 시각 이펙트 (낙뢰, 징표 등)")]
@@ -32,6 +32,14 @@ public class SingleTargetModule : TargetingModule
 
             if (foundTarget != null)
             {
+                float distance = Vector3.Distance(
+                    context.Caster.GetTransform().position,
+                    hit.transform.position
+                );
+
+                if (distance > (MaxCastRange * 0.5f))
+                    return;
+
                 if (context.PrimaryTarget == null)
                 {
                     context.PrimaryTarget = foundTarget;
@@ -69,7 +77,7 @@ public class SingleTargetModule : TargetingModule
                     context.PrimaryTarget.GetTransform().position
                 );
 
-                if (distance > MaxCastRange + 1.0f)
+                if (distance > (MaxCastRange * 0.5f))
                 {
                     context.PrimaryTarget.HighlightTarget(false);
                     return false; // 사거리 밖 취소

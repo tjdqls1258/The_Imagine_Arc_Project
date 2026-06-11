@@ -28,7 +28,7 @@ public class AwakeScene : MonoBehaviour
         await GameMaster.Instance.InitAssetDependentSystemsAsync();
 
         // 5. 완료 후 터치 대기 UI 노출
-        m_loadingPanel.ShowPanel(LoadingPanel.CanvasGroups.StartPaenl);
+        m_loadingPanel.ShowPanel(LoadingPanel.CanvasGroups.StartPanel);
 
         m_loadingPanel.AddOnClickAction(() =>
         {

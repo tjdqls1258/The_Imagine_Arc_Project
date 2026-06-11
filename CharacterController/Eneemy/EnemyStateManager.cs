@@ -96,7 +96,15 @@ public class EnemyStateManager : StateMachine<EnemyContext, EnemyState>, ITarget
         }
     }
 
-    public void ApplyEffect(EffectPayload payload) => Hit(payload.Value);
+    public void ApplyEffect(EffectPayload payload)
+    {
+        Hit(payload.Value);
+
+        if (payload.conditionBuffes != null && payload.conditionBuffes.Count > 0)
+        {
+            ApplyBuffeEffectList(payload.conditionBuffes, payload.Value);
+        }
+    }
 
     public void Hit(float atk)
     {
@@ -151,5 +159,13 @@ public class EnemyStateManager : StateMachine<EnemyContext, EnemyState>, ITarget
     public int GetCasterID()
     {
         return GetInstanceID();
+    }
+
+    private void ApplyBuffeEffectList(List<ConditionBuffeSO> effectList, float value)
+    {
+        foreach(ConditionBuffeSO effect in effectList)
+        {
+            conditionBuffeManager.ApplyCondition(effect, value);
+        }
     }
 }

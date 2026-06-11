@@ -1,13 +1,15 @@
 using Cysharp.Threading.Tasks;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using UnityEngine;
+using UnityEngine.Events;
 using UnityEngine.U2D;
 
 public class StageLoader
 {
-    public async UniTask InitTile(MapData mapData, SpriteAtlas spriteAtlas, CancellationToken destoryToken, Transform parent)
+    public async UniTask InitTile(MapData mapData, SpriteAtlas spriteAtlas, CancellationToken destoryToken, Transform parent, InGameManager gameManager)
     {
         List<UniTask> tileCreationTasks = new();
 
@@ -17,7 +19,7 @@ public class StageLoader
             if (data.type == MapData.MapObject.Delete) continue;
 
             // 각 타일을 비동기로 인스턴스화하는 작업을 리스트에 적재
-            tileCreationTasks.Add(TileCreationTaskHelper(data, spriteAtlas, destoryToken, parent));
+            tileCreationTasks.Add(TileCreationTaskHelper(data, spriteAtlas, destoryToken, parent, gameManager));
         }
 
         // 4. 모든 타일 오브젝트가 한꺼번에 생성 완료될 때까지 대기 (로딩 멈춤 현상 최소화)
@@ -34,7 +36,7 @@ public class StageLoader
         GameData.Instance.DefaulteCameraPos = GameUtil.mainCamera.transform.position;
     }
 
-    private async UniTask TileCreationTaskHelper(MapData.TileData tileData, SpriteAtlas spAtlas, CancellationToken cancelToken, Transform parent)
+    private async UniTask TileCreationTaskHelper(MapData.TileData tileData, SpriteAtlas spAtlas, CancellationToken cancelToken, Transform parent, InGameManager gameManager)
     {
         // 타일 타입이 지정되지 않은 경우(None) 기본 'Wall' 프리팹 경로를 사용
         string prefabName = tileData.type == MapData.MapObject.None
@@ -51,6 +53,7 @@ public class StageLoader
             // 타일의 좌표 정보와 시각적 요소(아틀라스에서 잘라온 스프라이트) 초기 설정
             tileObject.Init(tileData);
             tileObject.SetTileSprite(spAtlas.GetSprite(tileData.spriteName));
+            gameManager.dragCharacter += tileObject.SpawnableCharacter;
         }
     }
 }

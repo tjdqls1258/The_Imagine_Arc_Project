@@ -47,7 +47,6 @@ public class EnemyContext : Context
 
     public override void Init()
     {
-        // ... 기존 초기화 ...
         isBlocked = false;
         currentTarget = null;
         lastAttackTime = 0f;

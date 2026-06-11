@@ -1,5 +1,6 @@
 ﻿using Cysharp.Threading.Tasks;
 using System.Threading;
+using System.Threading.Tasks;
 using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -61,7 +62,11 @@ public class UnitButton : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDr
 
         CharacterData.characterData.LoadSprite().Forget();
         CreateCharacterPreviewAsync().Forget();
+    }
 
+    private async UniTask LoadSpriteSetButtonImage()
+    {
+        await CharacterData.characterData.GetCharacterSpriteFace(targetImage: m_characterImage);
     }
 
     public void ChangeState(IButtonState newState)
@@ -89,6 +94,7 @@ public class UnitButton : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDr
 
         string path = string.Format(Util.CHARACTER_MODLED_PATH, CharacterData.characterData.modelObjectName);
         var obj = await GameMaster.Instance.addressableManager.InstantiateObjectAsync(path);
+        await LoadSpriteSetButtonImage();
 
         PreviewCharacter = obj.GetComponent<PlayerCharacterController>();
         PreviewCharacter.SetCharacter(CharacterData);

@@ -14,7 +14,7 @@ public class EnemySpawnManager : MonoBehaviour
     private float m_currentTime = 0;
 
     private int m_totalCount = 0;
-    private int m_remmantCount = 0;           
+    private int m_remnant = 0;           
     private int m_currentCount = 0;
 
     private CancellationTokenSource m_cancellationTokenSource = new(); 
@@ -37,7 +37,7 @@ public class EnemySpawnManager : MonoBehaviour
         m_enemyArriveAction = enemyArriveAction;
 
         m_totalCount = m_enemySpawnDatas.Length;
-        m_remmantCount = m_enemySpawnDatas.Length;
+        m_remnant = m_enemySpawnDatas.Length;
         m_currentCount = m_enemySpawnDatas.Length;
     }
 
@@ -103,7 +103,7 @@ public class EnemySpawnManager : MonoBehaviour
             EnemyController obj;
             int id = m_enemySpawnDatas[m_spawnCount].enemyDataID;
 
-            m_remmantCount -= 1;
+            m_remnant -= 1;
 
             if (m_disableList.ContainsKey(id) && m_disableList[id].Count > 0)
             {

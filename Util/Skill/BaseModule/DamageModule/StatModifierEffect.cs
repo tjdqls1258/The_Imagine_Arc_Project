@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using UnityEngine;
 
 /// <summary>
 /// 버프/디버프 모듈
@@ -7,21 +8,20 @@ using System.Collections.Generic;
 public class StatModifierEffect : EffectModule
 {
     public bool IsBuff = true;
-    public string TargetStat = "AttackPower";
     public float ModifierValue = 20f;
-    public float Duration = 10f;
 
-    public List<ConditionBuffeBase> conditionBuffes = new();
+    public List<ConditionBuffeSO> conditionBuffes = new();
 
     public override void Apply(SkillContext context, ITargetable target)
     {
+        if (target == null) return;
+
         EffectPayload payload = new EffectPayload
         {
             CasterID = context.Caster.GetCasterID(),
             Category = IsBuff ? EffectCategory.Buff : EffectCategory.Debuff,
             Value =  ModifierValue,
-            Duration = Duration,
-            TargetStat_Tag = TargetStat
+            conditionBuffes = conditionBuffes
         };
 
         target.ApplyEffect(payload);

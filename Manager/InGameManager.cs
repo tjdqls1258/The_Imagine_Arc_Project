@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using UnityEngine;
+using UnityEngine.Events;
 using UnityEngine.U2D;
 
 public class InGameManager : MonoBehaviour
@@ -20,6 +21,8 @@ public class InGameManager : MonoBehaviour
     private StageRule stageRule = new();
     private GameGoodsSystem goodsSystem = new();
     private StageLoader stageLoader = new();
+
+    public UnityAction<bool, bool> dragCharacter = null;
 
     private void Awake()
     {
@@ -50,7 +53,7 @@ public class InGameManager : MonoBehaviour
 
         stageRule.Init(GetComponent<EnemySpawnManager>(), mapData);
         goodsSystem.Init();
-        await stageLoader.InitTile(mapData, spAtlas, destroyCancellationToken, m_mapObject.transform);
+        await stageLoader.InitTile(mapData, spAtlas, destroyCancellationToken, m_mapObject.transform, this);
 
         StartGame();
     }

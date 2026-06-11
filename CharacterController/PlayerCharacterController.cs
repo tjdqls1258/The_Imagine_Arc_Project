@@ -103,6 +103,13 @@ public class PlayerCharacterController : MonoBehaviour, ITargetable
     public void ApplyEffect(EffectPayload payload)
     {
         combatController.ApplyEffect(payload);
+        if (payload.conditionBuffes != null &&payload.conditionBuffes.Count > 0)
+        {
+            foreach (ConditionBuffeSO effect in payload.conditionBuffes)
+            {
+                combatController.ConditionManager.ApplyCondition(effect, payload.Value);
+            }
+        }
     }
 
     // --- Block System ---

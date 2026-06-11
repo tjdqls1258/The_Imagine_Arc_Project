@@ -33,7 +33,7 @@ public class TileBase : CachObject, TileClickEvent
 {
     protected SpriteRenderer tileImage;
 
-    public TileData m_tileData
+    public TileData tileData
     {
         private set;
         get;
@@ -45,7 +45,7 @@ public class TileBase : CachObject, TileClickEvent
     }
     public virtual void Init(TileData tileData)
     {
-        m_tileData = tileData;
+        this.tileData = tileData;
 
         transform.localPosition = new Vector3(tileData.x, tileData.y, 0);
     }
@@ -60,8 +60,8 @@ public class TileBase : CachObject, TileClickEvent
 
     public virtual bool CheckSpawnPoint(bool spawnPathCharacter = false)
     {
-        if ((m_tileData.type == MapObject.Spawn && spawnPathCharacter == false) ||
-            (m_tileData.type == MapObject.Path && spawnPathCharacter))
+        if ((tileData.type == MapObject.Spawn && spawnPathCharacter == false) ||
+            (tileData.type == MapObject.Path && spawnPathCharacter))
         {
             return true;
         }
@@ -90,4 +90,20 @@ public class TileBase : CachObject, TileClickEvent
     { return 0; }
 
     public virtual float GetSkillCoolTime() { return 0; }
+
+    public void SpawnableCharacter(bool spawnPathCharacter, bool draging)
+    {
+        if(draging == false)
+        {
+            tileImage.color = Color.white;
+            return;
+        }
+
+        if(tileData.type == MapObject.Spawn && spawnPathCharacter == false)
+            tileImage.color = Color.yellow;
+        else if (tileData.type == MapObject.Path && spawnPathCharacter)
+            tileImage.color = Color.yellow;
+        else
+            tileImage.color = Color.red;
+    }
 }

@@ -47,8 +47,8 @@ public struct EffectPayload
     public int CasterID;
     public EffectCategory Category;
     
-    public float Value;           // 데미지, 힐량, 혹은 버프 수치
-    public float Duration;        // 0이면 즉발, 0보다 크면 지속형(DoT, 버프)
-    public float TickRate;        // DoT일 경우 몇 초마다 데미지를 줄 것인가?
-    public string TargetStat_Tag; // 버프일 경우 어떤 스탯을 올릴지 (예: "AttackPower", "Stun")
+    public float Value;
+    public float TickRate;
+
+    public List<ConditionBuffeSO> conditionBuffes;
 }

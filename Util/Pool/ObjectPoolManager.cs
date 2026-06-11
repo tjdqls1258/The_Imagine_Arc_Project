@@ -24,7 +24,7 @@ public class ObjectPoolManager : MonoBehaviour
     {
         if (m_poolBase.ContainsKey(key) == false) return;
 
-        var pool = target.AddComponent<PoolObejct>();
+        var pool = target.AddComponent<PoolObeject>();
         pool.key = key;
 
         m_activePool.Add(key, new());
@@ -124,7 +124,7 @@ public class ObjectPoolManager : MonoBehaviour
     }
 }
 
-public class PoolObejct : MonoBehaviour
+public class PoolObeject : MonoBehaviour
 {
     public string key = ""; 
 

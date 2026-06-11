@@ -139,6 +139,20 @@ public class CharacterData : CSVData
             loadImage.Invoke(sprite);
     }
 
+    public async UniTask GetCharacterSpriteFace(Action<Sprite> loadImage = null, Image targetImage = null)
+    {
+        if (characterSprite == null)
+            await LoadSprite();
+
+        Sprite sprite = characterSprite.GetSprite(Util.CHARACTERFACE_IMAGE_NAME);
+
+        if (targetImage != null)
+            targetImage.sprite = sprite;
+
+        if (loadImage != null)
+            loadImage.Invoke(sprite);
+    }
+
     public async UniTask LoadSprite()
     {
         if (characterSprite != null) return;
