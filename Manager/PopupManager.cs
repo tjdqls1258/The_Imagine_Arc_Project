@@ -2,12 +2,23 @@ using Cysharp.Threading.Tasks;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using UniRx;
 using UnityEngine;
-using UnityEngine.AddressableAssets;
-using static PopupManager;
+using VContainer;
 
 public class PopupManager : MonoBehaviour
 {
+    [Serializable]
+    public struct ToolTipBoxEvent
+    {
+        public IToolTip toolTip;
+
+        public ToolTipBoxEvent(IToolTip tip) => toolTip = tip;
+    }
+
+    [Inject] private readonly AddressableManager addressableManager;
+
+
     [Serializable]
     public enum PopupType
     {
@@ -35,12 +46,18 @@ public class PopupManager : MonoBehaviour
     public void Init()
     {
         m_tooltipBox = GetComponentInChildren<ToolTipBox>(true);
+        SettingMessageEvent();
+    }
+
+    private void SettingMessageEvent()
+    {
+        MessageBroker.Default.Receive<ToolTipBoxEvent>().Subscribe(ShowToolTipPopup).AddTo(this);
     }
 
     public async UniTask SettingPopupDataAsync()
     {
         TextAsset popupDataTable =
-            await GameMaster.Instance.addressableManager.LoadAssetAndCacheAsync<TextAsset>(POPUP_DATA_TABLE_KEY);
+            await addressableManager.LoadAssetAndCacheAsync<TextAsset>(POPUP_DATA_TABLE_KEY);
 
         if (popupDataTable == null)
         {
@@ -61,7 +78,7 @@ public class PopupManager : MonoBehaviour
         }
         finally
         {
-            GameMaster.Instance.addressableManager.UnloadAsset(POPUP_DATA_TABLE_KEY);
+            addressableManager.UnloadAsset(POPUP_DATA_TABLE_KEY);
         }
     }
 
@@ -91,7 +108,7 @@ public class PopupManager : MonoBehaviour
             return null;
         }
 
-        PopupBase popup = await GameMaster.Instance.addressableManager.InstantiateComponentAsync<PopupBase>(path, transform);
+        PopupBase popup = await addressableManager.InstantiateComponentAsync<PopupBase>(path, transform);
 
         if (popup == null)
         {
@@ -102,7 +119,7 @@ public class PopupManager : MonoBehaviour
         _stackPopup.Push(popup);
         _currentPopup = popup;
 
-        popup.Init(par);
+        popup.Init(this, par);
 
         return popup;
     }
@@ -138,11 +155,28 @@ public class PopupManager : MonoBehaviour
         _stackPopup.Clear();
     }
 
-    public void ShowToolTipPopup(IToolTip toolTip)
+    public void ShowToolTipPopup(ToolTipBoxEvent toolTip)
     {
-        if (toolTip == null || m_tooltipBox == null)
-            Debug.LogError($"toolTip is Null = {toolTip == null}, Box is Null = {m_tooltipBox == null}");
+        if (toolTip.toolTip == null || m_tooltipBox == null)
+            Debug.LogError($"toolTip is Null = {toolTip.toolTip == null}, Box is Null = {m_tooltipBox == null}");
 
-        m_tooltipBox.ShowToolTip(toolTip);
+        m_tooltipBox.ShowToolTip(toolTip.toolTip);
+    }
+
+    public async UniTask ExitGamePopup()
+    {
+        var popup = await ShowPopup(PopupManager.PopupType.PopupMsg);
+        if (popup != null)
+        {
+            popup.closeAction += ExitGame;
+        }
+    }
+
+    private void ExitGame()
+    {
+        Application.Quit();
+#if UNITY_EDITOR
+        UnityEditor.EditorApplication.isPlaying = false;
+#endif
     }
 }

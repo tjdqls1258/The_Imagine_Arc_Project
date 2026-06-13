@@ -2,13 +2,14 @@ using Cysharp.Threading.Tasks;
 using NetExcute;
 using System;
 using System.Collections.Generic;
-using UnityEngine;
 using UnityEngine.UI;
-
+using VContainer;
 using Random = UnityEngine.Random;
 
 public class DrawShopPanel : UIBase
 {
+    [Inject] private readonly CSVHelper csvHelper;
+
     enum DrawButton
     {
         Draw1,
@@ -26,6 +27,7 @@ public class DrawShopPanel : UIBase
         DrawAction,
     }
 
+    [Inject] private readonly AddressableManager addressable;
     private List<CharacterData> currentData;
 
     protected override void Awake()
@@ -62,7 +64,7 @@ public class DrawShopPanel : UIBase
         UnLoadCurrentData();
 
         var drawRequset = new DrawCharacterRequest();
-        drawRequset.uuid = GameMaster.Instance.GetUUID();
+        drawRequset.uuid = GameUtil.UUID;
         drawRequset.count = count;
 
         NetExcute.NetExcute.Instance.Requset<DrawCharacterResponse>(drawRequset, DrawCharacter, ()=> DrawCharacter_Test(count)).Forget();
@@ -77,13 +79,13 @@ public class DrawShopPanel : UIBase
 
         foreach (int id in draw.data)
         {
-            var characterDtat = GameMaster.Instance.csvHelper.GetScripteData<CharacterDataList>().GetData(id);
+            var characterDtat = csvHelper.GetScripteData<CharacterDataList>().GetData(id);
             currentData.Add(characterDtat);
 
             int currentCount = count;
 
             Get<Image>(currentCount).gameObject.SetActive(true);
-            characterDtat.GetCharacterSprite(targetImage: Get<Image>(currentCount)).Forget();
+            characterDtat.GetCharacterSprite(addressable, targetImage: Get<Image>(currentCount)).Forget();
 
             count += 1;
         }
@@ -93,7 +95,7 @@ public class DrawShopPanel : UIBase
             Get<Image>(i).gameObject.SetActive(false);
         }
 
-        Get<DrawTimeLine>(0).DrawCharacter(currentData.ToArray());
+        Get<DrawTimeLine>(0).DrawCharacter(currentData.ToArray(), addressable);
     }
 
     public override void CloseUI(bool isClosetAll = false)
@@ -108,7 +110,7 @@ public class DrawShopPanel : UIBase
 
         foreach (var item in currentData)
         {
-            item.UnloadAtlas();
+            item.UnloadAtlas(addressable);
         }
         currentData.Clear();
     }
@@ -117,7 +119,7 @@ public class DrawShopPanel : UIBase
     [UnityEditor.MenuItem("Test/draw")]
     public static void TestCharacterDraw()
     {
-        NetExcute.NetExcute.Instance.Requset<DrawCharacterResponse>(new DrawCharacterRequest() { uuid = GameMaster.Instance.GetUUID(),count = 10 }, (res) => { }, null);
+        NetExcute.NetExcute.Instance.Requset<DrawCharacterResponse>(new DrawCharacterRequest() { uuid = GameUtil.UUID ,count = 10 }, (res) => { }, null);
     }
 #endif
 
@@ -136,13 +138,13 @@ public class DrawShopPanel : UIBase
 
         foreach (int id in ids)
         {
-            var characterDtat = GameMaster.Instance.csvHelper.GetScripteData<CharacterDataList>().GetData(id);
+            var characterDtat = csvHelper.GetScripteData<CharacterDataList>().GetData(id);
             currentData.Add(characterDtat);
 
             int currentCount = count;
 
             Get<Image>(currentCount).gameObject.SetActive(true);
-            characterDtat.GetCharacterSprite(targetImage: Get<Image>(currentCount)).Forget();
+            characterDtat.GetCharacterSprite(addressable, targetImage: Get<Image>(currentCount)).Forget();
 
             count += 1;
         }
@@ -152,7 +154,7 @@ public class DrawShopPanel : UIBase
             Get<Image>(i).gameObject.SetActive(false);
         }
 
-        Get<DrawTimeLine>(0).DrawCharacter(currentData.ToArray());
+        Get<DrawTimeLine>(0).DrawCharacter(currentData.ToArray(), addressable);
     }
 
 }

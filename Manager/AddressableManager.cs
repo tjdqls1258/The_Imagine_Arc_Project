@@ -4,10 +4,14 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
+using VContainer;
+using VContainer.Unity;
 using Object = UnityEngine.Object;
 
 public class AddressableManager
 {
+    [Inject] private readonly IObjectResolver resolver;
+
     private readonly Dictionary<string, Object> m_loadedAssets = new();
     private readonly Dictionary<string, List<GameObject>> m_instantiatedGameObjects = new();
     private readonly object _lock = new();
@@ -74,7 +78,7 @@ public class AddressableManager
 
             if (downloadHandle.Status != AsyncOperationStatus.Succeeded)
             {
-                Debug.LogError($"[AddressableManager] Download failed for label: {label}");
+                Logger.LogError($"[AddressableManager] Download failed for label: {label}");
                 isAllSuccess = false;
                 Addressables.Release(downloadHandle);
                 break;
@@ -104,22 +108,25 @@ public class AddressableManager
             return loadHandle.Result;
         }
 
-        Debug.LogError($"[AddressableManager] Failed to load asset: {key}");
+        Logger.LogError($"[AddressableManager] Failed to load asset: {key}");
         return null;
     }
 
     public async UniTask<GameObject> InstantiateObjectAsync(string key, Transform parent = null)
     {
-        AsyncOperationHandle<GameObject> handle = Addressables.InstantiateAsync(key, parent);
+        AsyncOperationHandle<GameObject> handle = Addressables.LoadAssetAsync<GameObject>(key);
         await handle;
 
         if (handle.Status != AsyncOperationStatus.Succeeded)
         {
-            Debug.LogError($"[AddressableManager] Failed to instantiate: {key}");
+            Logger.LogError($"[AddressableManager] Failed to instantiate: {key}");
             return null;
         }
 
-        GameObject result = handle.Result;
+        GameObject result = resolver.Instantiate(handle.Result, parent);
+       
+        if (resolver == null)
+            Logger.Log("resolver !!!!!!!!!!!! NULL");
 
         lock (_lock)
         {

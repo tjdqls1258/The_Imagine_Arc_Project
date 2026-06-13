@@ -5,8 +5,6 @@ using UnityEngine.EventSystems;
 public class SkillIdleState : IButtonState
 {
     private UnitButton m_btn;
-    private float m_pointerDownTime;
-    private bool m_isHolding;
 
     public SkillIdleState(UnitButton button) { m_btn = button; }
 
@@ -15,13 +13,10 @@ public class SkillIdleState : IButtonState
 
     public void OnPointerDown(PointerEventData e)
     {
-        m_pointerDownTime = Time.time;
-        m_isHolding = true;
     }
 
     public void OnPointerUp(PointerEventData e)
     {
-        m_isHolding = false;
     }
 
     public void OnBeginDrag(PointerEventData e)

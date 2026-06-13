@@ -1,17 +1,16 @@
 ﻿using Cysharp.Threading.Tasks;
 using System.Threading;
-using System.Threading.Tasks;
 using TMPro;
+using UniRx;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
-/// <summary>
-/// 유닛 배치 및 스킬 사용을 관리하는 UI 버튼입니다. 
-/// 모든 실제 로직은 State(상태 패턴) 클래스들에게 위임합니다.
-/// </summary>
+
 public class UnitButton : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler, IPointerDownHandler, IPointerUpHandler
 {
+    private AddressableManager addressableManager;
+
     [Header("UI References")]
     [SerializeField] private Image m_characterImage;
     [SerializeField] private TextMeshProUGUI m_costText;
@@ -52,21 +51,22 @@ public class UnitButton : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDr
         SetBlockState(true);
     }
 
-    public void SetCharacter(InGameCharacterData characterData, InGameUIManager ingameManager = null)
+    public void SetCharacter(InGameCharacterData characterData, InGameUIManager ingameManager = null, AddressableManager addressableManager = null)
     {
+        this.addressableManager = addressableManager;
         CharacterData = characterData;
         InGameUIManager = ingameManager;
         m_costText.text = CharacterData.characterData.cost.ToString();
 
         ResetCancellationToken();
 
-        CharacterData.characterData.LoadSprite().Forget();
+        CharacterData.characterData.LoadSprite(addressableManager).Forget();
         CreateCharacterPreviewAsync().Forget();
     }
 
     private async UniTask LoadSpriteSetButtonImage()
     {
-        await CharacterData.characterData.GetCharacterSpriteFace(targetImage: m_characterImage);
+        await CharacterData.characterData.GetCharacterSpriteFace(addressableManager, targetImage: m_characterImage);
     }
 
     public void ChangeState(IButtonState newState)
@@ -93,7 +93,7 @@ public class UnitButton : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDr
         if (PreviewCharacter != null) Destroy(PreviewCharacter.gameObject);
 
         string path = string.Format(Util.CHARACTER_MODLED_PATH, CharacterData.characterData.modelObjectName);
-        var obj = await GameMaster.Instance.addressableManager.InstantiateObjectAsync(path);
+        var obj = await addressableManager.InstantiateObjectAsync(path);
         await LoadSpriteSetButtonImage();
 
         PreviewCharacter = obj.GetComponent<PlayerCharacterController>();
@@ -111,7 +111,12 @@ public class UnitButton : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDr
         ChangeState(SpawnReady);
     }
 
-    public void UpdateCostAction(int currentCost)
+    public void SubscribeCost(ReactiveProperty<int> reactiveProperty)
+    {
+        reactiveProperty.Subscribe(UpdateCostAction).AddTo(this);
+    }
+
+    private void UpdateCostAction(int currentCost)
     {
         if (PreviewCharacter == null || PreviewCharacter.IsSpawn()) return;
 
@@ -153,7 +158,7 @@ public class UnitButton : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDr
     {
         m_cancelTokenSource?.Cancel();
 
-        CharacterData?.characterData.UnloadAtlas();
+        CharacterData?.characterData.UnloadAtlas(addressableManager);
 
         if (PreviewCharacter != null)
         {

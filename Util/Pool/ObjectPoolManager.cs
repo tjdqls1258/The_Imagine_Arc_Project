@@ -25,6 +25,7 @@ public class ObjectPoolManager : MonoBehaviour
         if (m_poolBase.ContainsKey(key) == false) return;
 
         var pool = target.AddComponent<PoolObeject>();
+        pool.Init(this);
         pool.key = key;
 
         m_activePool.Add(key, new());
@@ -127,16 +128,22 @@ public class ObjectPoolManager : MonoBehaviour
 public class PoolObeject : MonoBehaviour
 {
     public string key = ""; 
+    private ObjectPoolManager poolManager;
+
+    public void Init(ObjectPoolManager pool)
+    {
+        poolManager = pool;
+    }
 
     private void OnDisable()
     {
-        if (GameMaster.Instance.objectPoolManager != null)
-            GameMaster.Instance.objectPoolManager.DisablePool(key, gameObject);
+        if (poolManager != null)
+            poolManager.DisablePool(key, gameObject);
     }
 
     private void OnDestroy()
     {
-        if (GameMaster.Instance.objectPoolManager != null)
-            GameMaster.Instance.objectPoolManager.DestroyObject(key, gameObject);
+        if (poolManager != null)
+            poolManager.DestroyObject(key, gameObject);
     }
 }

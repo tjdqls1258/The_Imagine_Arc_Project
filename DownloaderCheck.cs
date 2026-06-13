@@ -1,19 +1,17 @@
 using Cysharp.Threading.Tasks;
 using UnityEngine;
+using VContainer;
 
 public class DownloaderCheck : MonoBehaviour
 {
     [SerializeField] private LoadingPanel m_loadingPanel;
+    [Inject] private readonly PopupManager popupManager;
 
-    /// <summary>
-    /// 다운로드 진행 여부를 판단합니다. (성공 시 true, 취소 시 false 반환)
-    /// </summary>
-    public async UniTask<bool> HandleAddressablesDownloadAsync()
+    public async UniTask<bool> HandleAddressablesDownloadAsync(AddressableManager addressable)
     {
-        var addressManager = GameMaster.Instance.addressableManager;
-        var popupManager = GameMaster.Instance.popupManager;
+        var addressManager = addressable;
 
-        long checkDownlSize = await addressManager.DownloadChecdk(GameMaster.Instance.ADDRESSABLE_LABEL);
+        long checkDownlSize = await addressManager.DownloadChecdk(Util.ADDRESSABLE_LABEL);
 
         if (checkDownlSize > 0)
         {
@@ -32,7 +30,7 @@ public class DownloaderCheck : MonoBehaviour
 
                 popup.noAction += () =>
                 {
-                    GameMaster.Instance.ExitGamePopup().Forget();
+                    popupManager.ExitGamePopup().Forget();
                     tcs.TrySetResult(false); // 취소 신호 전달
                 };
 

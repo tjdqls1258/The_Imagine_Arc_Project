@@ -1,14 +1,17 @@
 using Cysharp.Threading.Tasks;
 using NetExcute;
-using System;
 using System.Collections.Generic;
-using System.Threading.Tasks;
-using TMPro;
 using UnityEngine;
-using UnityEngine.UI;
+using VContainer;
+using UniRx;
 
 public class InGameUIManager : UIBaseFormMaker
 {
+    [Inject] private readonly AddressableManager addressableManager;
+    [Inject] private readonly SceneLoadManager sceneLoadManager;
+    [Inject] private readonly ObjectPoolManager objectPoolManager;
+    [Inject] private readonly CSVHelper csvHelper;
+
     [Header("UI Components")]
     [SerializeField] private InGameUIView m_inGameView;
     [SerializeField] private GameEndPanel m_endPanel;
@@ -54,23 +57,25 @@ public class InGameUIManager : UIBaseFormMaker
 
         inGameManager = FindAnyObjectByType<InGameManager>();
 
-        inGameManager.SetChargeAction(m_inGameView.UpdateCostDisplay);
+        inGameManager.goodsSystem.CurrentCost.Subscribe(cost =>
+        {
+            m_inGameView.UpdateCostDisplay(cost);
+        }).AddTo(this);
 
-        m_inGameView.CreateUnitButtons(characterDeckList.ToArray(), this);
-        m_inGameView.UpdateCostDisplay((inGameManager.GetCurrentCost()));
+        m_inGameView.CreateUnitButtons(characterDeckList.ToArray(), this, addressableManager);
 
         Get<OnClickCharacterPaenl>(0).SetInGameManager(inGameManager);
 
         async UniTask SetCharacterData(NetExcute.UserCharacterData data)
         {
-            var characterData = data.GetCharacterData();
+            var characterData = data.GetCharacterData(csvHelper);
             var activeSkillID = characterData.activeSkill[data.activeSkillID];
             var passiveSkillID = characterData.passiveSkill[data.passiveSkillID];
             var nomalAtkDataID = characterData.nomalAtk;
 
-            var activeSkillData = await GameMaster.Instance.addressableManager.LoadAssetAndCacheAsync<SkillBase>(string.Format(Util.CHARACTER_SKILL_PATH, activeSkillID));
-            var passiveSkillData = await GameMaster.Instance.addressableManager.LoadAssetAndCacheAsync<SkillBase>(string.Format(Util.CHARACTER_SKILL_PATH, passiveSkillID));
-            var nomalAtkData = await GameMaster.Instance.addressableManager.LoadAssetAndCacheAsync<SkillBase>(string.Format(Util.CHARACTER_SKILL_PATH, nomalAtkDataID));
+            var activeSkillData = await addressableManager.LoadAssetAndCacheAsync<SkillBase>(string.Format(Util.CHARACTER_SKILL_PATH, activeSkillID));
+            var passiveSkillData = await addressableManager.LoadAssetAndCacheAsync<SkillBase>(string.Format(Util.CHARACTER_SKILL_PATH, passiveSkillID));
+            var nomalAtkData = await addressableManager.LoadAssetAndCacheAsync<SkillBase>(string.Format(Util.CHARACTER_SKILL_PATH, nomalAtkDataID));
             InGameCharacterData ingameData = new InGameCharacterData(characterData, data, nomalAtkData, passiveSkillData, activeSkillData);
 
             characterDeckList.Add(ingameData);
@@ -102,7 +107,7 @@ public class InGameUIManager : UIBaseFormMaker
         inGameManager.ExitGame();
         inGameManager = null;
 
-        GameMaster.Instance.sceneLoadManager.SceneLoad(SceneInfo.SceneType.HomeScene).Forget();
-        GameMaster.Instance.objectPoolManager.ClearNullPoolObject();
+        sceneLoadManager.SceneLoad(SceneInfo.SceneType.HomeScene).Forget();
+        objectPoolManager.ClearNullPoolObject();
     }
 }

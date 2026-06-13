@@ -4,6 +4,7 @@ using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using VContainer;
 
 public class AutoUIManager : MonoBehaviour
 {
@@ -12,6 +13,8 @@ public class AutoUIManager : MonoBehaviour
         main,
         inGame
     }
+
+    [Inject] private readonly AddressableManager addressableManager;
 
     [Header("Main Canvas Groups")]
     [SerializeField] private CanvasGroup m_commandCanvas;
@@ -42,7 +45,7 @@ public class AutoUIManager : MonoBehaviour
     [ContextMenu("Test JsonLoad")]
     public async UniTask LoadJsonAsync()
     {
-        var data = await GameMaster.Instance.addressableManager.LoadAssetAndCacheAsync<TextAsset>("UIData");
+        var data = await addressableManager.LoadAssetAndCacheAsync<TextAsset>("UIData");
 
         if (data == null)
         {
@@ -71,7 +74,7 @@ public class AutoUIManager : MonoBehaviour
 
     public async UniTask InstantiateObjectAndSettingAsync(UIBaseData data, Transform parent)
     {
-        var obj = await GameMaster.Instance.addressableManager.InstantiateObjectAsync(data.dataName, parent);
+        var obj = await addressableManager.InstantiateObjectAsync(data.dataName, parent);
 
         if (obj == null) return;
 

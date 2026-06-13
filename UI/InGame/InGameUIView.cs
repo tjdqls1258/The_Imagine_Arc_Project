@@ -9,20 +9,18 @@ public class InGameUIView : MonoBehaviour
     [SerializeField] private TextMeshProUGUI m_costText;
 
     private List<UnitButton> m_spawnButtons = new();
-    private Action<int> m_updateCostAction = null;
 
     public void UpdateCostDisplay(int cost)
     {
         m_costText.text = cost.ToString();
-        m_updateCostAction?.Invoke(cost);
     }
 
-    public void CreateUnitButtons(InGameCharacterData[] datas, InGameUIManager inGameUiManager)
+    public void CreateUnitButtons(InGameCharacterData[] datas, InGameUIManager inGameUiManager, AddressableManager addressableManager)
     {
         if (m_spawnButtons.Count == 0)
         {
             m_spawnButtons.Add(m_unitButtonBase);
-            m_updateCostAction += m_unitButtonBase.UpdateCostAction;
+            m_unitButtonBase.SubscribeCost(inGameUiManager.inGameManager.goodsSystem.CurrentCost);
         }
         for (int characterCount = 0; characterCount < GameData.MAX_SETTING_CHARACTERCOUNT; characterCount++)
         {
@@ -33,11 +31,10 @@ public class InGameUIView : MonoBehaviour
             {
                 UnitButton newButton = Instantiate(m_unitButtonBase, m_unitButtonBase.transform.parent);
                 m_spawnButtons.Add(newButton);
-
-                m_updateCostAction += m_spawnButtons[characterCount].UpdateCostAction;
+                m_spawnButtons[characterCount].SubscribeCost(inGameUiManager.inGameManager.goodsSystem.CurrentCost);
             }
 
-            m_spawnButtons[characterCount].SetCharacter(datas[characterCount], inGameUiManager);
+            m_spawnButtons[characterCount].SetCharacter(datas[characterCount], inGameUiManager, addressableManager);
         }
     }
 

@@ -11,8 +11,6 @@ public class SpawnPointTile : TileBase
     public int sapwnIndex = 0;
     private List<EnemySpawnData> m_enemeyData = new();
 
-    private bool m_enemyDataSetDone = false;
-
     private CancellationTokenSource m_stopToken = new CancellationTokenSource();
 
     private float currentSpawnTime = 0;
@@ -23,7 +21,6 @@ public class SpawnPointTile : TileBase
 
         m_enemeyData.AddRange(enemeyDatas.FindAll((x) => x.pathIndex == sapwnIndex));
 
-        m_enemyDataSetDone = true;
         currentSpawnTime = 0;
     }
 

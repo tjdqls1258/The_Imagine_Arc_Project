@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using VContainer;
 
 public class CharacterDetail : CachObject
 {
@@ -12,6 +13,9 @@ public class CharacterDetail : CachObject
     enum Texts { StateLV_Text, State_Text }
     enum Buttons { Close }
     enum Transforms { PassiveLayout, ActiveLayout }
+
+    [Inject] private AddressableManager addressable;
+    [Inject] private CSVHelper csvHelper;
 
     private CharacterDetailViewModel m_viewModel;
 
@@ -65,7 +69,7 @@ public class CharacterDetail : CachObject
         gameObject.SetActive(true);
         m_group.DOFade(1, m_fadeTime);
 
-        m_viewModel.LoadDataAsync(data).Forget();
+        m_viewModel.LoadDataAsync(data, addressable, csvHelper).Forget();
     }
 
     public void Close()
@@ -93,7 +97,7 @@ public class CharacterDetail : CachObject
             }
 
             baseList[a].transform.gameObject.SetActive(true);
-            taskList.Add(baseList[a].SetSkill(skillList[a]));
+            taskList.Add(baseList[a].SetSkill(skillList[a], addressable));
         }
 
         for (int i = skillList.Length; i < baseList.Count; i++)

@@ -3,12 +3,15 @@ using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System;
+using VContainer;
 
 public class CSVReader
 {
     static string SPLIT_RE = @",(?=(?:[^""]*""[^""]*"")*(?![^""]*""))";
     static string LINE_SPLIT_RE = @"\r\n|\n\r|\n|\r";
     static char[] TRIM_CHARS = { '\"' };
+
+    [Inject] private static readonly AddressableManager addressableManager;
 
     public static List<Dictionary<string, object>> ReadFromResources(string file)
     {
@@ -18,8 +21,8 @@ public class CSVReader
 
     public static async Task<List<Dictionary<string, object>>> ReadFromAddressable(string key)
     {
-        TextAsset data = await GameMaster.Instance.addressableManager.LoadAssetAndCacheAsync<TextAsset>(key);
-        return Read(data, ()=> GameMaster.Instance.addressableManager.UnloadAsset(key));
+        TextAsset data = await addressableManager.LoadAssetAndCacheAsync<TextAsset>(key);
+        return Read(data, ()=> addressableManager.UnloadAsset(key));
     }
 
     private static List<Dictionary<string, object>> Read(TextAsset data, Action DoneAction = null)

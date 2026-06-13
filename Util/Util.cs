@@ -5,6 +5,8 @@ public static class Util
 #if UNITY_EDITOR
     public const string SKILL_SPRITE_PATH = "Assets/Image/Skill/{0}.png";
 #endif
+    public static readonly string[] ADDRESSABLE_LABEL = { "InGameData", "SpriteAltas", "JsonData", "UI", "CharacterSprite" };
+
     //######### Character Data
     public const string CHARACTER_SPRITE_PATH = "Assets/Sprite/TestCharacterImage/{0}.spriteatlas";
     public const string CHARACTER_IMAGE_NAME = "CharacterImage";

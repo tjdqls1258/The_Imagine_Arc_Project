@@ -23,7 +23,7 @@ public class UIScriptableData : ScriptableObject
 #endif
     }
 
-    public async UniTask MakeUIList(Transform command, Transform mainUI, Transform InGame)
+    public async UniTask MakeUIList(Transform command, Transform mainUI, Transform InGame, AddressableManager addressableManager)
     {
         var uiData = m_UIDataList;
         if (uiData == null) return;
@@ -35,13 +35,13 @@ public class UIScriptableData : ScriptableObject
             switch (d.uiType)
             {
                 case UIBaseData.UIType.Command:
-                    tasks.Add(InstantiateObjectSetting(d, command));
+                    tasks.Add(InstantiateObjectSetting(d, command, addressableManager));
                     break;
                 case UIBaseData.UIType.MainUI:
-                    tasks.Add(InstantiateObjectSetting(d, mainUI));
+                    tasks.Add(InstantiateObjectSetting(d, mainUI, addressableManager));
                     break;
                 case UIBaseData.UIType.InGameUI:
-                    tasks.Add(InstantiateObjectSetting(d, InGame));
+                    tasks.Add(InstantiateObjectSetting(d, InGame, addressableManager));
                     break;
             }
         }
@@ -49,9 +49,9 @@ public class UIScriptableData : ScriptableObject
         await UniTask.WhenAll(tasks);
     }
 
-    public async UniTask InstantiateObjectSetting(UIBaseData data, Transform parent)
+    private async UniTask InstantiateObjectSetting(UIBaseData data, Transform parent, AddressableManager addressableManager)
     {
-        var obj = await GameMaster.Instance.addressableManager.InstantiateObjectAsync(data.dataName, parent);
+        var obj = await addressableManager.InstantiateObjectAsync(data.dataName, parent);
 
         if (obj == null) return;
 
@@ -86,14 +86,14 @@ public class UIScriptableData : ScriptableObject
     }
 
     [ContextMenu("Load Json")]
-    public void LoadJson()
+    public void LoadJson(AddressableManager addressable)
     {
-        LoadJsonUI().Forget();
+        LoadJsonUI(addressable).Forget();
     }
 
-    public async UniTask LoadJsonUI()
+    public async UniTask LoadJsonUI(AddressableManager addressable)
     {
-        var data = await GameMaster.Instance.addressableManager.LoadAssetAndCacheAsync<TextAsset>("UIData");
+        var data = await addressable.LoadAssetAndCacheAsync<TextAsset>("UIData");
 
         if (data == null)
         {

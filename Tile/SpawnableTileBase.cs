@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.EventSystems;
+using VContainer;
 
 public class SpawnableTileBase : TileBase, IPointerDownHandler, IPointerUpHandler, IPointerClickHandler
 {
@@ -14,7 +15,7 @@ public class SpawnableTileBase : TileBase, IPointerDownHandler, IPointerUpHandle
         if (isUnitSpawnTile == false) return;
         if (m_spawnUnitTile == false) return;
 
-        GameMaster.Instance.uiManager.GetAutoUIManager()
+        uiManager.GetAutoUIManager()
             .GetCompoent<InGameUIManager>(UIBaseData.UIType.InGameUI)
             .OnClickCharacter(m_character.CharacterData, this);
     }

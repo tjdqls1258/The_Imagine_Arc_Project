@@ -1,11 +1,26 @@
 ﻿using Cysharp.Threading.Tasks;
 using System.Collections.Generic;
+using System.Threading;
+using UniRx;
 using UnityEngine;
-using static UIManager;
+using VContainer;
 
 public class UIManager
 {
+    public readonly struct LoadingEvent
+    {
+        public bool IsShow { get; }
+
+        public LoadingEvent(bool isShow)
+        {
+            IsShow = isShow;
+        }
+    }
+
     private const string UIPATH_FORMAT = "UIPanel/{0}.prefab";
+
+    [Inject] private readonly AddressableManager addressableManager;
+    CancellationTokenSource destoryToken = new CancellationTokenSource();
 
     public enum UISequence
     {
@@ -24,11 +39,20 @@ public class UIManager
     public readonly Dictionary<UISequence, GameObject> m_openUIPool = new();
     public readonly Dictionary<UISequence, GameObject> m_closeUIPool = new();
 
-    public void Init() { }
+    public void Init() 
+    {
+        SettingMessageEvent();
+    }
+
+    private void SettingMessageEvent()
+    {
+        MessageBroker.Default.Receive<UISequence>().Subscribe(CloseUI).AddTo(destoryToken.Token);
+        MessageBroker.Default.Receive<LoadingEvent>().Subscribe(ShowLoadingImage).AddTo(destoryToken.Token);
+    }
 
     public async UniTask LoadMasterCanvasAsync(Transform parent)
     {
-        GameObject masterCanvasObj = await GameMaster.Instance.addressableManager.InstantiateObjectAsync("MasterCanvas", parent);
+        GameObject masterCanvasObj = await addressableManager.InstantiateObjectAsync("MasterCanvas", parent);
 
         if (masterCanvasObj == null)
         {
@@ -57,7 +81,7 @@ public class UIManager
         else
         {
             string path = string.Format(UIPATH_FORMAT, type.ToString());
-            GameObject ui = await GameMaster.Instance.addressableManager.InstantiateObjectAsync(path, AutoUIManager.GetParent(uiType));
+            GameObject ui = await addressableManager.InstantiateObjectAsync(path, AutoUIManager.GetParent(uiType));
 
             if (ui == null)
             {
@@ -97,18 +121,23 @@ public class UIManager
         }
     }
 
-    public void SetLodingObject(GameObject lodingImage)
+    public UIManager(GameObject lodingImage)
     {
         m_lodingImage = lodingImage;
     }
 
-    public void ShowLoadingImage(bool isShow)
+    public void ShowLoadingImage(LoadingEvent isShow)
     {
         if (m_lodingImage == null)
             return;
 
-        m_lodingImage.SetActive(isShow);
+        m_lodingImage.SetActive(isShow.IsShow);
     }
 
     public AutoUIManager GetAutoUIManager() => AutoUIManager;
+
+    ~UIManager()
+    {
+        destoryToken.Cancel();
+    }
 }

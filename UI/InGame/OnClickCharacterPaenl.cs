@@ -4,6 +4,7 @@ using System.Threading;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using VContainer;
 
 public class OnClickCharacterPaenl : CachObject
 {
@@ -22,6 +23,8 @@ public class OnClickCharacterPaenl : CachObject
     {
         UpgradText,
     }
+
+    [Inject] private readonly AddressableManager addressable;
 
     private InGameCharacterData m_currentCharaterData; 
     private TileClickEvent m_tileEvents;
@@ -57,7 +60,7 @@ public class OnClickCharacterPaenl : CachObject
         Time.timeScale = 0f;
 
         Get<TextMeshProUGUI>((int)TextMeshPros.UpgradText).text = $"UPGRAD\nCost:{characterData.characterData.cost}";
-        characterData.characterData.GetCharacterSprite(targetImage: Get<Image>((int)Images.CharacterImage)).Forget();
+        characterData.characterData.GetCharacterSprite(addressable,targetImage: Get<Image>((int)Images.CharacterImage)).Forget();
 
         m_currentSkillTime = m_tileEvents.GetSkillLastTime() + m_tileEvents.GetSkillCoolTime();
     }
@@ -78,7 +81,7 @@ public class OnClickCharacterPaenl : CachObject
     private void UpgradeButtonClick()
     {
         int useCost = m_tileEvents.GetUpgradeCost();
-        if (m_inGameManager.GetCurrentCost() < m_tileEvents.GetUpgradeCost())
+        if (m_inGameManager.goodsSystem.CurrentCost.Value < m_tileEvents.GetUpgradeCost())
         {
             Logger.Log("업그레이드 불가");
             return;

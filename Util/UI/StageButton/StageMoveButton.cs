@@ -12,9 +12,15 @@ public class StageMoveButton : CachObject
     private int main;
     private int sub;
     private Button m_myButton;
-
-    public void Init(int mainStage, int subStage)
+    private SceneLoadManager sceneLoadManager;
+    private UserDataManager dataManager;
+    private UIManager uiManager;
+    public void Init(int mainStage, int subStage, SceneLoadManager sceneLoadManager, UserDataManager dataManager, UIManager uiManager)
     {
+        this.sceneLoadManager = sceneLoadManager;
+        this.dataManager = dataManager;
+        this.uiManager = uiManager;
+
         main = mainStage;
         sub = subStage;
 
@@ -31,11 +37,11 @@ public class StageMoveButton : CachObject
         GameData.Instance.MainStage = main;
         GameData.Instance.SubStage = sub;
 
-        GameMaster.Instance.sceneLoadManager.SceneLoad(SceneInfo.SceneType.GameScene, async () =>
+        sceneLoadManager.SceneLoad(SceneInfo.SceneType.GameScene, async () =>
         {
-            var userCharacterData = GameMaster.Instance.dataManager.GetUserData<UserData>() as UserData;
+            var userCharacterData = dataManager.GetUserData<UserData>() as UserData;
 
-            await GameMaster.Instance.uiManager.GetAutoUIManager()
+            await uiManager.GetAutoUIManager()
                 .GetCompoent<InGameUIManager>(UIBaseData.UIType.InGameUI)
                 .SetInGameData(userCharacterData.characterDeckList[0]);
 

@@ -7,9 +7,11 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using UniRx;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.Networking;
+using VContainer;
 
 namespace NetExcute
 {
@@ -21,7 +23,6 @@ namespace NetExcute
 
     public class NetExcute : Singleton<NetExcute>
     {
-       
         public CancellationTokenSource cancellation = new();
 
         public async UniTask Requset<T>(RequsetHeader header, Action<T> requsetAction, Action fail) where T : Response
@@ -39,7 +40,7 @@ namespace NetExcute
                 }
             }
 
-            GameMaster.Instance.uiManager.ShowLoadingImage(true);
+            MessageBroker.Default.Publish(new UIManager.LoadingEvent(true));
             using (UnityWebRequest unityWeb = new UnityWebRequest(url, method))
             {
                 if (method != "GET")
@@ -91,7 +92,7 @@ namespace NetExcute
                         fail.Invoke();
                 }
 
-                GameMaster.Instance.uiManager.ShowLoadingImage(false);
+                MessageBroker.Default.Publish(new UIManager.LoadingEvent(false));
             }
         }
     }

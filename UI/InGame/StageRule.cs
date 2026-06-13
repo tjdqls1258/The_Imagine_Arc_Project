@@ -1,11 +1,19 @@
 using System;
 using UnityEngine;
+using VContainer;
 
 public class StageRule
 {
+    private readonly UIManager uiManager;
+
     private EnemySpawnManager m_enemySpawnManager;
     private int m_arriveCount = 0;
     private int m_life;
+
+    public StageRule(UIManager uiManager)
+    {
+        this.uiManager = uiManager;
+    }
 
     public void Init(EnemySpawnManager enemySpawnManager, MapData mapData)
     {
@@ -26,7 +34,7 @@ public class StageRule
 
         if (m_enemySpawnManager.GetCurrentCount() <= 0)
         {
-            GameMaster.Instance.uiManager.GetAutoUIManager().GetCompoent<InGameUIManager>(UIBaseData.UIType.InGameUI).EndGame(true);
+            uiManager.GetAutoUIManager().GetCompoent<InGameUIManager>(UIBaseData.UIType.InGameUI).EndGame(true);
             Logger.Log("Enemy Clear");
         }
     }
@@ -37,7 +45,7 @@ public class StageRule
 
         if (m_life <= m_arriveCount)
         {
-            GameMaster.Instance.uiManager.GetAutoUIManager().GetCompoent<InGameUIManager>(UIBaseData.UIType.InGameUI).EndGame(false);
+            uiManager.GetAutoUIManager().GetCompoent<InGameUIManager>(UIBaseData.UIType.InGameUI).EndGame(false);
         }
         else
         {

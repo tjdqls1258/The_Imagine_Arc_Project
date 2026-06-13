@@ -5,9 +5,13 @@ using System.Threading.Tasks;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using VContainer;
 
 public class LobbyCharacter : UILobbyUpdate
 {
+    [Inject] private readonly CSVHelper csvHelper;
+    [Inject] private readonly AddressableManager addressable;
+
     private CancellationTokenSource cancelToken;
     private CharacterData lobbyCharacterData;
 
@@ -28,9 +32,9 @@ public class LobbyCharacter : UILobbyUpdate
 
     public override void UpdateFormLobby()
     {
-        lobbyCharacterData = GameMaster.Instance.csvHelper.GetScripteData<CharacterDataList>().GetData(1);
+        lobbyCharacterData = csvHelper.GetScripteData<CharacterDataList>().GetData(1);
 
-        lobbyCharacterData.GetCharacterSprite(targetImage: Get<Image>((int)Images.CharacterImage)).Forget();
+        lobbyCharacterData.GetCharacterSprite(addressable, targetImage: Get<Image>((int)Images.CharacterImage)).Forget();
 
         Get<TextMeshProUGUI>().text = $"{lobbyCharacterData.characterName}의 대사";
         RestartChatMessage();

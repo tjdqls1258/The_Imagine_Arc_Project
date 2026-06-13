@@ -1,7 +1,9 @@
 using Cysharp.Threading.Tasks;
 using System.Collections.Generic;
+using UniRx;
 using UnityEngine;
 using UnityEngine.Audio;
+using VContainer;
 
 #region Enums
 public enum SoundType
@@ -22,13 +24,29 @@ public enum SoundPath
 
 public class SoundManager : MonoBehaviour
 {
+    [Inject] private readonly UserDataManager userDataManager;
+    [Inject] private readonly AddressableManager addressableManager;
+
     [Header("Audio Mixer Settings")]
     [SerializeField] private AudioMixerGroup audioMixerGroup;
 
-    UserSettingData SettingData => GameMaster.Instance.dataManager.GetUserData<UserSettingData>() as UserSettingData;
+    UserSettingData SettingData => userDataManager.GetUserData<UserSettingData>() as UserSettingData;
 
     private Dictionary<string, AudioClip> m_clipDic = new();
     private AudioSource[] m_audioSources = new AudioSource[(int)SoundType.MaxCount];
+
+    [System.Serializable]
+    public struct PlaySoundEvent
+    {
+        public SoundPath Path;
+        public SoundType Type;
+
+        public PlaySoundEvent(SoundPath path, SoundType type = SoundType.EFFECT)
+        {
+            Path = path;
+            Type = type;
+        }
+    }
 
     public void Init()
     {
@@ -54,6 +72,12 @@ public class SoundManager : MonoBehaviour
         }
 
         m_audioSources[(int)SoundType.BGM].loop = true;
+
+
+        MessageBroker.Default.Receive<PlaySoundEvent>().Subscribe(soundEvent =>
+        {
+            Play(soundEvent.Path, soundEvent.Type).Forget();
+        }).AddTo(this);
     }
 
     public async UniTask Play(SoundPath path, SoundType type = SoundType.EFFECT, float pitch = 1f)
@@ -74,13 +98,13 @@ public class SoundManager : MonoBehaviour
 
         if (type == SoundType.BGM)
         {
-            audioClip = await GameMaster.Instance.addressableManager.LoadAssetAndCacheAsync<AudioClip>(path);
+            audioClip = await addressableManager.LoadAssetAndCacheAsync<AudioClip>(path);
         }
         else
         {
             if (m_clipDic.TryGetValue(path, out audioClip) == false)
             {
-                audioClip = await GameMaster.Instance.addressableManager.LoadAssetAndCacheAsync<AudioClip>(path);
+                audioClip = await addressableManager.LoadAssetAndCacheAsync<AudioClip>(path);
                 if (audioClip != null)
                 {
                     m_clipDic.Add(path, audioClip);
@@ -165,7 +189,7 @@ public class SoundManager : MonoBehaviour
 
         foreach (var key in keysToUnload)
         {
-            GameMaster.Instance.addressableManager.UnloadAsset(key);
+            addressableManager.UnloadAsset(key);
             m_clipDic.Remove(key);
         }
 

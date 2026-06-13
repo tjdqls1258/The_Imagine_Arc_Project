@@ -2,10 +2,13 @@ using System;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
+using VContainer;
 
 
 public class SettingPanel : UIBase
 {
+    [Inject] private readonly UserDataManager dataManager;
+    [Inject] private readonly SoundManager soundManager;
     enum Sliders
     {
         //Sound
@@ -36,7 +39,7 @@ public class SettingPanel : UIBase
 
     UserSettingData.UserSettingOption m_oldOption;
     UserSettingData.UserSettingOption m_newOption;
-    UserSettingData SettingData => GameMaster.Instance.dataManager.GetUserData<UserSettingData>() as UserSettingData;
+    UserSettingData SettingData => dataManager.GetUserData<UserSettingData>() as UserSettingData;
 
     public override void Init(Transform parent = null)
     {
@@ -90,15 +93,15 @@ public class SettingPanel : UIBase
         switch (type)
         {
             case SettingSoundType.Master:
-                GameMaster.Instance.soundManager.MasterValue(value, m_newOption.muteMasterSound);
+                soundManager.MasterValue(value, m_newOption.muteMasterSound);
                 m_newOption.masterSoundValue = value;
                 break;
             case SettingSoundType.BGM:
-                GameMaster.Instance.soundManager.BGMValue(value, m_newOption.muteBgmSound);
+                soundManager.BGMValue(value, m_newOption.muteBgmSound);
                 m_newOption.bgmSoundValue = value;
                 break;
             case SettingSoundType.Effect:
-                GameMaster.Instance.soundManager.EffectValue(value, m_newOption.muteEffectSound);
+                soundManager.EffectValue(value, m_newOption.muteEffectSound);
                 m_newOption.effectSoundValue = value;
                 break;
         }
@@ -109,15 +112,15 @@ public class SettingPanel : UIBase
         switch (type)
         {
             case SettingSoundType.Master:
-                GameMaster.Instance.soundManager.MasterValue(m_newOption.masterSoundValue, isOn);
+                soundManager.MasterValue(m_newOption.masterSoundValue, isOn);
                 m_newOption.muteMasterSound = isOn;
                 break;
             case SettingSoundType.BGM:
-                GameMaster.Instance.soundManager.BGMValue(m_newOption.bgmSoundValue, isOn);
+                soundManager.BGMValue(m_newOption.bgmSoundValue, isOn);
                 m_newOption.muteBgmSound = isOn;
                 break;
             case SettingSoundType.Effect:
-                GameMaster.Instance.soundManager.EffectValue(m_newOption.effectSoundValue, isOn);
+                soundManager.EffectValue(m_newOption.effectSoundValue, isOn);
                 m_newOption.muteEffectSound = isOn;
                 break;
         }

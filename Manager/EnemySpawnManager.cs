@@ -5,9 +5,13 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using UnityEngine;
+using VContainer;
 
 public class EnemySpawnManager : MonoBehaviour
 {
+    [Inject] private readonly CSVHelper csvHelper;
+    [Inject] private readonly AddressableManager addressableManager;
+
     private EnemySpawnData[] m_enemySpawnDatas; 
     private MapData.PathData[] m_pathData;       
     private int m_spawnCount = 0;
@@ -30,6 +34,8 @@ public class EnemySpawnManager : MonoBehaviour
 
     public void SetEnemyData(EnemySpawnData[] data, MapData.PathData[] pathDatas, Action enemyDieAction, Action enemyArriveAction)
     {
+        GameUtil.InjectUtil(this);
+
         m_enemySpawnDatas = data;
         m_pathData = pathDatas;
 
@@ -67,8 +73,8 @@ public class EnemySpawnManager : MonoBehaviour
         {
             if (m_enemyModelList.ContainsKey(enemySpawnData.enemyDataID))
                 continue;
-            var enemyData = GameMaster.Instance.csvHelper.GetScripteData<EnemyDataList>().GetData(enemySpawnData.enemyDataID);
-            var obj = await GameMaster.Instance.addressableManager.LoadAssetAndCacheAsync<GameObject>(string.Format(Util.ENEMY_MODLED_PATH, enemyData.controllObjectKey)).AttachExternalCancellation(destroyCancellationToken);
+            var enemyData = csvHelper.GetScripteData<EnemyDataList>().GetData(enemySpawnData.enemyDataID);
+            var obj = await addressableManager.LoadAssetAndCacheAsync<GameObject>(string.Format(Util.ENEMY_MODLED_PATH, enemyData.controllObjectKey)).AttachExternalCancellation(destroyCancellationToken);
             obj.gameObject.SetActive(false);
             m_enemyModelList.Add(enemySpawnData.enemyDataID, obj);
         }
@@ -129,12 +135,12 @@ public class EnemySpawnManager : MonoBehaviour
             if (pathData != null)
             {
                 var vectorList = GameUtil.ConvartSerializableVector2IntToVector2Int_List(pathData.path);
-                obj.InitEnemyData(GameMaster.Instance.csvHelper.GetScripteData<EnemyDataList>().GetData(m_enemySpawnDatas[m_spawnCount].enemyDataID), vectorList, DieAction, m_enemyDie, m_enemyArriveAction);
+                obj.InitEnemyData(csvHelper.GetScripteData<EnemyDataList>().GetData(m_enemySpawnDatas[m_spawnCount].enemyDataID), vectorList, DieAction, m_enemyDie, m_enemyArriveAction);
             }
             else
             {
                 var vectorList = GameUtil.ConvartSerializableVector2IntToVector2Int_List(m_pathData[0].path);
-                obj.InitEnemyData(GameMaster.Instance.csvHelper.GetScripteData<EnemyDataList>().GetData(m_enemySpawnDatas[m_spawnCount].enemyDataID), vectorList, DieAction, m_enemyDie, m_enemyArriveAction);
+                obj.InitEnemyData(csvHelper.GetScripteData<EnemyDataList>().GetData(m_enemySpawnDatas[m_spawnCount].enemyDataID), vectorList, DieAction, m_enemyDie, m_enemyArriveAction);
             }
 
             m_spawnCount++;

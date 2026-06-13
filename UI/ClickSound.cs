@@ -1,8 +1,8 @@
 using Cysharp.Threading.Tasks;
+using UniRx;
 using UnityEngine;
-using UnityEngine.EventSystems;
 using UnityEngine.UI;
-using System.Diagnostics;
+using VContainer;
 
 public class ClickSound : MonoBehaviour
 {
@@ -16,14 +16,10 @@ public class ClickSound : MonoBehaviour
         if (m_btn == null)
             m_btn = GetComponent<Button>();
 
-        m_btn.onClick.AddListener(PlaySound);
-    }
-
-    private void PlaySound()
-    {
-        if (useClickSound == false) return;
-
-        GameMaster.Instance.soundManager.Play(clickSound, SoundType.EFFECT).Forget();
+        m_btn.OnClickAsObservable().Subscribe(_ =>
+        {
+            MessageBroker.Default.Publish(new SoundManager.PlaySoundEvent(clickSound));
+        }).AddTo(this);
     }
 
 #if UNITY_EDITOR

@@ -2,6 +2,7 @@ using Cysharp.Threading.Tasks;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using VContainer;
 
 public class Profile : UILobbyUpdate
 {
@@ -74,6 +75,6 @@ public class Profile : UILobbyUpdate
 
     private void OpenSettingPanel()
     {
-        GameMaster.Instance.uiManager.ShowUI(UIManager.UISequence.SettingPanel, UIBaseData.UIType.Command).Forget();
+        uiManager.ShowUI(UIManager.UISequence.SettingPanel, UIBaseData.UIType.Command).Forget();
     }
 }

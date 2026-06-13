@@ -2,9 +2,11 @@ using Cysharp.Threading.Tasks;
 using System;
 using UnityEngine;
 using UnityEngine.UI;
+using VContainer;
 
 public class ButtonSceneMove : UIBaseFormMaker
 {
+    [Inject] private readonly SceneLoadManager sceneLoadManager;
     private Button m_button;
 
     [Header("Scene Load Settings")]
@@ -21,7 +23,7 @@ public class ButtonSceneMove : UIBaseFormMaker
 
         m_sceneLoadAction += () =>
         {
-            GameMaster.Instance.uiManager.GetAutoUIManager().SetUIType(m_uiType);
+            uiManager.GetAutoUIManager().SetUIType(m_uiType);
         };
     }
 
@@ -32,6 +34,6 @@ public class ButtonSceneMove : UIBaseFormMaker
 
     private void OnClickButton()
     {
-        GameMaster.Instance.sceneLoadManager.SceneLoad(m_loadScene, m_sceneLoadAction).Forget();
+        sceneLoadManager.SceneLoad(m_loadScene, m_sceneLoadAction).Forget();
     }
 }

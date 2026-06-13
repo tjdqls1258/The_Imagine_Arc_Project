@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.Events;
+using VContainer;
+
 
 
 #if UNITY_EDITOR
@@ -12,6 +14,8 @@ using Unity.VisualScripting;
 [RequireComponent(typeof(CircleCollider2D))]
 public class PlayerCombatController : MonoBehaviour,  ISkillCaster
 {
+    [Inject] private readonly ObjectPoolManager poolManager;
+    [Inject] private readonly AddressableManager addressableManager;
     private readonly string effectName = "EffectPrefabs/Hit_FX01.prefab";
 
     [Header("Attack Settings")]
@@ -29,7 +33,6 @@ public class PlayerCombatController : MonoBehaviour,  ISkillCaster
     private SkillContext m_nomalAtkContext;
     private UnityAction m_dieCallback;
 
-    private bool isDie = false;
 
     private void Awake()
     {
@@ -38,7 +41,6 @@ public class PlayerCombatController : MonoBehaviour,  ISkillCaster
 
     public void InitCombat(InGameCharacterData data, CharacterAnimationController anim, UnityAction dieCallback)
     {
-        isDie = false;
         m_inGameData = data;
         m_animController = anim;
         m_dieCallback = dieCallback;
@@ -67,10 +69,10 @@ public class PlayerCombatController : MonoBehaviour,  ISkillCaster
 
     private async UniTask SetEffect()
     {
-        if (GameMaster.Instance.objectPoolManager.CheckAddKey(effectName)) return;
-        GameMaster.Instance.objectPoolManager.AddKey(effectName);
-        var effect = await GameMaster.Instance.addressableManager.InstantiateObjectAsync(effectName);
-        GameMaster.Instance.objectPoolManager.SetPoolObject(effectName, effect);
+        if (poolManager.CheckAddKey(effectName)) return;
+        poolManager.AddKey(effectName);
+        var effect = await addressableManager.InstantiateObjectAsync(effectName);
+        poolManager.SetPoolObject(effectName, effect);
     }
 
     public void UpdateTargeting()
@@ -97,7 +99,7 @@ public class PlayerCombatController : MonoBehaviour,  ISkillCaster
         m_nomalAtkContext.Damage = ConditionManager.GetStat(StatType.AttackDamage);
         m_inGameData.nomalAtkSkill.ExecuteActive(m_nomalAtkContext);
 
-        var effect = GameMaster.Instance.objectPoolManager.AddPoolObject(effectName);
+        var effect = poolManager.AddPoolObject(effectName);
         if (effect != null) effect.transform.position = m_nomalAtkContext.PrimaryTarget.GetTransform().position;
     }
 
@@ -127,7 +129,6 @@ public class PlayerCombatController : MonoBehaviour,  ISkillCaster
 
     public void DieAction()
     {
-        isDie = true;
         m_dieCallback?.Invoke();
     }
 
@@ -141,8 +142,8 @@ public class PlayerCombatController : MonoBehaviour,  ISkillCaster
 
     private void OnDestroy()
     {
-        if (GameMaster.Instance.addressableManager != null)
-            GameMaster.Instance.objectPoolManager.RemovePoolObject(effectName);
+        if (addressableManager != null)
+            poolManager.RemovePoolObject(effectName);
     }
 #if UNITY_EDITOR
     [ContextMenu("Setting HP Component")]

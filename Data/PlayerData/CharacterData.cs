@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.U2D;
 using UnityEngine.UI;
+using VContainer;
 
 public enum SpawnType
 {
@@ -111,24 +112,24 @@ public class CharacterData : CSVData
 
     public override int GetID() => id;
 
-    public async UniTask<Sprite> GetSpriteAsync()
+    public async UniTask<Sprite> GetSpriteAsync(AddressableManager addressableManagerm)
     {
         if (modelSprite == null)
         {
-            await LoadSprite();
+            await LoadSprite(addressableManagerm);
         }
         return modelSprite;
     }
 
-    public async UniTask<GameObject> GetModleObject()
+    public async UniTask<GameObject> GetModleObject(AddressableManager addressableManager)
     {
-        return await GameMaster.Instance.addressableManager.LoadAssetAndCacheAsync<GameObject>(modelObjectName);
+        return await addressableManager.LoadAssetAndCacheAsync<GameObject>(modelObjectName);
     }
 
-    public async UniTask GetCharacterSprite(Action<Sprite> loadImage = null, Image targetImage = null)
+    public async UniTask GetCharacterSprite(AddressableManager addressableManagerm, Action<Sprite> loadImage = null, Image targetImage = null)
     {
         if (characterSprite == null)
-            await LoadSprite();
+            await LoadSprite(addressableManagerm);
 
         Sprite sprite = characterSprite.GetSprite(Util.CHARACTER_IMAGE_NAME);
 
@@ -139,10 +140,10 @@ public class CharacterData : CSVData
             loadImage.Invoke(sprite);
     }
 
-    public async UniTask GetCharacterSpriteFace(Action<Sprite> loadImage = null, Image targetImage = null)
+    public async UniTask GetCharacterSpriteFace(AddressableManager addressableManagerm, Action<Sprite> loadImage = null, Image targetImage = null)
     {
         if (characterSprite == null)
-            await LoadSprite();
+            await LoadSprite(addressableManagerm);
 
         Sprite sprite = characterSprite.GetSprite(Util.CHARACTERFACE_IMAGE_NAME);
 
@@ -153,19 +154,19 @@ public class CharacterData : CSVData
             loadImage.Invoke(sprite);
     }
 
-    public async UniTask LoadSprite()
+    public async UniTask LoadSprite(AddressableManager addressableManager)
     {
         if (characterSprite != null) return;
 
-        SpriteAtlas atlas = await GameMaster.Instance.addressableManager.LoadAssetAndCacheAsync<SpriteAtlas>(GetSpriteName);
+        SpriteAtlas atlas = await addressableManager.LoadAssetAndCacheAsync<SpriteAtlas>(GetSpriteName);
         characterSprite = atlas;
     }
 
-    public void UnloadAtlas()
+    public void UnloadAtlas(AddressableManager addressableManager)
     {
         if (characterSprite == null) return;
 
-        GameMaster.Instance.addressableManager.UnloadAsset(GetSpriteName);
+        addressableManager.UnloadAsset(GetSpriteName);
         characterSprite = null;
     }
 }
@@ -177,10 +178,10 @@ public class CharacterDataList : CSVDataList<CharacterData>
         return m_dataList.ContainsKey(id) ? m_dataList[id].characterName : string.Empty;
     }
 
-    public async UniTask<Sprite> GetSpriteAsync(int id)
+    public async UniTask<Sprite> GetSpriteAsync(int id, AddressableManager addressableManagerm)
     {
         if (m_dataList.ContainsKey(id))
-            return await m_dataList[id].GetSpriteAsync();
+            return await m_dataList[id].GetSpriteAsync(addressableManagerm);
 
         return null;
     }
@@ -199,14 +200,14 @@ public class CharacterDataList : CSVDataList<CharacterData>
         return datas;
     }
 
-    public async UniTask LoadAllCharacterSprite()
+    public async UniTask LoadAllCharacterSprite(AddressableManager addressableManager)
     {
         var allData = GetAllList();
         List<UniTask> taskList = new();
 
         foreach (var data in allData)
         {
-            taskList.Add(data.LoadSprite());
+            taskList.Add(data.LoadSprite(addressableManager));
         }
 
         await UniTask.WhenAll(taskList);

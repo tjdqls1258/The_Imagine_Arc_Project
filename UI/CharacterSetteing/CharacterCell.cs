@@ -6,14 +6,10 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-/// <summary>
-/// FancyGridView에서 개별 캐릭터 항목을 표시하는 셀 컴포넌트입니다.
-/// 캐릭터의 이미지, 이름 등의 정보를 갱신하고 클릭 이벤트를 처리합니다.
-/// </summary>
 public class CharacterCell : FancyGridViewCell<UserCharacterData, CharacterPanelContext>
 {
     private UserCharacterData m_userCharacterData;
-    private CharacterData m_data => m_userCharacterData.GetCharacterData(); 
+    private CharacterData m_data => m_userCharacterData.GetCharacterData(Context.csvHelper); 
 
     [Header("UI Components")]
     [SerializeField] private Image m_characterImage;      // 캐릭터 일러스트/아이콘 이미지
@@ -28,7 +24,7 @@ public class CharacterCell : FancyGridViewCell<UserCharacterData, CharacterPanel
     {
         m_userCharacterData = itemData;
 
-        m_data.GetCharacterSprite(targetImage: m_characterImage).Forget();
+        m_data.GetCharacterSprite(Context.addressableManager ,targetImage: m_characterImage).Forget();
 
         m_characterName.text = m_data.characterName;
 
@@ -63,7 +59,7 @@ public class CharacterCell : FancyGridViewCell<UserCharacterData, CharacterPanel
     {
         if (m_data != null)
         {
-            m_data.UnloadAtlas();
+            m_data.UnloadAtlas(Context.addressableManager);
         }
         if (this == null) return;
 

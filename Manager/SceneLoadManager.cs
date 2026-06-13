@@ -3,12 +3,16 @@ using DG.Tweening;
 using System;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using VContainer;
 
 public class SceneLoadManager : MonoBehaviour
 {
     [Header("Loading UI")]
     [SerializeField] private GameObject layoutGroupObject;
     [SerializeField] private CanvasGroup layoutGroup;
+
+    [Inject] private readonly PopupManager popupManager;
+    [Inject] private readonly UIManager uiManager;
 
     private float m_currentProgress = 0;
     private float m_fadeTime = 1;
@@ -24,7 +28,7 @@ public class SceneLoadManager : MonoBehaviour
     {
         m_currentProgress = 0;
 
-        GameMaster.Instance.popupManager.ClosePopupAll();
+        popupManager.ClosePopupAll();
         Time.timeScale = 1;
 
         string SceneName = SceneInfo.GetSceneName(type);
@@ -62,10 +66,10 @@ public class SceneLoadManager : MonoBehaviour
         switch (type)
         {
             case SceneInfo.SceneType.HomeScene:
-                GameMaster.Instance.uiManager.GetAutoUIManager().SetUIType(AutoUIManager.UIType.main);
+                uiManager.GetAutoUIManager().SetUIType(AutoUIManager.UIType.main);
                 break;
             case SceneInfo.SceneType.GameScene:
-                GameMaster.Instance.uiManager.GetAutoUIManager().SetUIType(AutoUIManager.UIType.inGame);
+                uiManager.GetAutoUIManager().SetUIType(AutoUIManager.UIType.inGame);
                 break;
             default:
                 return;

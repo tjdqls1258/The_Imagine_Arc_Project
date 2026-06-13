@@ -1,33 +1,37 @@
 using Cysharp.Threading.Tasks;
 using UnityEngine;
+using VContainer;
 
 public class AwakeScene : MonoBehaviour
 {
     [SerializeField] private LoadingPanel m_loadingPanel;
     [SerializeField] private DownloaderCheck m_downloader;
+    [SerializeField] private Transform m_managerParnet;
+    [Inject] private readonly GameBootStart m_bootStart;
+    [Inject] private readonly SceneLoadManager sceneLoadManager;
+    [Inject] private readonly SoundManager soundManager;
+    [Inject] private readonly AddressableManager addressableManager;
 
     private void Start()
     {
+        Application.targetFrameRate = 60;
         StartAppFlowAsync().Forget();
     }
 
     private async UniTask StartAppFlowAsync()
     {
-        GameMaster.Instance.InitBaseSystems();
+        m_bootStart.InitBaseSystems(m_managerParnet);
 
-        await GameMaster.Instance.InitAddressableSystemAsync();
+        await m_bootStart.AddressableInitAsync();
 
-        // 3. [다운로드 체크] 팝업 발생 및 대기
-        bool canProceed = await m_downloader.HandleAddressablesDownloadAsync();
+        bool canProceed = await m_downloader.HandleAddressablesDownloadAsync(addressableManager);
         if (!canProceed)
         {
-            return; // 사용자가 다운로드를 취소했으므로 이후 진행 중단
+            return;
         }
 
-        // 4. [어드레서블 이후] 패치된 최신 데이터(CSV, Prefab 등)를 기반으로 매니저 초기화
-        await GameMaster.Instance.InitAssetDependentSystemsAsync();
+        await m_bootStart.StartAsync(this.destroyCancellationToken);
 
-        // 5. 완료 후 터치 대기 UI 노출
         m_loadingPanel.ShowPanel(LoadingPanel.CanvasGroups.StartPanel);
 
         m_loadingPanel.AddOnClickAction(() =>
@@ -38,7 +42,7 @@ public class AwakeScene : MonoBehaviour
 
     private async UniTask LoadNextSceneAsync()
     {
-        await GameMaster.Instance.sceneLoadManager.SceneLoad(SceneInfo.SceneType.HomeScene);
-        GameMaster.Instance.soundManager.Play(SoundPath.BGM_Title, SoundType.BGM).Forget();
+        await sceneLoadManager.SceneLoad(SceneInfo.SceneType.HomeScene);
+        soundManager.Play(SoundPath.BGM_Title, SoundType.BGM).Forget();
     }
 }

@@ -5,42 +5,48 @@ using System.Linq;
 using System.Threading;
 using UnityEngine;
 using UnityEngine.Events;
+using UnityEngine.Rendering.VirtualTexturing;
 using UnityEngine.U2D;
+using VContainer;
+using VContainer.Unity;
 
 public class InGameManager : MonoBehaviour
 {
     [Header("Map References")]
     [Tooltip("비동기로 생성된 맵 타일들이 배치될 부모 GameObject")]
     [SerializeField] private GameObject m_mapObject;
+    [Inject] private readonly AddressableManager addressableManager;
+    [Inject] private readonly UIManager uiManager;
+   
 
-    private bool m_isStartGame = false;
+    private string m_currentStageKey; 
+    private string m_stageAtlasKey;
 
-    private string _currentStageKey; 
-    private string _stageAtlasKey;
-
-    private StageRule stageRule = new();
-    private GameGoodsSystem goodsSystem = new();
-    private StageLoader stageLoader = new();
+    private StageRule stageRule;
+    public GameGoodsSystem goodsSystem { get; private set; } = new();
+    private StageLoader stageLoader;
 
     public UnityAction<bool, bool> dragCharacter = null;
 
     private void Awake()
     {
+        GameUtil.InjectUtil(this);
+
+        stageLoader = new(uiManager, addressableManager);
+        stageRule = new(uiManager);
         LoadMapDataAsync(GameData.Instance.MainStage, GameData.Instance.SubStage).Forget();
     }
 
-    public int GetCurrentCost() => goodsSystem.currentCost;
-
     public async UniTask LoadMapDataAsync(int mainStage, int subStage)
     {
-        _currentStageKey = string.Format(Util.MAP_DATAPATH_FORMAT, mainStage, subStage);
-        _stageAtlasKey = string.Format(Util.STAGE_NAME, mainStage, subStage);
+        m_currentStageKey = string.Format(Util.MAP_DATAPATH_FORMAT, mainStage, subStage);
+        m_stageAtlasKey = string.Format(Util.STAGE_NAME, mainStage, subStage);
 
-        string mapDataAddress = string.Format(Util.MAP_DATA_FOLDER, _currentStageKey);
-        string atlasAddress = string.Format(Util.SPRITE_ATLAS_FOLDER, _stageAtlasKey);
+        string mapDataAddress = string.Format(Util.MAP_DATA_FOLDER, m_currentStageKey);
+        string atlasAddress = string.Format(Util.SPRITE_ATLAS_FOLDER, m_stageAtlasKey);
 
-        var mapDataTask = GameMaster.Instance.addressableManager.LoadAssetAndCacheAsync<MapData>(mapDataAddress);
-        var atlasTask = GameMaster.Instance.addressableManager.LoadAssetAndCacheAsync<SpriteAtlas>(atlasAddress);
+        var mapDataTask = addressableManager.LoadAssetAndCacheAsync<MapData>(mapDataAddress);
+        var atlasTask = addressableManager.LoadAssetAndCacheAsync<SpriteAtlas>(atlasAddress);
 
         var mapData = await mapDataTask.AttachExternalCancellation(destroyCancellationToken);
         SpriteAtlas spAtlas = await atlasTask.AttachExternalCancellation(destroyCancellationToken);
@@ -58,14 +64,8 @@ public class InGameManager : MonoBehaviour
         StartGame();
     }
 
-    public void SetChargeAction(Action<int> charge)
-    {
-        goodsSystem.AddActionChangeGoods(charge);
-    }
-
     public void StartGame()
     {
-        m_isStartGame = true;
         stageRule.StartGame();
         goodsSystem.StartGame();
     }
@@ -74,10 +74,9 @@ public class InGameManager : MonoBehaviour
 
     public void ExitGame()
     {
-        GameMaster.Instance.addressableManager.UnloadAsset(string.Format(Util.MAP_DATA_FOLDER, _currentStageKey));
-        GameMaster.Instance.addressableManager.UnloadAsset(string.Format(Util.SPRITE_ATLAS_FOLDER, _stageAtlasKey));
+        addressableManager.UnloadAsset(string.Format(Util.MAP_DATA_FOLDER, m_currentStageKey));
+        addressableManager.UnloadAsset(string.Format(Util.SPRITE_ATLAS_FOLDER, m_stageAtlasKey));
 
-        m_isStartGame = false;
         stageRule.Clear();
         goodsSystem.Clear();
     }

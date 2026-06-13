@@ -2,6 +2,7 @@ using Cysharp.Threading.Tasks;
 using DG.Tweening;
 using UnityEngine;
 using UnityEngine.UI;
+using VContainer;
 
 public class InGameOptionPanel : UIBaseFormMaker
 {
@@ -83,14 +84,14 @@ public class InGameOptionPanel : UIBaseFormMaker
 
     public void OnClickHome()
     {
-        GameMaster.Instance.uiManager.GetAutoUIManager().GetCompoent<InGameUIManager>(UIBaseData.UIType.InGameUI).ExitGame();
+        uiManager.GetAutoUIManager().GetCompoent<InGameUIManager>(UIBaseData.UIType.InGameUI).ExitGame();
 
         CanvasAtive(false);
     }
 
     public void ShowSettingPanel()
     {
-        GameMaster.Instance.uiManager.ShowUI(UIManager.UISequence.SettingPanel, UIBaseData.UIType.Command).Forget();
+        uiManager.ShowUI(UIManager.UISequence.SettingPanel, UIBaseData.UIType.Command).Forget();
     }
 
     #endregion

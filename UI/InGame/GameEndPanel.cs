@@ -2,6 +2,7 @@ using Cysharp.Threading.Tasks;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
+using VContainer;
 
 public class GameEndPanel : UIBase
 {
@@ -79,7 +80,7 @@ public class GameEndPanel : UIBase
     {
         Time.timeScale = 1;
 
-        GameMaster.Instance.uiManager.GetAutoUIManager()
+        uiManager.GetAutoUIManager()
             .GetCompoent<InGameUIManager>(UIBaseData.UIType.InGameUI)
             .ExitGame();
     }

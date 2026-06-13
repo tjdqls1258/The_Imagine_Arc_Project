@@ -5,9 +5,14 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
+using VContainer;
 
 public class CharacterSelectPanel : UIBase
 {
+    [Inject] private readonly UserDataManager dataManager;
+    [Inject] private readonly PopupManager popupManager;
+    [Inject] private readonly AddressableManager addressable;
+    [Inject] private readonly CSVHelper csvHelper;
     private enum CanvasGroups
     {
         PagePanel,
@@ -25,7 +30,7 @@ public class CharacterSelectPanel : UIBase
         SaveButton,
     }
 
-    private UserData m_userCharacterData => GameMaster.Instance.dataManager.GetUserData<UserData>() as UserData;
+    private UserData m_userCharacterData => dataManager.GetUserData<UserData>() as UserData;
 
     private List<Button> m_pageInteractable = new();
 
@@ -66,7 +71,7 @@ public class CharacterSelectPanel : UIBase
             int index = 0;
             foreach (var item in m_characterImages)
             {
-                item.Init(OnClickChangeCharacter, index);
+                item.Init(addressable, csvHelper, OnClickChangeCharacter, index);
                 index++;
             }
         }
@@ -232,13 +237,13 @@ public class CharacterSelectPanel : UIBase
 
     private void SettingContext()
     {
-        m_characterListPanel.OnCellClicked(OnClickChange, m_currentDeck, m_targetData);
+        m_characterListPanel.OnCellClicked(OnClickChange, addressable, csvHelper, m_currentDeck, m_targetData);
         m_characterListPanel.UpdateContents(m_userCharacterData.oderCharacter.Values.ToList());
     }
 
     async UniTask SavePopup(Action closetPopupAction = null)
     {
-        var popup = await GameMaster.Instance.popupManager.ShowPopup(PopupManager.PopupType.PopupQ) as PopupQ;
+        var popup = await popupManager.ShowPopup(PopupManager.PopupType.PopupQ) as PopupQ;
 
         popup.okAction = () =>
         {
@@ -259,7 +264,7 @@ public class CharacterSelectPanel : UIBase
 
     async UniTask PopupNotSaveMessage()
     {
-        var Popup = await GameMaster.Instance.popupManager.ShowPopup(PopupManager.PopupType.PopupMsg) as PopupMsg;
+        var Popup = await popupManager.ShowPopup(PopupManager.PopupType.PopupMsg) as PopupMsg;
         Popup.Mssage = "최소 한 명 이상의 캐릭터가 배치되어야 저장이 가능합니다.";
     }
 }

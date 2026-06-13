@@ -2,6 +2,7 @@ using NetExcute;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using VContainer;
 
 namespace NetExcute
 {
@@ -49,14 +50,14 @@ namespace NetExcute
             }
         }
 
-        public CharacterData GetCharacterData()
+        public CharacterData GetCharacterData(CSVHelper csvHelper)
         {
-            return GameMaster.Instance.csvHelper.GetScripteData<CharacterDataList>().GetData(ID);
+            return csvHelper.GetScripteData<CharacterDataList>().GetData(ID);
         }
 
-        public BaseCharacterStat GetInGameBaseStat()
+        public BaseCharacterStat GetInGameBaseStat(CSVHelper csvHelper)
         {
-            CharacterData baseData = GetCharacterData();
+            CharacterData baseData = GetCharacterData(csvHelper);
 
             if (baseCharacterStat != null && m_isDirty == false)
                 return baseCharacterStat;
@@ -130,9 +131,6 @@ namespace NetExcute
         public List<UserCharacterData> userCharacterDatas;
     }
 
-    // ----------------------------------------------------------------------
-    // ## Network Protocol (Request / Response)
-    // ----------------------------------------------------------------------
 
     // --- 전체 정보 요청 프로토콜 ---
     public class UserInfoRequset : RequsetHeader
@@ -225,7 +223,7 @@ namespace NetExcute
     {
         public override string GetRutor()
         {
-            return string.Format("champions/{0}/player", GameMaster.Instance.GetUUID());
+            return string.Format("champions/{0}/player", GameUtil.UUID);
         }
 
         public override string GetMethod()
@@ -254,7 +252,7 @@ namespace NetExcute
     {
         public override string GetRutor()
         {
-            return string.Format("members/{0}", GameMaster.Instance.GetUUID());
+            return string.Format("members/{0}", GameUtil.UUID);
         }
         public override string GetMethod()
         {

@@ -32,6 +32,7 @@ public interface TileClickEvent
 public class TileBase : CachObject, TileClickEvent
 {
     protected SpriteRenderer tileImage;
+    protected UIManager uiManager;
 
     public TileData tileData
     {
@@ -43,8 +44,10 @@ public class TileBase : CachObject, TileClickEvent
     {
         tileImage = GetComponent<SpriteRenderer>();
     }
-    public virtual void Init(TileData tileData)
+    public virtual void Init(TileData tileData, UIManager manager)
     {
+        uiManager = manager;
+
         this.tileData = tileData;
 
         transform.localPosition = new Vector3(tileData.x, tileData.y, 0);
