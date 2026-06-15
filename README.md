@@ -1,6 +1,6 @@
 # 🛡️ The Imagine Arc Project
 
-> **2D 서브컬처 수집형 RPG 디펜스 게임 프레임워크**  
+> **2D 서브컬처 수집형 RPG 디펜스 게임**  
 > Unity 기반의 고성능·확장 가능한 디펜스 RPG 코어 시스템
 
 ---
