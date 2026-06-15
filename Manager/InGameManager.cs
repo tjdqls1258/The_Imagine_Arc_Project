@@ -17,15 +17,12 @@ public class InGameManager : MonoBehaviour
     [SerializeField] private GameObject m_mapObject;
     [Inject] private readonly AddressableManager addressableManager;
     [Inject] private readonly UIManager uiManager;
-   
 
     private string m_currentStageKey; 
     private string m_stageAtlasKey;
-
-    private StageRule stageRule;
+    public StageRule stageRule { get; private set; }
     public GameGoodsSystem goodsSystem { get; private set; } = new();
     private StageLoader stageLoader;
-
     public UnityAction<bool, bool> dragCharacter = null;
 
     private void Awake()
@@ -68,6 +65,7 @@ public class InGameManager : MonoBehaviour
     {
         stageRule.StartGame();
         goodsSystem.StartGame();
+        uiManager.GetAutoUIManager().GetCompoent<InGameUIManager>(UIBaseData.UIType.InGameUI).StartGame();
     }
 
     public bool UseCost(int cost) => goodsSystem.UseCost(cost);

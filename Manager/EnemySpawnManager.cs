@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using UniRx;
 using UnityEngine;
 using VContainer;
 
@@ -17,9 +18,9 @@ public class EnemySpawnManager : MonoBehaviour
     private int m_spawnCount = 0;
     private float m_currentTime = 0;
 
-    private int m_totalCount = 0;
+    private int totalCount = 0;
     private int m_remnant = 0;           
-    private int m_currentCount = 0;
+    public ReactiveProperty<int> currentCount { get; private set; } = new();
 
     private CancellationTokenSource m_cancellationTokenSource = new(); 
 
@@ -42,9 +43,9 @@ public class EnemySpawnManager : MonoBehaviour
         m_enemyDie = enemyDieAction;
         m_enemyArriveAction = enemyArriveAction;
 
-        m_totalCount = m_enemySpawnDatas.Length;
+        totalCount = m_enemySpawnDatas.Length;
         m_remnant = m_enemySpawnDatas.Length;
-        m_currentCount = m_enemySpawnDatas.Length;
+        currentCount.Value = m_enemySpawnDatas.Length;
     }
 
     public void StartSpawn()
@@ -54,15 +55,15 @@ public class EnemySpawnManager : MonoBehaviour
 
     public int GetTotalCount()
     {
-        return m_totalCount;
+        return totalCount;
     }
 
     public void EnemyDie()
     {
-        m_currentCount -= 1;
+        currentCount.Value -= 1;
     }
 
-    public int GetCurrentCount() => m_currentCount;
+    public int GetCurrentCount() => currentCount.Value;
 
     private async UniTask SpawnStart()
     {

@@ -53,5 +53,7 @@ public class GameGoodsSystem
             m_cancleToken.Dispose();
             m_cancleToken = null;
         }
+
+        CurrentCost.Dispose();
     }
 }

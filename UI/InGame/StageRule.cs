@@ -1,4 +1,5 @@
 using System;
+using UniRx;
 using UnityEngine;
 using VContainer;
 
@@ -7,8 +8,8 @@ public class StageRule
     private readonly UIManager uiManager;
 
     private EnemySpawnManager m_enemySpawnManager;
-    private int m_arriveCount = 0;
-    private int m_life;
+
+    public ReactiveProperty<int> lifeEvent { get; private set; } = new();
 
     public StageRule(UIManager uiManager)
     {
@@ -18,7 +19,8 @@ public class StageRule
     public void Init(EnemySpawnManager enemySpawnManager, MapData mapData)
     {
         m_enemySpawnManager = enemySpawnManager;
-        m_life = mapData.m_life;
+
+        lifeEvent.Value = mapData.m_life;
 
         m_enemySpawnManager.SetEnemyData(mapData.enemySpawnDatas, mapData.pathDatas, EnemyDieAction, EnemyArriveAction);
     }
@@ -41,9 +43,9 @@ public class StageRule
 
     private void EnemyArriveAction()
     {
-        m_arriveCount++;
+        lifeEvent.Value -= 1;
 
-        if (m_life <= m_arriveCount)
+        if (lifeEvent.Value <= 0)
         {
             uiManager.GetAutoUIManager().GetCompoent<InGameUIManager>(UIBaseData.UIType.InGameUI).EndGame(false);
         }

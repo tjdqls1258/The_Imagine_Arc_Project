@@ -42,10 +42,15 @@ public class InGameUIManager : UIBaseFormMaker
         Bind<OnClickCharacterPaenl>(typeof(OnClickSettingPanel));
     }
 
+    public void StartGame()
+    {
+        m_inGameView.StatGaem();
+    }
+
     public async UniTask SetInGameData(UserCharacterData[] characterDatas)
     {
         m_endPanel.gameObject.SetActive(false);
-        Debug.Log("Game Data Test Setting");
+        Logger.Log("Game Data Test Setting");
 
         List<InGameCharacterData> characterDeckList = new();
 
@@ -56,7 +61,6 @@ public class InGameUIManager : UIBaseFormMaker
         }
 
         inGameManager = FindAnyObjectByType<InGameManager>();
-
         inGameManager.goodsSystem.CurrentCost.Subscribe(cost =>
         {
             m_inGameView.UpdateCostDisplay(cost);
@@ -65,6 +69,8 @@ public class InGameUIManager : UIBaseFormMaker
         m_inGameView.CreateUnitButtons(characterDeckList.ToArray(), this, addressableManager);
 
         Get<OnClickCharacterPaenl>(0).SetInGameManager(inGameManager);
+
+        m_inGameView.SubjectGameTextValue(inGameManager.stageRule.lifeEvent, inGameManager.GetComponent<EnemySpawnManager>().currentCount);
 
         async UniTask SetCharacterData(NetExcute.UserCharacterData data)
         {

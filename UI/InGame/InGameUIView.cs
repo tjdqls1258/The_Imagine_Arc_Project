@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using TMPro;
+using UniRx;
 using UnityEngine;
 
 public class InGameUIView : MonoBehaviour
@@ -8,11 +9,31 @@ public class InGameUIView : MonoBehaviour
     [SerializeField] private UnitButton m_unitButtonBase;
     [SerializeField] private TextMeshProUGUI m_costText;
 
+    [SerializeField] private TextMeshProUGUI m_lifeText;
+    [SerializeField] private TextMeshProUGUI m_leftEnemeyText;
+    [SerializeField] private TextMeshProUGUI m_timerText;
+
     private List<UnitButton> m_spawnButtons = new();
+
+    public void StatGaem()
+    {
+        Observable.Interval(TimeSpan.FromSeconds(1)).
+            Select(temp => TimeSpan.FromSeconds(temp)).
+            Subscribe(x =>
+            {
+                m_timerText.text = $"{x:mm\\:ss}";
+            }).AddTo(this);
+    }
 
     public void UpdateCostDisplay(int cost)
     {
         m_costText.text = cost.ToString();
+    }
+
+    public void SubjectGameTextValue(ReactiveProperty<int> lifeProperty, ReactiveProperty<int> leftProperty)
+    {
+        lifeProperty.Subscribe(UpdateLifeText).AddTo(this);
+        leftProperty.Subscribe(UpdateLeftEnemyText).AddTo(this);
     }
 
     public void CreateUnitButtons(InGameCharacterData[] datas, InGameUIManager inGameUiManager, AddressableManager addressableManager)
@@ -20,7 +41,6 @@ public class InGameUIView : MonoBehaviour
         if (m_spawnButtons.Count == 0)
         {
             m_spawnButtons.Add(m_unitButtonBase);
-            m_unitButtonBase.SubscribeCost(inGameUiManager.inGameManager.goodsSystem.CurrentCost);
         }
         for (int characterCount = 0; characterCount < GameData.MAX_SETTING_CHARACTERCOUNT; characterCount++)
         {
@@ -35,6 +55,7 @@ public class InGameUIView : MonoBehaviour
             }
 
             m_spawnButtons[characterCount].SetCharacter(datas[characterCount], inGameUiManager, addressableManager);
+            m_spawnButtons[characterCount].SubscribeCost(inGameUiManager.inGameManager.goodsSystem.CurrentCost);
         }
     }
 
@@ -51,4 +72,8 @@ public class InGameUIView : MonoBehaviour
             buttonItem.DeleteData();
         }
     }
+
+    private void UpdateLifeText(int life) => m_lifeText.text = $"라이프 : {life}";
+
+    private void UpdateLeftEnemyText(int leftEnemy) => m_leftEnemeyText.text = $"남은 적 : {leftEnemy}";
 }
