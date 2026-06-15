@@ -11,8 +11,9 @@ public static class PlayerPrefasHelper
     /// <summary> 사용되는 저장 데이터 키 목록입니다. </summary>
     public enum PrefabsKey
     {
-        HasSettingData,    // 설정 데이터 저장 여부 확인용
-        UserSettingOption, // 유저 설정 옵션 데이터 (JSON 등)
+        HasSettingData,  
+        UserSettingOption, 
+        UserGameOption,
     }
 
     #region Use PrefabsKey (강력한 형식의 접근 방식)
@@ -23,6 +24,7 @@ public static class PlayerPrefasHelper
         {
             { PrefabsKey.HasSettingData, "HAS_SAVEDATA" },
             { PrefabsKey.UserSettingOption, "USERSETTING_OPTION" },
+            { PrefabsKey.UserGameOption, "USERSETTING_GAMEOPTION" },
         };
 
     /// <summary>

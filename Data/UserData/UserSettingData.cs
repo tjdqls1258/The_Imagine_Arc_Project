@@ -2,7 +2,6 @@ using Newtonsoft.Json;
 using System;
 using VContainer;
 
-
 public class UserSettingData : IUserData
 {
     [Serializable]
@@ -90,5 +89,69 @@ public class UserSettingData : IUserData
         soundManager.MasterValue(userSettingOption.masterSoundValue, userSettingOption.muteMasterSound);
         soundManager.BGMValue(userSettingOption.bgmSoundValue, userSettingOption.muteBgmSound);
         soundManager.EffectValue(userSettingOption.effectSoundValue, userSettingOption.muteEffectSound);
+    }
+}
+
+public class UserGameSettingData : IUserData
+{
+    [Serializable]
+    public struct UserGameOption
+    {
+        public int GameSpeedIndex;
+
+        public void SetDefault()
+        {
+            GameSpeedIndex = 0;
+        }
+    }
+
+    public UserGameOption userGameSettingOption;
+    public void InitData()
+    {
+        userGameSettingOption = new();
+    }
+
+    public bool LoadData()
+    {
+        Logger.Log($"{GetType()}::Load Data");
+        try
+        {
+            var getDataJson = PlayerPrefasHelper.GetString(PlayerPrefasHelper.PrefabsKey.UserGameOption, string.Empty);
+
+            if (string.Empty == getDataJson)
+            {
+                userGameSettingOption = new();
+                userGameSettingOption.SetDefault();
+                SaveData();
+                return true;
+            }
+
+            userGameSettingOption = JsonConvert.DeserializeObject<UserGameOption>(getDataJson);
+
+            return true;
+        }
+        catch (Exception e)
+        {
+            Logger.LogError($"Load Error : {e.ToString()}");
+            return false;
+        }
+    }
+
+    public bool SaveData()
+    {
+        Logger.Log($"{GetType()}::Save Data");
+        try
+        {
+            var data = JsonConvert.SerializeObject(userGameSettingOption);
+
+            PlayerPrefasHelper.SetString(PlayerPrefasHelper.PrefabsKey.UserGameOption, data);
+            PlayerPrefasHelper.SetInt(PlayerPrefasHelper.PrefabsKey.HasSettingData, 1);
+            return true;
+        }
+        catch (Exception e)
+        {
+            Logger.LogError($"Save Error : {e.ToString()}");
+            return false;
+        }
     }
 }

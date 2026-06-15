@@ -14,15 +14,16 @@ public class InGameUIView : MonoBehaviour
     [SerializeField] private TextMeshProUGUI m_timerText;
 
     private List<UnitButton> m_spawnButtons = new();
+    private IDisposable m_timer;
 
     public void StatGaem()
     {
-        Observable.Interval(TimeSpan.FromSeconds(1)).
+        m_timer = Observable.Interval(TimeSpan.FromSeconds(1)).
             Select(temp => TimeSpan.FromSeconds(temp)).
             Subscribe(x =>
             {
                 m_timerText.text = $"{x:mm\\:ss}";
-            }).AddTo(this);
+            });
     }
 
     public void UpdateCostDisplay(int cost)
@@ -61,7 +62,14 @@ public class InGameUIView : MonoBehaviour
 
     public void Clear()
     {
+        if (m_timer != null)
+        {
+            m_timer.Dispose();
+            m_timer = null;
+        }
+
         m_costText.text = "0";
+        m_timerText.text = "00:00";
         ResetCharacterDatas();
     }
 

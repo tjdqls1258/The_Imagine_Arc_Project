@@ -17,6 +17,7 @@ public class InGameManager : MonoBehaviour
     [SerializeField] private GameObject m_mapObject;
     [Inject] private readonly AddressableManager addressableManager;
     [Inject] private readonly UIManager uiManager;
+    [Inject] private readonly UserDataManager userDataManager;
 
     private string m_currentStageKey; 
     private string m_stageAtlasKey;
@@ -63,6 +64,7 @@ public class InGameManager : MonoBehaviour
 
     public void StartGame()
     {
+        Time.timeScale = GameUtil.GetGameTimeScale((userDataManager.GetUserData<UserGameSettingData>() as UserGameSettingData).userGameSettingOption.GameSpeedIndex);
         stageRule.StartGame();
         goodsSystem.StartGame();
         uiManager.GetAutoUIManager().GetCompoent<InGameUIManager>(UIBaseData.UIType.InGameUI).StartGame();
@@ -77,5 +79,7 @@ public class InGameManager : MonoBehaviour
 
         stageRule.Clear();
         goodsSystem.Clear();
+
+        Time.timeScale = 1;
     }
 }

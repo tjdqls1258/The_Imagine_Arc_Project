@@ -19,6 +19,7 @@ public class UserDataManager
         asyncUserDatas.Clear();
 
         userDatas.Add(typeof(UserSettingData), new UserSettingData());
+        userDatas.Add(typeof(UserGameSettingData), new UserGameSettingData());
 
         asyncUserDatas.Add(typeof(UserData), new UserData());
 
