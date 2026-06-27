@@ -46,7 +46,6 @@ public class InGameCharacterData : BaseCharacterStat
 
         //if (growth != null)
         //{
-        //    // 1레벨은 기본 스탯이므로 (현재 레벨 - 1) 번 성장합니다.
         //    int levelUps = userCharacterDatas.level - 1;
 
         //    if (levelUps > 0)
@@ -69,7 +68,7 @@ public class InGameCharacterData : BaseCharacterStat
 
         //if (growth != null)
         //{
-        //    // 업그레이드 횟수(count)만큼 CSV 수치를 더해줍니다.
+        //    // 업그레이드 횟수(count)만큼 CSV 수치를 더함.
         //    AddStat(StatType.MaxHp, growth.MaxHpAdd * count);
         //    AddStat(StatType.AttackDamage, growth.AtkPowerAdd * count);
         //    AddStat(StatType.Defense, growth.DefPowerAdd * count);
@@ -103,6 +102,8 @@ public class CharacterData : CSVData
     public SpawnType spawnType;
 
     public int blockCount = 1;
+
+    public string timelineKey;
 
     [Header("Runtime State (Caching)")]
     private Sprite modelSprite;

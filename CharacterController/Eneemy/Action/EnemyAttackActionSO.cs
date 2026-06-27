@@ -25,7 +25,7 @@ public class EnemyAttackActionSO : ActionSO<EnemyContext>
 
     private void ExecuteAttack(EnemyContext context)
     {
-        context.skillcontext.PrimaryTarget = ((ITargetable)context.currentTarget);
+        context.skillcontext.PrimaryTarget = context.currentTarget;
         context.nomalSkill.ExecuteActive(context.skillcontext);
         //if (context.attackType == EnemyAttackType.Melee)
         //{

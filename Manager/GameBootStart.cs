@@ -41,17 +41,20 @@ public class GameBootStart
         m_managerParent = parent;
         m_sceneLoadManager.Init();
         m_popupManager.Init();
-        m_popupManager.SettingLocalData();
         m_soundManager.Init();
         m_uiManager.Init();
+        m_dataManager.Init();
+
+        //로컬 데이터 (O, X 팝업, 에러 팝업 등)
+        m_csvHelper.InitLocalData();
+        m_popupManager.InitLocalData();
     }
 
-    public async UniTask StartAsync(CancellationToken cancelToken)
+    public async UniTask StartAsyncBeforeAddressableLoad(CancellationToken cancelToken)
     {
         await m_popupManager.SettingPopupDataAsync();
         await m_csvHelper.InitCSVDataAsync();
-
-        await LoadBaseResourceAsync();
+        await m_uiManager.LoadMasterCanvasAsync(m_managerParent);
         await AsyncLoadUserDataAsync();
         await m_uiManager.AutoUIManager.LoadJsonAsync();
     }
@@ -61,14 +64,9 @@ public class GameBootStart
         await m_addressableManager.InitAsync();
     }
 
-    private async UniTask LoadBaseResourceAsync()
-    {
-        await m_uiManager.LoadMasterCanvasAsync(m_managerParent);
-    }
-
+    //Data Load
     private async UniTask AsyncLoadUserDataAsync()
     {
-        m_dataManager.Init();
         if (m_dataManager.hasSaveData)
             m_dataManager.LoadUserData();
         else

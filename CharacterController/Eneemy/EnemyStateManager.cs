@@ -1,3 +1,4 @@
+using Cysharp.Threading.Tasks;
 using NetExcute;
 using System;
 using System.Collections.Generic;
@@ -73,7 +74,6 @@ public class EnemyStateManager : StateMachine<EnemyContext, EnemyState>, ITarget
         context.skillcontext = new SkillContext() 
         { 
             Caster = this, 
-            Condition = conditionBuffeManager, 
             SkillRange = conditionBuffeManager.GetStat(StatType.AttackRange),
             Damage = conditionBuffeManager.GetStat(StatType.AttackDamage)
             
@@ -167,5 +167,12 @@ public class EnemyStateManager : StateMachine<EnemyContext, EnemyState>, ITarget
         {
             conditionBuffeManager.ApplyCondition(effect, value);
         }
+    }
+
+    public string GetTimelineKey() => string.Empty;
+
+    public UniTask<Sprite> GetCutsceneSpriteAsync(AddressableManager addressableManager)
+    {
+        return UniTask.FromResult<Sprite>(null);
     }
 }

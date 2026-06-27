@@ -6,13 +6,12 @@ using UnityEngine.Events;
 using VContainer;
 
 
-
 #if UNITY_EDITOR
 using Unity.VisualScripting;
 #endif
 
 [RequireComponent(typeof(CircleCollider2D))]
-public class PlayerCombatController : MonoBehaviour,  ISkillCaster
+public class PlayerCombatController : MonoBehaviour, ISkillCaster
 {
     [Inject] private readonly ObjectPoolManager poolManager;
     [Inject] private readonly AddressableManager addressableManager;
@@ -50,7 +49,7 @@ public class PlayerCombatController : MonoBehaviour,  ISkillCaster
 
         m_animController?.SetAction(AtkAction, null, DieAction, null);
 
-        m_nomalAtkContext = new SkillContext { Caster = this, SkillRange = ConditionManager.GetStat(StatType.AttackRange), Condition = ConditionManager };
+        m_nomalAtkContext = new SkillContext { Caster = this, SkillRange = ConditionManager.GetStat(StatType.AttackRange) };
 
         SetAtkDistance();
         SetEffect().Forget();
@@ -119,7 +118,28 @@ public class PlayerCombatController : MonoBehaviour,  ISkillCaster
     }
 
     public void Hit(float atk) => m_pHpController.UpdateHp(-atk);
-    public void ApplyEffect(EffectPayload payload) => Hit(payload.Value);
+    public void ApplyEffect(EffectPayload payload)
+    {
+        if (payload.Category == EffectCategory.Buff ||
+            payload.Category == EffectCategory.Debuff || 
+            payload.Category == EffectCategory.Heal)
+        {
+            if (payload.conditionBuffes != null && payload.conditionBuffes.Count > 0)
+            {
+                ApplyBuffeEffectList(payload.conditionBuffes, payload.Value);
+            }
+        }
+        else
+            Hit(payload.Value);
+    }
+
+    private void ApplyBuffeEffectList(List<ConditionBuffeSO> effectList, float value)
+    {
+        foreach (ConditionBuffeSO effect in effectList)
+        {
+            ConditionManager.ApplyCondition(effect, value);
+        }
+    }
 
     public void Upgrade()
     {
@@ -145,6 +165,18 @@ public class PlayerCombatController : MonoBehaviour,  ISkillCaster
         if (addressableManager != null)
             poolManager.RemovePoolObject(effectName);
     }
+
+    public UniTask<Sprite> GetCutsceneSpriteAsync(AddressableManager addressableManager)
+    {
+        return m_inGameData.characterData.GetSpriteAsync(addressableManager);
+    }
+    
+
+    public string GetTimelineKey()
+    {
+        return m_inGameData.characterData.timelineKey;
+    }
+
 #if UNITY_EDITOR
     [ContextMenu("Setting HP Component")]
     public void SettingHP()
@@ -179,8 +211,5 @@ public class PlayerCombatController : MonoBehaviour,  ISkillCaster
         if (m_atkRangeObject == null) return;
         UnityEditor.EditorUtility.SetDirty(this);
     }
-
-
-
 #endif
 }

@@ -47,18 +47,21 @@ public class InGameUIManager : UIBaseFormMaker
         m_inGameView.StatGaem();
     }
 
-    public async UniTask SetInGameData(UserCharacterData[] characterDatas)
+    public async UniTask SetInGameData(UserCharacterData[] characterDatas, List<int> userSkillList)
     {
         m_endPanel.gameObject.SetActive(false);
         Logger.Log("Game Data Test Setting");
 
         List<InGameCharacterData> characterDeckList = new();
+        List<UserSkillBase> userSkillBases = new();
 
         foreach (var characterData in characterDatas)
         {
             if (characterData == null) continue;
             await SetCharacterData(characterData);
         }
+
+        await SetUserSkillData(userSkillList);
 
         inGameManager = FindAnyObjectByType<InGameManager>();
         inGameManager.goodsSystem.CurrentCost.Subscribe(cost =>
@@ -67,6 +70,7 @@ public class InGameUIManager : UIBaseFormMaker
         }).AddTo(this);
 
         m_inGameView.CreateUnitButtons(characterDeckList.ToArray(), this, addressableManager);
+        m_inGameView.CreateUserSkillButtons(userSkillBases.ToArray(), this, addressableManager);
 
         Get<OnClickCharacterPaenl>(0).SetInGameManager(inGameManager);
 
@@ -85,6 +89,15 @@ public class InGameUIManager : UIBaseFormMaker
             InGameCharacterData ingameData = new InGameCharacterData(characterData, data, nomalAtkData, passiveSkillData, activeSkillData);
 
             characterDeckList.Add(ingameData);
+        }
+
+        async UniTask SetUserSkillData(List<int> userSkillIDs)
+        {
+            foreach (var id in userSkillIDs)
+            {
+                var skillData = await addressableManager.LoadAssetAndCacheAsync<UserSkillBase>(string.Format(Util.USER_SKILL_PATH, id));
+                userSkillBases.Add(skillData);
+            }
         }
     }
 

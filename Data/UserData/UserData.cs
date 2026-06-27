@@ -12,6 +12,7 @@ public class UserData : IAsyncUserData
 
     public UserInfo myUserInfo { get; private set; }
     public Dictionary<long, UserCharacterData> oderCharacter = new();
+    public List<int> userSkillList = new();
 
     public Dictionary<long, UserCharacterData[]> characterDeckList
     {
@@ -122,5 +123,8 @@ public class UserData : IAsyncUserData
         oderCharacter.Add(11, new() { ID = 11, Enforce = 0, level = 1, Rank = 1 });
         oderCharacter.Add(14, new() { ID = 14, Enforce = 0, level = 1, Rank = 1 });
         oderCharacter.Add(16, new() { ID = 16, Enforce = 0, level = 1, Rank = 1 });
+
+        userSkillList.Add(1);
+        userSkillList.Add(2);
     }
 }

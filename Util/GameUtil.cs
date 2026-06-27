@@ -10,6 +10,12 @@ using static MapData;
 /// </summary>
 public static class GameUtil
 {
+    public static class TimeConstants
+    {
+        public const float DEFAULT_TIMESCALE = 1.0f;
+        public const float DEFAULT_FIXEDDELTA = 0.02f;
+    }
+
     private static string _uuid = string.Empty;
     public static string UUID
     {
@@ -30,7 +36,7 @@ public static class GameUtil
         }
     }
 
-    private static readonly float[] GAMESPEED = { 1.0f, 2.0f, 3.0f, 4.0f };
+    public static readonly float[] GAMESPEED = { 1.0f, 2.0f, 3.0f, 4.0f };
 
     public static bool SetTimeScale(int index)
     {

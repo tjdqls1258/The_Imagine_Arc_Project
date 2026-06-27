@@ -30,7 +30,7 @@ public class AwakeScene : MonoBehaviour
             return;
         }
 
-        await m_bootStart.StartAsync(this.destroyCancellationToken);
+        await m_bootStart.StartAsyncBeforeAddressableLoad(this.destroyCancellationToken);
 
         m_loadingPanel.ShowPanel(LoadingPanel.CanvasGroups.StartPanel);
 

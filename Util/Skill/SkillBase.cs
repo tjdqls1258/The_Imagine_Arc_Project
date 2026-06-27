@@ -1,4 +1,7 @@
+using Cysharp.Threading.Tasks;
+using System;
 using System.Collections.Generic;
+using UniRx;
 using UnityEngine;
 
 [CreateAssetMenu(menuName = "Skill System/Skill Template")]
@@ -44,7 +47,7 @@ public class SkillBase : ScriptableObject, IToolTip
         if (Type != SkillType.Passive) return;
         if (ActivationTrigger != triggerOccurred) return;
 
-        if (Random.value <= ProcChance)
+        if (UnityEngine.Random.value <= ProcChance)
         {
             ExecutePipeline(context);
         }
@@ -71,6 +74,8 @@ public class SkillBase : ScriptableObject, IToolTip
                 }
             }
         }
+
+        MessageBroker.Default.Publish(new SkillFiredEvent(context.Caster.GetTimelineKey(), context.Caster));
 
         return skillResult;
     }
@@ -113,5 +118,17 @@ public class SkillBase : ScriptableObject, IToolTip
     public string GetCoolTime()
     {
         return Cooldown.ToString("N1");
+    }
+}
+
+public struct SkillFiredEvent
+{
+    public string timeLineKey;
+    public ISkillCaster caster;
+
+    public SkillFiredEvent(string timeLineKey, ISkillCaster caster)
+    {
+        this.timeLineKey = timeLineKey; 
+        this.caster = caster;
     }
 }

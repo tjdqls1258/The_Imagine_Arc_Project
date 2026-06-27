@@ -1,3 +1,4 @@
+using UniRx;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
@@ -8,16 +9,9 @@ public class SkillDragState : IButtonState
 
     public SkillDragState(UnitButton button) { m_btn = button; }
 
-    private float m_beforeTimeScale = 1f;
-    private float m_beforeFixedDeltaTime = 0.02f;
-
     public void Enter()
     {
-        m_beforeTimeScale = Time.timeScale;
-        m_beforeFixedDeltaTime = Time.fixedDeltaTime;
-
-        Time.timeScale = 0.1f;
-        Time.fixedDeltaTime = m_beforeFixedDeltaTime * Time.timeScale;
+        MessageBroker.Default.Publish(new TimeScaleRequestEvent("SkillDrag", 0.1f, PRIORITY_TIME.SkillDrage));
 
         if (m_aimContext != null)
         {
@@ -27,8 +21,7 @@ public class SkillDragState : IButtonState
 
     public void Exit()
     {
-        Time.timeScale = m_beforeTimeScale;
-        Time.fixedDeltaTime = m_beforeFixedDeltaTime;
+        MessageBroker.Default.Publish(new TimeScaleReleaseEvent("SkillDrag"));
 
         if (m_aimContext != null)
         {

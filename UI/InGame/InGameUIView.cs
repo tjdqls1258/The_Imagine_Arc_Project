@@ -7,13 +7,16 @@ using UnityEngine;
 public class InGameUIView : MonoBehaviour
 {
     [SerializeField] private UnitButton m_unitButtonBase;
-    [SerializeField] private TextMeshProUGUI m_costText;
+    [SerializeField] private PlayerSkillButton m_playerSkillButton;
 
+    [Header("Text")]
+    [SerializeField] private TextMeshProUGUI m_costText;
     [SerializeField] private TextMeshProUGUI m_lifeText;
     [SerializeField] private TextMeshProUGUI m_leftEnemeyText;
     [SerializeField] private TextMeshProUGUI m_timerText;
 
     private List<UnitButton> m_spawnButtons = new();
+    private List<PlayerSkillButton> m_userSkillButton = new();
     private IDisposable m_timer;
 
     public void StatGaem()
@@ -37,6 +40,26 @@ public class InGameUIView : MonoBehaviour
         leftProperty.Subscribe(UpdateLeftEnemyText).AddTo(this);
     }
 
+    public void CreateUserSkillButtons(UserSkillBase[] userSkills,InGameUIManager inGameUiManager, AddressableManager addressableManager)
+    {
+        if (userSkills == null) return;
+        if(m_userSkillButton.Count == 0)
+        {
+            m_userSkillButton.Add(m_playerSkillButton);
+        }
+        for(int count = 0; count < userSkills.Length; count++)
+        {
+            if (m_userSkillButton.Count < userSkills.Length)
+            {
+                PlayerSkillButton newButton = Instantiate(m_playerSkillButton, m_playerSkillButton.transform.parent);
+                m_userSkillButton.Add(newButton);
+            }
+
+            m_userSkillButton[count].SetSkill(userSkills[count], inGameUiManager.inGameManager.userSkillcontext, addressableManager);
+            m_userSkillButton[count].SubscribeCost(inGameUiManager.inGameManager.goodsSystem.CurrentCost);
+        }
+    }
+
     public void CreateUnitButtons(InGameCharacterData[] datas, InGameUIManager inGameUiManager, AddressableManager addressableManager)
     {
         if (m_spawnButtons.Count == 0)
@@ -52,7 +75,6 @@ public class InGameUIView : MonoBehaviour
             {
                 UnitButton newButton = Instantiate(m_unitButtonBase, m_unitButtonBase.transform.parent);
                 m_spawnButtons.Add(newButton);
-                m_spawnButtons[characterCount].SubscribeCost(inGameUiManager.inGameManager.goodsSystem.CurrentCost);
             }
 
             m_spawnButtons[characterCount].SetCharacter(datas[characterCount], inGameUiManager, addressableManager);

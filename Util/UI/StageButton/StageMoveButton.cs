@@ -43,7 +43,7 @@ public class StageMoveButton : CachObject
 
             await uiManager.GetAutoUIManager()
                 .GetCompoent<InGameUIManager>(UIBaseData.UIType.InGameUI)
-                .SetInGameData(userCharacterData.characterDeckList[0]);
+                .SetInGameData(userCharacterData.characterDeckList[0], userCharacterData.userSkillList);
 
         }).Forget();
     }

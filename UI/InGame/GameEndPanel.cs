@@ -78,8 +78,6 @@ public class GameEndPanel : UIBase
 
     public override void CloseUI(bool isClosetAll = false)
     {
-        Time.timeScale = 1;
-
         uiManager.GetAutoUIManager()
             .GetCompoent<InGameUIManager>(UIBaseData.UIType.InGameUI)
             .ExitGame();

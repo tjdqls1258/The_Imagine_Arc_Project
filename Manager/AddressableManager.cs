@@ -21,10 +21,6 @@ public class AddressableManager
 
     public bool IsInitialized => m_isInitialized;
 
-    public void Init() 
-    {
-    }
-
     public async UniTask InitAsync()
     {
         if (m_isInitialized) return;

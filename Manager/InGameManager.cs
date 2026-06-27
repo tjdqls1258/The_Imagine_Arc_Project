@@ -10,7 +10,7 @@ using UnityEngine.U2D;
 using VContainer;
 using VContainer.Unity;
 
-public class InGameManager : MonoBehaviour
+public class InGameManager : MonoBehaviour, ISkillCaster
 {
     [Header("Map References")]
     [Tooltip("비동기로 생성된 맵 타일들이 배치될 부모 GameObject")]
@@ -19,12 +19,15 @@ public class InGameManager : MonoBehaviour
     [Inject] private readonly UIManager uiManager;
     [Inject] private readonly UserDataManager userDataManager;
 
+    private InGameTimeScaleManager gameTimeScaleManager = new();
+
     private string m_currentStageKey; 
     private string m_stageAtlasKey;
     public StageRule stageRule { get; private set; }
     public GameGoodsSystem goodsSystem { get; private set; } = new();
     private StageLoader stageLoader;
     public UnityAction<bool, bool> dragCharacter = null;
+    public SkillContext userSkillcontext { get; private set; } = new();
 
     private void Awake()
     {
@@ -33,6 +36,10 @@ public class InGameManager : MonoBehaviour
         stageLoader = new(uiManager, addressableManager);
         stageRule = new(uiManager);
         LoadMapDataAsync(GameData.Instance.MainStage, GameData.Instance.SubStage).Forget();
+
+        userSkillcontext.Caster = this;
+        userSkillcontext.SkillRange = float.MaxValue;
+        userSkillcontext.Damage = 0;
     }
 
     public async UniTask LoadMapDataAsync(int mainStage, int subStage)
@@ -64,7 +71,7 @@ public class InGameManager : MonoBehaviour
 
     public void StartGame()
     {
-        Time.timeScale = GameUtil.GetGameTimeScale((userDataManager.GetUserData<UserGameSettingData>() as UserGameSettingData).userGameSettingOption.GameSpeedIndex);
+        gameTimeScaleManager.Init(GameUtil.GetGameTimeScale((userDataManager.GetUserData<UserGameSettingData>() as UserGameSettingData).userGameSettingOption.GameSpeedIndex));
         stageRule.StartGame();
         goodsSystem.StartGame();
         uiManager.GetAutoUIManager().GetCompoent<InGameUIManager>(UIBaseData.UIType.InGameUI).StartGame();
@@ -79,7 +86,20 @@ public class InGameManager : MonoBehaviour
 
         stageRule.Clear();
         goodsSystem.Clear();
+        gameTimeScaleManager.Dispose();
+    }
 
-        Time.timeScale = 1;
+    public Transform GetTransform() => transform;
+
+    public int GetCasterID() => GetInstanceID();
+
+    public UniTask<Sprite> GetCutsceneSpriteAsync(AddressableManager am)
+    {
+        return UniTask.FromResult<Sprite>(null); // 플레이어 스킬 연출 이미지 정해지면 교체
+    }
+
+    public string GetTimelineKey()
+    {
+        return string.Empty; // 플레이어 전용 스킬 연출 정해지면 교체
     }
 }

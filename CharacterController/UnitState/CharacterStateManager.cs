@@ -13,7 +13,7 @@ namespace Character_State
         SpawnCoolTime
     }
 
-    public class CharacterStateManager : StateMachine<CharacterContext, CharacterStateScriptableObjcetBase>, ISkillCaster
+    public class CharacterStateManager : StateMachine<CharacterContext, CharacterStateScriptableObjcetBase>
     {
         public CharacterContext CharacterContext { get => context; }
         public SkillContext skillContext { get; private set; } = new();
@@ -26,8 +26,7 @@ namespace Character_State
             context.animController = anim;
             context.transform = transform;
 
-            skillContext.Caster = this;
-            skillContext.Condition = CharacterContext.atkController.ConditionManager;
+            skillContext.Caster = combat;
         }
 
         public void SetSpawn(bool isSpawn) => context.isSpawn = isSpawn;
@@ -43,10 +42,6 @@ namespace Character_State
             base.ForeChangeState(state);
             CurrentCharacterState = state.StateType;
         }
-
-        // --- ISkillCaster ---
-        public Transform GetTransform() => transform;
-        public int GetCasterID() => GetInstanceID();
 
         public float GetDamage() => context.atkController.ConditionManager.GetStat(StatType.AttackDamage);
 #if UNITY_EDITOR

@@ -82,7 +82,7 @@ public class PopupManager : MonoBehaviour
         }
     }
 
-    public void SettingLocalData()
+    public void InitLocalData()
     {
         try
         {

@@ -60,12 +60,14 @@ public class InGameOptionPanel : UIBaseFormMaker
             .SetUpdate(true)
             .Pause();
 
-        Get<TextMeshProUGUI>((int)TextMeshProUGUIs.SpeedText).text = $"x{GameUtil.GetGameTimeScale(gameOption.userGameSettingOption.GameSpeedIndex):F1}";
+        float currentSpeed = GameUtil.GetGameTimeScale(gameOption.userGameSettingOption.GameSpeedIndex);
+        MessageBroker.Default.Publish(new TimeScaleRequestEvent("BaseSpeed", currentSpeed, PRIORITY_TIME.SetBaseTime));
+        Get<TextMeshProUGUI>((int)TextMeshProUGUIs.SpeedText).text = $"x{currentSpeed:F1}";
 
         void CanvasClose_TweenEnd()
         {
             Get<CanvasGroup>((int)CanvasGroups.OptionPanel).gameObject.SetActive(false);
-            GameUtil.SetTimeScale(gameOption.userGameSettingOption.GameSpeedIndex);
+            MessageBroker.Default.Publish(new TimeScaleReleaseEvent("OptionPanel"));
         }
     }
 
@@ -75,8 +77,9 @@ public class InGameOptionPanel : UIBaseFormMaker
 
         if (active)
         {
-            Time.timeScale = 0f;
-            Get<CanvasGroup>((int)CanvasGroups.OptionPanel).gameObject.SetActive(active);
+            MessageBroker.Default.Publish(new TimeScaleRequestEvent("OptionPanel", 0f, PRIORITY_TIME.Optiuon));
+
+            Get<CanvasGroup>((int)CanvasGroups.OptionPanel).gameObject.SetActive(true);
             m_activeOptionSequence.Restart();
         }
         else
@@ -95,12 +98,20 @@ public class InGameOptionPanel : UIBaseFormMaker
 
     public void OnClickGameSpeed()
     {
-        gameOption.userGameSettingOption.GameSpeedIndex++;
-        if (GameUtil.SetTimeScale(gameOption.userGameSettingOption.GameSpeedIndex) == false)
-            gameOption.userGameSettingOption.GameSpeedIndex = 0;
+        int nextIndex = gameOption.userGameSettingOption.GameSpeedIndex + 1;
 
+        if (nextIndex >= GameUtil.GAMESPEED.Length)
+        {
+            nextIndex = 0;
+        }
+
+        gameOption.userGameSettingOption.GameSpeedIndex = nextIndex;
         gameOption.SaveData();
-        Get<TextMeshProUGUI>((int)TextMeshProUGUIs.SpeedText).text = $"x{Time.timeScale:F1}";
+
+        float newSpeed = GameUtil.GetGameTimeScale(nextIndex);
+
+        MessageBroker.Default.Publish(new TimeScaleRequestEvent("BaseSpeed", newSpeed, PRIORITY_TIME.SetBaseTime));
+        Get<TextMeshProUGUI>((int)TextMeshProUGUIs.SpeedText).text = $"x{newSpeed:F1}";
     }
 
     public void OnClickBack()

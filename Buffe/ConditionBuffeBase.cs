@@ -5,8 +5,8 @@ public abstract class ConditionBuffeSO : ScriptableObject
     [Header("Basic Info")]
     public string ConditionID;
     public string ConditionName;
-    public float MaxDuration;
-    public float TickInterval = 1f;
+    [Tooltip("지속 시간")]public float MaxDuration;
+    [Tooltip("틱 간격")]public float TickInterval = 1f;
 
     [Header("Stack Settings")]
     public int MaxLevel = 5;

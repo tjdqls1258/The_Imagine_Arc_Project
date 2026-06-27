@@ -1,15 +1,18 @@
+using Cysharp.Threading.Tasks;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
 
 public enum SkillType { Active, Passive }
 public enum TriggerType_Passive { None, OnAttack, OnDamaged, OnTick, OnKill } //패시브 터지는 타이밍
-public enum EffectCategory { InstantDamage, DamageOverTime, Buff, Debuff, Heal } //효과
+public enum EffectCategory { InstantDamage, Buff, Debuff, Heal } //효과
 
 public interface ISkillCaster
 {
     Transform GetTransform();
     int GetCasterID();
+    UniTask<Sprite> GetCutsceneSpriteAsync(AddressableManager addressableManager);
+    string GetTimelineKey();
 }
 
 public interface ITargetable
@@ -36,7 +39,6 @@ public class SkillContext
     
     // 패시브 발동 정보
     public float Damage { get; set; }
-    public ConditionBuffeManager Condition { get; set; }
 
     public Dictionary<Type, IndicatorObject> IndicatorDic = new();
     public Dictionary<Type, IndicatorObject> MaxRangeIndcatorDic = new();

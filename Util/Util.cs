@@ -13,12 +13,16 @@ public static class Util
     public const string CHARACTERFACE_IMAGE_NAME = "CharacterImage_Face";
     public const string CHARACTER_MODLED_PATH = "Character/{0}.prefab";
     public const string CHARACTER_SKILL_PATH = "ScriptableObject/SkillBase/SkillBase_{0}.asset";
+    public const string USER_SKILL_PATH = "ScriptableObject/SkillBase/UserSkill/UserSkill_{0}.asset";
 
     //######### Enemy Data
     public const string ENEMY_MODLED_PATH = "Enemy/{0}.prefab";
 
     //######### Vector
     public static readonly Vector3 REVERSE_2D = new Vector3(-1, 1, 1);
+
+    //######### TimeLine
+    public static string TIMELINE_PATH = "";
 
 
     //#### Map
