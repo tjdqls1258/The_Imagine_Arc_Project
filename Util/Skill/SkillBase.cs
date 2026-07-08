@@ -34,11 +34,11 @@ public class SkillBase : ScriptableObject, IToolTip
     public string SkillDesc;
 
     // 액티브 스킬 실행
-    public bool ExecuteActive(SkillContext context)
+    public bool ExecuteActive(SkillContext context, bool useSkillCutScene = false)
     {
         if (Type != SkillType.Active) return false;
 
-        return ExecutePipeline(context);
+        return ExecutePipeline(context, useSkillCutScene);
     }
 
     // 패시브 스킬 실행
@@ -54,7 +54,7 @@ public class SkillBase : ScriptableObject, IToolTip
     }
 
     // 내부 로직
-    private bool ExecutePipeline(SkillContext context)
+    private bool ExecutePipeline(SkillContext context, bool useSkillCutScene = false)
     {
         if(Type != SkillType.Passive)
             Logger.Log($"스킬 사용! [{SkillName}] - 시전자: {context.Caster.GetTransform().gameObject.name}");
@@ -75,7 +75,8 @@ public class SkillBase : ScriptableObject, IToolTip
             }
         }
 
-        MessageBroker.Default.Publish(new SkillFiredEvent(context.Caster.GetTimelineKey(), context.Caster));
+        if(useSkillCutScene && skillResult)
+            MessageBroker.Default.Publish(new SkillFiredEvent(context.Caster.GetTimelineKey(), context.Caster));
 
         return skillResult;
     }
@@ -92,12 +93,12 @@ public class SkillBase : ScriptableObject, IToolTip
             TargetingMode.UpdateIndicator(context);
     }
 
-    public bool EndAimingAndExecute(SkillContext context)
+    public bool EndAimingAndExecute(SkillContext context, bool useSkillCutScene = false)
     {
         if (TargetingMode != null)
             TargetingMode.HideIndicator(context);
 
-        return ExecuteActive(context);
+        return ExecuteActive(context, useSkillCutScene);
     }
 
     public void CancelAiming(SkillContext context)

@@ -152,9 +152,8 @@ public class PlayerCombatController : MonoBehaviour, ISkillCaster
         m_dieCallback?.Invoke();
     }
 
-    // --- Interfaces & Getters ---
     public GameObject GetAtkRangeObject() => m_atkRangeObject;
-    public float SkillLastTime() => 0f; // 기존 로직 반영
+    public float SkillLastTime() => 0f;
     public Transform GetTransform() => transform;
     public int GetCasterID() => GetInstanceID();
     public bool GetCurrentTarget() => m_nomalAtkContext.PrimaryTarget != null && !m_nomalAtkContext.PrimaryTarget.IsDie();

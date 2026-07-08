@@ -8,10 +8,12 @@ public class ConditionBuffeManager : MonoBehaviour
 
     // 현재 걸려있는 모든 버프/디버프 리스트
     private List<ActiveCondition> m_activeConditions = new List<ActiveCondition>();
-
+    private ITargetable m_targetable;
     public void SetCharacterStat(BaseCharacterStat stat)
     {
+        m_targetable = GetComponent<ITargetable>();
         m_baseStat = stat;
+        m_activeConditions.Clear();
     }
 
     public void ApplyCondition(ConditionBuffeSO conditionSO, float value)
@@ -32,16 +34,15 @@ public class ConditionBuffeManager : MonoBehaviour
     {
         if (m_activeConditions.Count == 0) return;
 
-        ITargetable self = GetComponent<ITargetable>();
         float dt = Time.deltaTime;
 
         for (int i = m_activeConditions.Count - 1; i >= 0; i--)
         {
             var cond = m_activeConditions[i];
 
-            cond.UpdateCondition(self, dt);
+            bool isTickBuffe = cond.UpdateCondition(m_targetable, dt);
 
-            if (cond.Duration <= 0)
+            if (cond.Duration <= 0 && isTickBuffe)
             {
                 m_activeConditions.RemoveAt(i);
             }

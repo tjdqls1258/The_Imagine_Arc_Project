@@ -38,16 +38,10 @@ public static class GameUtil
 
     public static readonly float[] GAMESPEED = { 1.0f, 2.0f, 3.0f, 4.0f };
 
-    public static bool SetTimeScale(int index)
+    public static void ResetTime()
     {
-        if(index < 0 || index >= GAMESPEED.Length) 
-        {
-            Time.timeScale = GAMESPEED[0];
-            return false;
-        }
-
-        Time.timeScale = GAMESPEED[index];
-        return true;
+        Time.timeScale = TimeConstants.DEFAULT_TIMESCALE;
+        Time.fixedDeltaTime = TimeConstants.DEFAULT_FIXEDDELTA;
     }
 
     public static float GetGameTimeScale(int index)

@@ -150,6 +150,13 @@ public class EnemySpawnManager : MonoBehaviour
 
     private void DieAction(int id, EnemyController enemy)
     {
+        DieActionAsync(id, enemy).Forget();
+    }
+
+    private async UniTask DieActionAsync(int id, EnemyController enemy)
+    {
+        await UniTask.WaitForSeconds(1f, cancellationToken:destroyCancellationToken);
+
         if (m_enemyList.ContainsKey(id))
             m_enemyList[id].Remove(enemy);
 

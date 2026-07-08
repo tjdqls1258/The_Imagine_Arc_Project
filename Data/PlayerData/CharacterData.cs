@@ -103,7 +103,7 @@ public class CharacterData : CSVData
 
     public int blockCount = 1;
 
-    public string timelineKey;
+    public string timelineKey = Util.DEFAULT_TIMELINE_PATH;
 
     [Header("Runtime State (Caching)")]
     private Sprite modelSprite;
@@ -161,6 +161,9 @@ public class CharacterData : CSVData
 
         SpriteAtlas atlas = await addressableManager.LoadAssetAndCacheAsync<SpriteAtlas>(GetSpriteName);
         characterSprite = atlas;
+        
+        Sprite model = characterSprite.GetSprite(Util.CHARACTER_IMAGE_NAME);
+        modelSprite = model;
     }
 
     public void UnloadAtlas(AddressableManager addressableManager)

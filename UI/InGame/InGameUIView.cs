@@ -1,13 +1,17 @@
+using DG.Tweening;
 using System;
 using System.Collections.Generic;
 using TMPro;
 using UniRx;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class InGameUIView : MonoBehaviour
 {
     [SerializeField] private UnitButton m_unitButtonBase;
     [SerializeField] private PlayerSkillButton m_playerSkillButton;
+
+    [SerializeField] private Image fadeImage; //시작전 버튼 기본 세팅 안보이도록
 
     [Header("Text")]
     [SerializeField] private TextMeshProUGUI m_costText;
@@ -19,7 +23,12 @@ public class InGameUIView : MonoBehaviour
     private List<PlayerSkillButton> m_userSkillButton = new();
     private IDisposable m_timer;
 
-    public void StatGaem()
+    private void Awake()
+    {
+        ActiveFade(true);
+    }
+
+    public void StartGame()
     {
         m_timer = Observable.Interval(TimeSpan.FromSeconds(1)).
             Select(temp => TimeSpan.FromSeconds(temp)).
@@ -55,7 +64,7 @@ public class InGameUIView : MonoBehaviour
                 m_userSkillButton.Add(newButton);
             }
 
-            m_userSkillButton[count].SetSkill(userSkills[count], inGameUiManager.inGameManager.userSkillcontext, addressableManager);
+            m_userSkillButton[count].SetSkill(userSkills[count], inGameUiManager.inGameManager, addressableManager);
             m_userSkillButton[count].SubscribeCost(inGameUiManager.inGameManager.goodsSystem.CurrentCost);
         }
     }
@@ -82,6 +91,11 @@ public class InGameUIView : MonoBehaviour
         }
     }
 
+    public void UISettingDone()
+    {
+        ActiveFade(false);
+    }
+
     public void Clear()
     {
         if (m_timer != null)
@@ -93,6 +107,22 @@ public class InGameUIView : MonoBehaviour
         m_costText.text = "0";
         m_timerText.text = "00:00";
         ResetCharacterDatas();
+        ActiveFade(true);
+    }
+
+    private void ActiveFade(bool isActive)
+    {
+        if(isActive)
+        {
+            fadeImage.gameObject.SetActive(true);
+            fadeImage.color = Color.black;
+        }
+        else
+        {
+            fadeImage.DOFade(0, 0.2f).
+            OnComplete(() => fadeImage.gameObject.SetActive(false)).
+            SetLink(gameObject);
+        }
     }
 
     private void ResetCharacterDatas()

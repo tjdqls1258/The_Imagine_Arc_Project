@@ -29,7 +29,7 @@ public class SceneLoadManager : MonoBehaviour
         m_currentProgress = 0;
 
         popupManager.ClosePopupAll();
-        Time.timeScale = 1;
+        GameUtil.ResetTime();
 
         string SceneName = SceneInfo.GetSceneName(type);
         if (string.IsNullOrEmpty(SceneName)) return;
@@ -50,6 +50,9 @@ public class SceneLoadManager : MonoBehaviour
             m_currentProgress = asyncOperation.progress;
             await UniTask.WaitForFixedUpdate();
         }
+
+        GC.Collect();
+        await UniTask.NextFrame(); //GC 이후 프레임 기다림
 
         layoutGroup.DOFade(0, m_fadeTime).OnComplete(() => layoutGroupObject.SetActive(false));
 

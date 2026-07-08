@@ -15,6 +15,7 @@ public class PlayerSkillButton : MonoBehaviour, IBeginDragHandler, IDragHandler,
     [SerializeField] private TextMeshProUGUI m_costText;
     [SerializeField] private TextMeshProUGUI m_coolTimeText;
     [SerializeField] private GameObject m_blockImage;
+    private InGameManager m_InGameManager;
 
     private float m_beforeTimeScale = 1f;
     private float m_beforeFixedDeltaTime = 0.02f;
@@ -26,7 +27,7 @@ public class PlayerSkillButton : MonoBehaviour, IBeginDragHandler, IDragHandler,
 
     public LayerMask TileMask => 1 << 8;
 
-    public void SetSkill(UserSkillBase skillData, SkillContext userSkillContext,AddressableManager addressableManager = null)
+    public void SetSkill(UserSkillBase skillData, InGameManager InGameManager, AddressableManager addressableManager = null)
     {
         if (skillData == null)
         {
@@ -37,8 +38,9 @@ public class PlayerSkillButton : MonoBehaviour, IBeginDragHandler, IDragHandler,
             gameObject.SetActive(true);
 
         this.addressableManager = addressableManager;
+        m_InGameManager = InGameManager;
         m_userSkill = skillData;
-        m_userSkillContext = userSkillContext;
+        m_userSkillContext = InGameManager.userSkillcontext;
         m_skillImage.sprite = skillData.SkillIcon;
         m_costText.text = skillData.GetCost().ToString();
     }
@@ -63,8 +65,11 @@ public class PlayerSkillButton : MonoBehaviour, IBeginDragHandler, IDragHandler,
         if (CanUseSkill() == false) return;
 
         UpdateSkillContextPosition(m_userSkillContext, eventData.position);
-        if (m_userSkill.EndAimingAndExecute(m_userSkillContext))
+        if (m_userSkill.EndAimingAndExecute(m_userSkillContext, false))
+        {
             SkillReadyTime = Time.time + m_userSkill.Cooldown;
+            m_InGameManager.UseCost(m_userSkill.GetCost());
+        }
 
         SkillDragEnter(false);
     }

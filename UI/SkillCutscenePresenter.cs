@@ -1,5 +1,6 @@
 using Cysharp.Threading.Tasks;
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using UniRx;
 using UnityEngine;
@@ -17,39 +18,54 @@ public class SkillCutscenePresenter : MonoBehaviour
     [SerializeField] private PlayableDirector m_director;
     [SerializeField] private GameObject m_cutscenePanel;
 
+
+    private Queue<SkillFiredEvent> m_pendingEvents = new();
+    private bool m_isPlaying = false;
+
     private void Start()
     {
         MessageBroker.Default.Receive<SkillFiredEvent>()
         .Subscribe(e => {
-            MessageBroker.Default.Publish(new TimeScaleRequestEvent("SkillCutscene", 0f, PRIORITY_TIME.SkillCutScene));
-            
-            m_cutscenePanel.SetActive(true);
-            OnSkillFiredAsync(e).Forget();
+
+            m_pendingEvents.Enqueue(e);
+            if (!m_isPlaying) ProcessNextEvent().Forget();
         })
         .AddTo(this);
     }
 
-    private async UniTaskVoid OnSkillFiredAsync(SkillFiredEvent e)
+    private async UniTaskVoid ProcessNextEvent()
+    {
+        m_isPlaying = true;
+        while (m_pendingEvents.Count > 0)
+        {
+            var e = m_pendingEvents.Dequeue();
+            await OnSkillFiredAsync(e);
+        }
+        m_isPlaying = false;
+    }
+
+    private async UniTask OnSkillFiredAsync(SkillFiredEvent e)
     {
         if (string.IsNullOrEmpty(e.timeLineKey)) return;
 
+        MessageBroker.Default.Publish(
+        new TimeScaleRequestEvent("SkillCutscene", 0f, PRIORITY_TIME.SkillCutScene));
+        m_cutscenePanel.SetActive(true);
+
         try
         {
-            var timeline = await m_addressableManager.LoadAssetAndCacheAsync<TimelineAsset>(e.timeLineKey);
-
-            Sprite cutsceneSprite = await e.caster.GetCutsceneSpriteAsync(m_addressableManager);
-
-            if (cutsceneSprite != null)
-            {
-                BindSpriteToTimeline(timeline, cutsceneSprite);
-            }
+            var timeline = await m_addressableManager
+                .LoadAssetAndCacheAsync<TimelineAsset>(e.timeLineKey);
+            Sprite cutsceneSprite = await e.caster
+                .GetCutsceneSpriteAsync(m_addressableManager);
+            if (cutsceneSprite != null) BindSpriteToTimeline(timeline, cutsceneSprite);
 
             m_director.playableAsset = timeline;
             m_director.Play();
-
             await UniTask.WaitUntil(() => m_director.state != PlayState.Playing);
         }
-        catch (OperationCanceledException) 
+        catch (OperationCanceledException) { }
+        finally
         {
             MessageBroker.Default.Publish(new TimeScaleReleaseEvent("SkillCutscene"));
             m_cutscenePanel.SetActive(false);

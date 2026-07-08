@@ -11,7 +11,7 @@ public class SkillDragState : IButtonState
 
     public void Enter()
     {
-        MessageBroker.Default.Publish(new TimeScaleRequestEvent("SkillDrag", 0.1f, PRIORITY_TIME.SkillDrage));
+        MessageBroker.Default.Publish(new TimeScaleRequestEvent("SkillDrag", 0.1f, PRIORITY_TIME.SkillDrag));
 
         if (m_aimContext != null)
         {
@@ -48,7 +48,7 @@ public class SkillDragState : IButtonState
         m_aimContext.Damage = m_btn.PreviewCharacter.stateManager.GetDamage();
 
         m_btn.UpdateSkillContextPosition(m_aimContext, e.position);
-        if(m_btn.CharacterData.activeSkill.EndAimingAndExecute(m_aimContext))
+        if(m_btn.CharacterData.activeSkill.EndAimingAndExecute(m_aimContext, true))
             m_btn.SkillReadyTime = Time.time + m_btn.CharacterData.activeSkill.Cooldown;
 
         m_btn.ChangeState(m_btn.SkillIdle);

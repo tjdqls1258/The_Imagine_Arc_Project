@@ -44,7 +44,7 @@ public class InGameUIManager : UIBaseFormMaker
 
     public void StartGame()
     {
-        m_inGameView.StatGaem();
+        m_inGameView.StartGame();
     }
 
     public async UniTask SetInGameData(UserCharacterData[] characterDatas, List<int> userSkillList)
@@ -75,6 +75,8 @@ public class InGameUIManager : UIBaseFormMaker
         Get<OnClickCharacterPaenl>(0).SetInGameManager(inGameManager);
 
         m_inGameView.SubjectGameTextValue(inGameManager.stageRule.lifeEvent, inGameManager.GetComponent<EnemySpawnManager>().currentCount);
+        
+        m_inGameView.UISettingDone();
 
         async UniTask SetCharacterData(NetExcute.UserCharacterData data)
         {

@@ -22,7 +22,7 @@ public static class Util
     public static readonly Vector3 REVERSE_2D = new Vector3(-1, 1, 1);
 
     //######### TimeLine
-    public static string TIMELINE_PATH = "";
+    public static string DEFAULT_TIMELINE_PATH = "SkillCutSceneTimeLine_1.playable";
 
 
     //#### Map

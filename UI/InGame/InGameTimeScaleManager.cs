@@ -6,7 +6,7 @@ using UnityEngine;
 public enum PRIORITY_TIME : int
 {
     SetBaseTime = 0,
-    SkillDrage,
+    SkillDrag,
     SkillCutScene,
     Optiuon,
 }
@@ -79,7 +79,14 @@ public class InGameTimeScaleManager : System.IDisposable
 
     private void ApplyHighestPriorityTimeScale()
     {
+        if (m_requests.Count <= 0)
+        {
+            Logger.LogError($"Can't Find TimeRequset m_requests Count = zero");
+            return;
+        }
+
         var topRequest = m_requests.OrderByDescending(r => r.Priority).First();
+        
         Time.timeScale = topRequest.Scale;
         Time.fixedDeltaTime = GameUtil.TimeConstants.DEFAULT_FIXEDDELTA * topRequest.Scale;
     }

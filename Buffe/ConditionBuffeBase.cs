@@ -1,10 +1,18 @@
 using UnityEngine;
 
+public enum BuffeType
+{
+    Infiniti,
+    tick
+}
+
 public abstract class ConditionBuffeSO : ScriptableObject
 {
     [Header("Basic Info")]
     public string ConditionID;
     public string ConditionName;
+    public BuffeType buffeType;
+
     [Tooltip("지속 시간")]public float MaxDuration;
     [Tooltip("틱 간격")]public float TickInterval = 1f;
 
@@ -29,14 +37,16 @@ public class ActiveCondition
     public ActiveCondition(ConditionBuffeSO soData, float Value)
     {
         Data = soData;
-        Duration = soData.MaxDuration;
+        Duration = Data.buffeType == BuffeType.Infiniti ? -1 : soData.MaxDuration;
         CurrentLevel = 1;
         m_tickTimer = 0f;
         this.Value = Value * soData.BaseValue;
     }
 
-    public void UpdateCondition(ITargetable target, float deltaTime)
+    public bool UpdateCondition(ITargetable target, float deltaTime)
     {
+        if (Data.buffeType == BuffeType.Infiniti) return false;
+
         Duration -= deltaTime;
         m_tickTimer += deltaTime;
 
@@ -46,6 +56,8 @@ public class ActiveCondition
 
             Data.OnTick(target, CurrentLevel, Value);
         }
+
+        return true;
     }
 
     public void AddStack()

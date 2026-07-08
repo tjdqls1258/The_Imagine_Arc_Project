@@ -15,6 +15,7 @@ public class AwakeScene : MonoBehaviour
     private void Start()
     {
         Application.targetFrameRate = 60;
+        GameUtil.ResetTime();
         StartAppFlowAsync().Forget();
     }
 
