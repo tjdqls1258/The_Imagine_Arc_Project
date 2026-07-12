@@ -13,7 +13,7 @@ using UnityEditor;
 using UnityEngine;
 using UnityEngine.Events;
 
-public class GoogleSheetReder : EditorWindow
+public class GoogleSheetReader : EditorWindow
 {
     public class GenreClass<T> where T : ScriptableObject, IUpdateDataFormSheet, new()
     {
@@ -173,7 +173,7 @@ public class GoogleSheetReder : EditorWindow
     public static void ShowMyEditor()
     {
         LoadSetting();
-        EditorWindow wnd = GetWindow<GoogleSheetReder>();
+        EditorWindow wnd = GetWindow<GoogleSheetReader>();
         wnd.titleContent = new GUIContent("Google Sheet Loader");
     }
 
