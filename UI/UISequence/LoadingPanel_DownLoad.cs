@@ -3,7 +3,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-public partial class LoadingPanel : CachObject
+public partial class LoadingPanel : CacheObject
 {
     [Header("Loading Panel UI")]
     [SerializeField] private Image m_loadingBar;

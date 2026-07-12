@@ -13,7 +13,7 @@ namespace Character_State
         SpawnCoolTime
     }
 
-    public class CharacterStateManager : StateMachine<CharacterContext, CharacterStateScriptableObjcetBase>
+    public class CharacterStateManager : StateMachine<CharacterContext, CharacterStateScriptableObjectBase>
     {
         public CharacterContext CharacterContext { get => context; }
         public SkillContext skillContext { get; private set; } = new();
@@ -37,7 +37,7 @@ namespace Character_State
             base.Update();
         }
 
-        protected override void ForeChangeState(CharacterStateScriptableObjcetBase state)
+        protected override void ForeChangeState(CharacterStateScriptableObjectBase state)
         {
             base.ForeChangeState(state);
             CurrentCharacterState = state.StateType;

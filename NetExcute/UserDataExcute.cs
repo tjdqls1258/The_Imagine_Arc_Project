@@ -66,6 +66,7 @@ namespace NetExcute
 
             foreach (StatType type in Enum.GetValues(typeof(StatType)))
             {
+                if (type == StatType.MoveSpeed) continue;
                 float baseVal = GetBaseValueFromState(baseData.characterState, type);
                 baseCharacterStat.SetStat(type, baseVal);
             }

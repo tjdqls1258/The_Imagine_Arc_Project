@@ -23,7 +23,7 @@ public class UserDataManager
 
         asyncUserDatas.Add(typeof(UserData), new UserData());
 
-        hasSaveData = PlayerPrefasHelper.GetInt(PlayerPrefasHelper.PrefabsKey.HasSettingData, 0) != 0;
+        hasSaveData = PlayerPrefsHelper.GetInt(PlayerPrefsHelper.PrefabsKey.HasSettingData, 0) != 0;
     }
 
     public void InitDefaultData()
@@ -36,7 +36,7 @@ public class UserDataManager
 
     public void LoadUserData()
     {
-        hasSaveData = PlayerPrefasHelper.GetInt(PlayerPrefasHelper.PrefabsKey.HasSettingData, 0) != 0;
+        hasSaveData = PlayerPrefsHelper.GetInt(PlayerPrefsHelper.PrefabsKey.HasSettingData, 0) != 0;
 
         if (hasSaveData)
         {

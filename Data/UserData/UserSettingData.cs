@@ -45,7 +45,7 @@ public class UserSettingData : IUserData
         Logger.Log($"{GetType()}::Load Data");
         try
         {
-            var getDataJson = PlayerPrefasHelper.GetString(PlayerPrefasHelper.PrefabsKey.UserSettingOption, string.Empty);
+            var getDataJson = PlayerPrefsHelper.GetString(PlayerPrefsHelper.PrefabsKey.UserSettingOption, string.Empty);
 
             if (string.Empty == getDataJson)
             {
@@ -73,8 +73,8 @@ public class UserSettingData : IUserData
         {
             var data = JsonConvert.SerializeObject(userSettingOption);
 
-            PlayerPrefasHelper.SetString(PlayerPrefasHelper.PrefabsKey.UserSettingOption, data);
-            PlayerPrefasHelper.SetInt(PlayerPrefasHelper.PrefabsKey.HasSettingData, 1);
+            PlayerPrefsHelper.SetString(PlayerPrefsHelper.PrefabsKey.UserSettingOption, data);
+            PlayerPrefsHelper.SetInt(PlayerPrefsHelper.PrefabsKey.HasSettingData, 1);
             return true;
         }
         catch (Exception e)
@@ -116,7 +116,7 @@ public class UserGameSettingData : IUserData
         Logger.Log($"{GetType()}::Load Data");
         try
         {
-            var getDataJson = PlayerPrefasHelper.GetString(PlayerPrefasHelper.PrefabsKey.UserGameOption, string.Empty);
+            var getDataJson = PlayerPrefsHelper.GetString(PlayerPrefsHelper.PrefabsKey.UserGameOption, string.Empty);
 
             if (string.Empty == getDataJson)
             {
@@ -144,8 +144,8 @@ public class UserGameSettingData : IUserData
         {
             var data = JsonConvert.SerializeObject(userGameSettingOption);
 
-            PlayerPrefasHelper.SetString(PlayerPrefasHelper.PrefabsKey.UserGameOption, data);
-            PlayerPrefasHelper.SetInt(PlayerPrefasHelper.PrefabsKey.HasSettingData, 1);
+            PlayerPrefsHelper.SetString(PlayerPrefsHelper.PrefabsKey.UserGameOption, data);
+            PlayerPrefsHelper.SetInt(PlayerPrefsHelper.PrefabsKey.HasSettingData, 1);
             return true;
         }
         catch (Exception e)

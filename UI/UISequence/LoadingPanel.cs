@@ -2,7 +2,7 @@ using System;
 using UnityEngine;
 using static LoadingPanel;
 
-public partial class LoadingPanel : CachObject
+public partial class LoadingPanel : CacheObject
 {
     public enum CanvasGroups
     {

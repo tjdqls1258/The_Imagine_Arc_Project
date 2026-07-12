@@ -3,7 +3,7 @@ using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
 
-public class CharacterChangeButton : CachObject
+public class CharacterChangeButton : CacheObject
 {
     private AddressableManager addressable;
     private ICSVProvider csvHelper;

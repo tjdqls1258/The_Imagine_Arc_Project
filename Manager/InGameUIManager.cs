@@ -89,7 +89,7 @@ public class InGameUIManager : UIBaseFormMaker
             var activeSkillData = await addressableManager.LoadAssetAndCacheAsync<SkillBase>(string.Format(Util.CHARACTER_SKILL_PATH, activeSkillID));
             var passiveSkillData = await addressableManager.LoadAssetAndCacheAsync<SkillBase>(string.Format(Util.CHARACTER_SKILL_PATH, passiveSkillID));
             var nomalAtkData = await addressableManager.LoadAssetAndCacheAsync<SkillBase>(string.Format(Util.CHARACTER_SKILL_PATH, nomalAtkDataID));
-            InGameCharacterData ingameData = new InGameCharacterData(characterData, data, nomalAtkData, passiveSkillData, activeSkillData);
+            InGameCharacterData ingameData = new InGameCharacterData(characterData, data, nomalAtkData, passiveSkillData, activeSkillData, growthManager);
 
             characterDeckList.Add(ingameData);
         }

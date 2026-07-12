@@ -7,7 +7,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using VContainer;
 
-public class CharacterDetail : CachObject
+public class CharacterDetail : CacheObject
 {
     enum Images { CharacterImage }
     enum Texts { StateLV_Text, State_Text }

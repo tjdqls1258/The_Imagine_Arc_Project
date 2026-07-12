@@ -6,7 +6,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using VContainer;
 
-public class OnClickCharacterPaenl : CachObject
+public class OnClickCharacterPaenl : CacheObject
 {
     enum Images
     {

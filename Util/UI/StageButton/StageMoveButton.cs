@@ -2,7 +2,7 @@ using Cysharp.Threading.Tasks;
 using TMPro;
 using UnityEngine.UI;
 
-public class StageMoveButton : CachObject
+public class StageMoveButton : CacheObject
 {
     enum Texts
     {

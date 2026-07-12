@@ -6,7 +6,7 @@ using VContainer;
 /// 모든 UI 패널 및 요소의 근간이 되는 최상위 베이스 클래스입니다.
 /// UI의 초기화, 애니메이션 재생, 열기/닫기 콜백 및 UIManager와의 통신을 관리합니다.
 /// </summary>
-public class UIBase : CachObject
+public class UIBase : CacheObject
 {
     [Inject] protected readonly UIManager uiManager;
 

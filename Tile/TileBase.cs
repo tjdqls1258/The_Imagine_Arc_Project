@@ -29,7 +29,7 @@ public interface TileClickEvent
 /// 타일의 위치 설정, 스프라이트 변경, 배치 가능 구역 판정을 담당하며,
 /// TileClickEvent를 구현하여 하위 타일들이 클릭 이벤트를 재정의(Override)할 수 있도록 지원합니다.
 /// </summary>
-public class TileBase : CachObject, TileClickEvent
+public class TileBase : CacheObject, TileClickEvent
 {
     protected SpriteRenderer tileImage;
     protected UIManager uiManager;

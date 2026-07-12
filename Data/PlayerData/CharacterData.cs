@@ -35,7 +35,7 @@ public class InGameCharacterData : BaseCharacterStat
         nomalAtkSkill = nomalAtk;
         this.passive = passive;
         activeSkill = active;
-
+        this.growthManager = growthManager;
         characterData = data;
         userCharacterDatas = userCharacterData;
 

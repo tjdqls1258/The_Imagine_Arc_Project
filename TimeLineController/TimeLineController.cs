@@ -6,7 +6,7 @@ using UnityEngine.Playables;
 /// 유니티 타임라인(PlayableDirector)의 실행을 제어하고, 
 /// DOTween 애니메이션과 타임라인의 흐름을 동기화하는 베이스 클래스입니다.
 /// </summary>
-public class TimeLineController : CachObject
+public class TimeLineController : CacheObject
 {
     // ====== Inspector Settings ======
 

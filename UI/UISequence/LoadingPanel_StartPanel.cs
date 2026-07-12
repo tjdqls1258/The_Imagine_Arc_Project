@@ -2,7 +2,7 @@ using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
 
-public partial class LoadingPanel : CachObject
+public partial class LoadingPanel : CacheObject
 {
     [Space, Header("StartPaenl")]
     [SerializeField] private Button m_onClickButton;

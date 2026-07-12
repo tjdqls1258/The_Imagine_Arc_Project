@@ -75,11 +75,34 @@ public static class UpdateDataFormSheet
         string foldPath = path + $"/{typeof(Data).Name}";
         if (AssetDatabase.IsValidFolder(foldPath) == false)
         {
-            AssetDatabase.SaveAssets();
-            AssetDatabase.Refresh();
+            string parentFolder = path.TrimEnd('/');
+            AssetDatabase.CreateFolder(parentFolder, typeof(Data).Name);
         }
         string datapath = $"{foldPath}/{typeof(Data).Name}_{ID}.asset";
-        AssetDatabase.CreateAsset(data, datapath);
+
+        Data baseData = AssetDatabase.LoadAssetAtPath<Data>(datapath);
+        if(baseData != null)
+        {
+            FieldInfo[] fields = typeof(Data).GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+            foreach (FieldInfo field in fields)
+            {
+                if (field.GetCustomAttributes(typeof(SerializeReference), true).Length > 0)
+                    continue;
+
+                if (typeof(UnityEngine.Object).IsAssignableFrom(field.FieldType))
+                    continue;
+
+                object newValue = field.GetValue(data);
+                field.SetValue(baseData, newValue);
+            }
+            EditorUtility.SetDirty(baseData);
+        }
+        else
+            AssetDatabase.CreateAsset(data, datapath);
+
+
+        AssetDatabase.SaveAssets();
+        AssetDatabase.Refresh();
     }
 }
 #endif
