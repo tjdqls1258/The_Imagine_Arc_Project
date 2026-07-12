@@ -10,7 +10,7 @@ using VContainer;
 
 public class EnemySpawnManager : MonoBehaviour
 {
-    [Inject] private readonly CSVHelper csvHelper;
+    [Inject] private readonly ICSVProvider csvHelper;
     [Inject] private readonly AddressableManager addressableManager;
 
     private EnemySpawnData[] m_enemySpawnDatas; 
@@ -74,7 +74,7 @@ public class EnemySpawnManager : MonoBehaviour
         {
             if (m_enemyModelList.ContainsKey(enemySpawnData.enemyDataID))
                 continue;
-            var enemyData = csvHelper.GetScripteData<EnemyDataList>().GetData(enemySpawnData.enemyDataID);
+            var enemyData = csvHelper.GetScriptData<EnemyDataList>().GetData(enemySpawnData.enemyDataID);
             var obj = await addressableManager.LoadAssetAndCacheAsync<GameObject>(string.Format(Util.ENEMY_MODLED_PATH, enemyData.controllObjectKey)).AttachExternalCancellation(destroyCancellationToken);
             obj.gameObject.SetActive(false);
             m_enemyModelList.Add(enemySpawnData.enemyDataID, obj);
@@ -136,12 +136,12 @@ public class EnemySpawnManager : MonoBehaviour
             if (pathData != null)
             {
                 var vectorList = GameUtil.ConvartSerializableVector2IntToVector2Int_List(pathData.path);
-                obj.InitEnemyData(csvHelper.GetScripteData<EnemyDataList>().GetData(m_enemySpawnDatas[m_spawnCount].enemyDataID), vectorList, DieAction, m_enemyDie, m_enemyArriveAction);
+                obj.InitEnemyData(csvHelper.GetScriptData<EnemyDataList>().GetData(m_enemySpawnDatas[m_spawnCount].enemyDataID), vectorList, DieAction, m_enemyDie, m_enemyArriveAction);
             }
             else
             {
                 var vectorList = GameUtil.ConvartSerializableVector2IntToVector2Int_List(m_pathData[0].path);
-                obj.InitEnemyData(csvHelper.GetScripteData<EnemyDataList>().GetData(m_enemySpawnDatas[m_spawnCount].enemyDataID), vectorList, DieAction, m_enemyDie, m_enemyArriveAction);
+                obj.InitEnemyData(csvHelper.GetScriptData<EnemyDataList>().GetData(m_enemySpawnDatas[m_spawnCount].enemyDataID), vectorList, DieAction, m_enemyDie, m_enemyArriveAction);
             }
 
             m_spawnCount++;

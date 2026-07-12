@@ -13,7 +13,7 @@ public class CharacterPanelContext : FancyGridViewContext
 
     public Action<UserCharacterData> OnCellClicked;
     public AddressableManager addressableManager;
-    public CSVHelper csvHelper;
+    public ICSVProvider csvHelper;
 }
 
 public class CharacterPanelScroll : FancyGridView<UserCharacterData, CharacterPanelContext>
@@ -26,7 +26,7 @@ public class CharacterPanelScroll : FancyGridView<UserCharacterData, CharacterPa
 
     protected override void SetupCellTemplate() => Setup<CellGroup>(cellPrefab);
 
-    public void OnCellClicked(Action<UserCharacterData> callback, AddressableManager addressableManager, CSVHelper csvHelper,
+    public void OnCellClicked(Action<UserCharacterData> callback, AddressableManager addressableManager, ICSVProvider csvHelper,
         UserCharacterData[] characterDatas = null, UserCharacterData selecteCharacterData = null)
     {
         Context.addressableManager = addressableManager;

@@ -30,7 +30,7 @@ public class BaseCharacterStat : IStatProvider
         m_baseStats.Add(StatType.Defense, characterData.defPower);
     }
 
-    public float GetStat(StatType statType)
+    public virtual float GetStat(StatType statType)
     {
         if (m_baseStats.TryGetValue(statType, out float value))
             return value;
@@ -38,7 +38,7 @@ public class BaseCharacterStat : IStatProvider
         return 0f;
     }
 
-    public float SetStat(StatType statType, float value)
+    public virtual float SetStat(StatType statType, float value)
     {
         if(m_baseStats.ContainsKey(statType))
             m_baseStats[statType] = value;
@@ -46,7 +46,7 @@ public class BaseCharacterStat : IStatProvider
         return m_baseStats[statType];
     }
 
-    public float AddStat(StatType statType, float value)
+    public virtual float AddStat(StatType statType, float value)
     {
         if (m_baseStats.ContainsKey(statType))
             m_baseStats[statType] += value;

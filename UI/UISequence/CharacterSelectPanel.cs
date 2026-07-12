@@ -12,7 +12,7 @@ public class CharacterSelectPanel : UIBase
     [Inject] private readonly UserDataManager dataManager;
     [Inject] private readonly PopupManager popupManager;
     [Inject] private readonly AddressableManager addressable;
-    [Inject] private readonly CSVHelper csvHelper;
+    [Inject] private readonly ICSVProvider csvHelper;
     private enum CanvasGroups
     {
         PagePanel,

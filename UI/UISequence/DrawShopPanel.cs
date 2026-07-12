@@ -8,7 +8,7 @@ using Random = UnityEngine.Random;
 
 public class DrawShopPanel : UIBase
 {
-    [Inject] private readonly CSVHelper csvHelper;
+    [Inject] private readonly ICSVProvider csvHelper;
 
     enum DrawButton
     {
@@ -79,7 +79,7 @@ public class DrawShopPanel : UIBase
 
         foreach (int id in draw.data)
         {
-            var characterDtat = csvHelper.GetScripteData<CharacterDataList>().GetData(id);
+            var characterDtat = csvHelper.GetScriptData<CharacterDataList>().GetData(id);
             currentData.Add(characterDtat);
 
             int currentCount = count;
@@ -138,7 +138,7 @@ public class DrawShopPanel : UIBase
 
         foreach (int id in ids)
         {
-            var characterDtat = csvHelper.GetScripteData<CharacterDataList>().GetData(id);
+            var characterDtat = csvHelper.GetScriptData<CharacterDataList>().GetData(id);
             currentData.Add(characterDtat);
 
             int currentCount = count;

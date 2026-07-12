@@ -13,7 +13,7 @@ public class CharacterListPanel : UIBase
 {
     [Inject] private readonly UserDataManager dataManager;
     [Inject] private readonly AddressableManager addressableManager;
-    [Inject] private readonly CSVHelper csvHelper;
+    [Inject] private readonly ICSVProvider csvHelper;
     [Header("UI Components")]
     [Tooltip("캐릭터 목록을 그리드 형태로 표시하는 최적화 스크롤 컨트롤러")]
     [SerializeField] private CharacterPanelScroll m_characterScrollView;

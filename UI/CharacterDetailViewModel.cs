@@ -12,15 +12,15 @@ public class CharacterDetailViewModel
     public BindableProperty<int[]> ActiveSkills { get; private set; } = new();
     public BindableProperty<int[]> PassiveSkills { get; private set; } = new();
 
-    public async UniTask LoadDataAsync(UserCharacterData userData, AddressableManager addressable, CSVHelper csvHelper)
+    public async UniTask LoadDataAsync(UserCharacterData userData, AddressableManager addressable, GrowthManager growthManager, ICSVProvider csvHelper)
     {
         CharacterData rawData = userData.GetCharacterData(csvHelper);
-        BaseCharacterStat characterStat = userData.GetInGameBaseStat(csvHelper);
+        BaseCharacterStat characterStat = userData.GetInGameBaseStat(csvHelper, growthManager);
         LevelText.Value = $"LV. {userData.level}";
         InfoText.Value = 
             @$"{rawData.characterName} data Not Ready
-Cost : {rawData.cost}\nRating : {rawData.rating}
-test Data : {characterStat.GetStat(StatType.MaxHp)}";
+                Cost : {rawData.cost}\nRating : {rawData.rating}
+                test Data : {characterStat.GetStat(StatType.MaxHp)}";
 
         ActiveSkills.Value = rawData.activeSkill;
         PassiveSkills.Value = rawData.passiveSkill;

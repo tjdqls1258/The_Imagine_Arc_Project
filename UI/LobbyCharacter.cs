@@ -9,7 +9,7 @@ using VContainer;
 
 public class LobbyCharacter : UILobbyUpdate
 {
-    [Inject] private readonly CSVHelper csvHelper;
+    [Inject] private readonly ICSVProvider csvHelper;
     [Inject] private readonly AddressableManager addressable;
 
     private CancellationTokenSource cancelToken;
@@ -32,7 +32,7 @@ public class LobbyCharacter : UILobbyUpdate
 
     public override void UpdateFormLobby()
     {
-        lobbyCharacterData = csvHelper.GetScripteData<CharacterDataList>().GetData(1);
+        lobbyCharacterData = csvHelper.GetScriptData<CharacterDataList>().GetData(1);
 
         lobbyCharacterData.GetCharacterSprite(addressable, targetImage: Get<Image>((int)Images.CharacterImage)).Forget();
 

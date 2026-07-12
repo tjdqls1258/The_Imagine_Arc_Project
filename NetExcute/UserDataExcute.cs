@@ -50,12 +50,12 @@ namespace NetExcute
             }
         }
 
-        public CharacterData GetCharacterData(CSVHelper csvHelper)
+        public CharacterData GetCharacterData(ICSVProvider csvHelper)
         {
-            return csvHelper.GetScripteData<CharacterDataList>().GetData(ID);
+            return csvHelper.GetScriptData<CharacterDataList>().GetData(ID);
         }
 
-        public BaseCharacterStat GetInGameBaseStat(CSVHelper csvHelper)
+        public BaseCharacterStat GetInGameBaseStat(ICSVProvider csvHelper, GrowthManager growthManager)
         {
             CharacterData baseData = GetCharacterData(csvHelper);
 
@@ -64,31 +64,50 @@ namespace NetExcute
 
             baseCharacterStat = new BaseCharacterStat(baseData.characterState);
 
-            baseCharacterStat.SetStat(StatType.MaxHp, baseData.characterState.maxHp);
-            baseCharacterStat.SetStat(StatType.AttackDamage, baseData.characterState.atkPower);
-            baseCharacterStat.SetStat(StatType.Defense, baseData.characterState.defPower);
-            baseCharacterStat.SetStat(StatType.AttackSpeed, baseData.characterState.atkSpeed);
-            baseCharacterStat.SetStat(StatType.AttackRange, baseData.characterState.atkRang);
+            foreach (StatType type in Enum.GetValues(typeof(StatType)))
+            {
+                float baseVal = GetBaseValueFromState(baseData.characterState, type);
+                baseCharacterStat.SetStat(type, baseVal);
+            }
 
             int levelUps = level - 1;
-
             if (levelUps > 0)
             {
-                // TODO: 해당 캐릭터의 성장 데이터 ID를 가져오는 방식에 맞게 수정
-                //string growthID = "Attacker_Level"; // 테스트용 임시 ID
-                //GrowthData growth = DataManager.Instance.GetGrowthData(growthID);
+                GrowthData growth = growthManager.GetGrowthData(baseData.GrowthDataID);
 
-                //if (growth != null)
-                //{
-                //    finalStat.AddStat(StatType.MaxHp, growth.MaxHpAdd * levelUps);
-                //    finalStat.AddStat(StatType.AttackDamage, growth.AtkPowerAdd * levelUps);
-                //    finalStat.AddStat(StatType.Defense, growth.DefPowerAdd * levelUps);
-                //    finalStat.AddStat(StatType.AttackSpeed, growth. * levelUps);
-                //}
+                if (growth != null)
+                {
+                    foreach (StatType type in Enum.GetValues(typeof(StatType)))
+                    {
+                        float levelRate = growth.GetValue(GrowthType.Level, type);
+                        float enforceRate = growth.GetValue(GrowthType.Enforce, type);
+
+                        float multiplier = (levelRate * levelUps) + enforceRate;
+
+                        if (multiplier > 0)
+                        {
+                            float baseVal = GetBaseValueFromState(baseData.characterState, type);
+                            baseCharacterStat.AddStat(type, baseVal * multiplier);
+                        }
+                    }
+                }
             }
 
             m_isDirty = false;
             return baseCharacterStat;
+        }
+
+        private float GetBaseValueFromState(CharacterState state, StatType type)
+        {
+            return type switch
+            {
+                StatType.MaxHp => state.maxHp,
+                StatType.AttackDamage => state.atkPower,
+                StatType.Defense => state.defPower,
+                StatType.AttackSpeed => state.atkSpeed,
+                StatType.AttackRange => state.atkRang,
+                _ => 0f
+            };
         }
     }
 

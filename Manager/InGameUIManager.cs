@@ -10,7 +10,8 @@ public class InGameUIManager : UIBaseFormMaker
     [Inject] private readonly AddressableManager addressableManager;
     [Inject] private readonly SceneLoadManager sceneLoadManager;
     [Inject] private readonly ObjectPoolManager objectPoolManager;
-    [Inject] private readonly CSVHelper csvHelper;
+    [Inject] private readonly ICSVProvider csvHelper;
+    [Inject] private readonly GrowthManager growthManager;
 
     [Header("UI Components")]
     [SerializeField] private InGameUIView m_inGameView;

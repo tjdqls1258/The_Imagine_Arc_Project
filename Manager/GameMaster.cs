@@ -16,15 +16,22 @@ public class GameMaster : LifetimeScope
     public PopupManager popupManager;
     public AwakeScene awake;
     public GameObject managerParent;
+    public GrowthManager growthManager;
 
     [SerializeField] private GameObject lodingObject;
+
+    [SerializeField] private GrowthLibrary GrowthLibrary;
 
     protected override void Configure(IContainerBuilder builder)
     {
         DontDestroyOnLoad(managerParent);
-        builder.Register<CSVHelper>(Lifetime.Singleton);
+
+        builder.RegisterInstance(GrowthLibrary);
+
+        builder.Register<CSVHelper>(Lifetime.Singleton).As<ICSVProvider>().As<ICSVLoader>();
         builder.Register<AddressableManager>(Lifetime.Singleton);
         builder.Register<UserDataManager>(Lifetime.Singleton);
+        builder.Register<GrowthManager>(Lifetime.Singleton);
 
         builder.Register<UIManager>(Lifetime.Singleton).WithParameter(lodingObject);
 

@@ -15,7 +15,8 @@ public class CharacterDetail : CachObject
     enum Transforms { PassiveLayout, ActiveLayout }
 
     [Inject] private AddressableManager addressable;
-    [Inject] private CSVHelper csvHelper;
+    [Inject] private GrowthManager growthManager;
+    [Inject] private ICSVProvider csvHelper;
 
     private CharacterDetailViewModel m_viewModel;
 
@@ -69,7 +70,7 @@ public class CharacterDetail : CachObject
         gameObject.SetActive(true);
         m_group.DOFade(1, m_fadeTime);
 
-        m_viewModel.LoadDataAsync(data, addressable, csvHelper).Forget();
+        m_viewModel.LoadDataAsync(data, addressable, growthManager, csvHelper).Forget();
     }
 
     public void Close()

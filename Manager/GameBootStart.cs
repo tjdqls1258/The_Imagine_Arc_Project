@@ -7,22 +7,24 @@ using VContainer.Unity;
 public class GameBootStart
 {
     private readonly AddressableManager m_addressableManager;
-    private readonly CSVHelper m_csvHelper;
+    private readonly ICSVLoader m_csvHelper;
     private readonly PopupManager m_popupManager;
     private readonly SceneLoadManager m_sceneLoadManager;
     private readonly UIManager m_uiManager;
     private readonly UserDataManager m_dataManager;
     private readonly SoundManager m_soundManager;
+    private readonly GrowthManager m_growthManager;
 
     [Inject]
     public GameBootStart(
         AddressableManager addressableManager,
-        CSVHelper csvHelper,
+        ICSVLoader csvHelper,
         PopupManager popupManager,
         SceneLoadManager sceneLoadManager,
         UIManager uiManager,
         UserDataManager dataManager,
-        SoundManager soundManager)
+        SoundManager soundManager,
+        GrowthManager growthManager)
     {
         m_addressableManager = addressableManager;
         m_csvHelper = csvHelper;
@@ -31,6 +33,7 @@ public class GameBootStart
         m_uiManager = uiManager;
         m_dataManager = dataManager;
         m_soundManager = soundManager;
+        m_growthManager = growthManager;
     }
 
 

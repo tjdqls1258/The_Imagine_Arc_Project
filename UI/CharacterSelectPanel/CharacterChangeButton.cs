@@ -6,7 +6,7 @@ using UnityEngine.UI;
 public class CharacterChangeButton : CachObject
 {
     private AddressableManager addressable;
-    private CSVHelper csvHelper;
+    private ICSVProvider csvHelper;
     private Button m_button;
     private Button button
     {
@@ -35,7 +35,7 @@ public class CharacterChangeButton : CachObject
 
     public int prefabIndex { get; private set; } = 0;
 
-    public void Init(AddressableManager addressable, CSVHelper csvHelper, UnityAction<CharacterChangeButton> action, int index)
+    public void Init(AddressableManager addressable, ICSVProvider csvHelper, UnityAction<CharacterChangeButton> action, int index)
     {
         this.csvHelper = csvHelper;
         this.addressable = addressable;

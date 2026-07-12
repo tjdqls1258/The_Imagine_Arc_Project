@@ -4,6 +4,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Unity.VisualScripting;
+using UnityEditor.U2D.Animation;
 using UnityEngine;
 using UnityEngine.U2D;
 using UnityEngine.UI;
@@ -20,65 +22,81 @@ public class InGameCharacterData : BaseCharacterStat
     private NetExcute.UserCharacterData userCharacterDatas;
     protected int upgradeCount;
 
+    protected GrowthManager growthManager;
     public CharacterData characterData;
     public SkillBase nomalAtkSkill;
     public SkillBase passive;
     public SkillBase activeSkill;
 
-    public InGameCharacterData(CharacterData data, NetExcute.UserCharacterData userCharacterData,SkillBase nomalAtk = null, SkillBase passive = null, SkillBase active = null) : base(data.characterState)
+    public InGameCharacterData(CharacterData data, NetExcute.UserCharacterData userCharacterData, SkillBase nomalAtk = null, SkillBase passive = null, SkillBase active = null, GrowthManager growthManager = null) : base(data.characterState)
     {
-        characterData = data;
-        userCharacterDatas = userCharacterData;
         upgradeCount = 0;
 
         nomalAtkSkill = nomalAtk;
         this.passive = passive;
         activeSkill = active;
 
-        ApplyLobbyGrowth();
+        characterData = data;
+        userCharacterDatas = userCharacterData;
+
+        InitializeStats();
     }
 
-    private void ApplyLobbyGrowth()
+    private void InitializeStats()
     {
-        // 예: "Attacker_Level" 같은 CSV 키값을 생성 (SpawnType이나 클래스 기반)
-        //string growthID = $"{characterData.spawnType}_Level";
-        //GrowthData growth = DataManager.Instance.GetGrowthData(growthID);
+        GrowthData growth = growthManager.GetGrowthData(characterData.GrowthDataID);
+        if (growth == null) return;
 
-        //if (growth != null)
-        //{
-        //    int levelUps = userCharacterDatas.level - 1;
+        int levelUps = userCharacterDatas.Level - 1;
 
-        //    if (levelUps > 0)
-        //    {
-        //        AddStat(StatType.MaxHp, growth.MaxHpAdd * levelUps);
-        //        AddStat(StatType.AtkPower, growth.AtkPowerAdd * levelUps);
-        //        AddStat(StatType.DefPower, growth.DefPowerAdd * levelUps);
-        //    }
+        foreach (StatType type in Enum.GetValues(typeof(StatType)))
+        {
+            float levelRate = growth.GetValue(GrowthType.Level, type);
+            float enforceRate = growth.GetValue(GrowthType.Enforce, type);
 
-        //    // TODO: Enforce(강화)나 Rank(진화)에 따른 추가 스탯 보너스도 여기서 AddStat으로 처리
-        //}
+            float multiplier = (levelRate * levelUps) + enforceRate;
+
+            if (multiplier > 0)
+            {
+                float baseVal = GetInitialBaseValue(type);
+                this.AddStat(type, baseVal * multiplier);
+            }
+        }
+    }
+
+    private float GetInitialBaseValue(StatType type)
+    {
+        return type switch
+        {
+            StatType.MaxHp => characterData.characterState.maxHp,
+            StatType.AttackDamage => characterData.characterState.atkPower,
+            StatType.Defense => characterData.characterState.defPower,
+            StatType.AttackRange => characterData.characterState.atkRang,
+            StatType.AttackSpeed => characterData.characterState.atkSpeed,
+            _ => 0f
+        };
     }
 
     public void UpgradeCharacter(int count = 1)
     {
         upgradeCount += count;
 
-        //string upgradeID = $"{characterData.spawnType}_Upgrade";
-        //GrowthData growth = DataManager.Instance.GetGrowthData(upgradeID);
+        GrowthData growth = growthManager.GetGrowthData(characterData.GrowthDataID);
 
-        //if (growth != null)
-        //{
-        //    // 업그레이드 횟수(count)만큼 CSV 수치를 더함.
-        //    AddStat(StatType.MaxHp, growth.MaxHpAdd * count);
-        //    AddStat(StatType.AttackDamage, growth.AtkPowerAdd * count);
-        //    AddStat(StatType.Defense, growth.DefPowerAdd * count);
-        //AddStat(StatType.AttackSpeed, growth.AtkSpeedAdd * count);
-        //}
-    }
+        if (growth != null)
+        {
+            foreach (StatType statType in Enum.GetValues(typeof(StatType)))
+            {
+                float rate = growth.GetValue(GrowthType.Upgrade, statType);
 
-    public float GetAtk()
-    {
-        return StatCalculator.Calculate(characterData.characterState.atkPower, userCharacterDatas.level, userCharacterDatas.Enforce, userCharacterDatas.Rank, upgradeCount);
+                if (rate <= 0) continue;
+
+                float currentStat = GetStat(statType);
+                float addValue = GrowthManager.CalculateAddedStat(currentStat, rate, count);
+
+                AddStat(statType, addValue);
+            }
+        }
     }
 }
 
@@ -102,6 +120,7 @@ public class CharacterData : CSVData
     public SpawnType spawnType;
 
     public int blockCount = 1;
+    public string GrowthDataID;
 
     public string timelineKey = Util.DEFAULT_TIMELINE_PATH;
 

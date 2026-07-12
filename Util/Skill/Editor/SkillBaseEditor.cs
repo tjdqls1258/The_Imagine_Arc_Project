@@ -1,5 +1,6 @@
 #if UNITY_EDITOR
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
 using UnityEngine;
@@ -68,7 +69,16 @@ public class SkillBaseEditor : Editor
 
         if (m_targetingModeProp.managedReferenceValue != null)
         {
-            EditorGUILayout.PropertyField(m_targetingModeProp, new GUIContent("Current Targeting"), true);
+            
+            DrawIndicatorDropdown(m_targetingModeProp, "MaxRangeIndicatorPrefab", "Max Range Prefab");
+            DrawIndicatorDropdown(m_targetingModeProp, "ShapeIndicatorPrefab", "Shape Prefab");
+
+            GUILayout.Space(2);
+            if (GUILayout.Button("Remove Targeting Module", GUILayout.Height(20)))
+            {
+                m_targetingModeProp.managedReferenceValue = null;
+                serializedObject.ApplyModifiedProperties();
+            }
         }
         else
         {
@@ -93,14 +103,17 @@ public class SkillBaseEditor : Editor
 
         EditorGUILayout.PropertyField(m_effectModesProp, new GUIContent("Effects List"), true);
 
+        for (int i = 0; i < m_effectModesProp.arraySize; i++)
+        {
+            var element = m_effectModesProp.GetArrayElementAtIndex(i);
+            DrawPrefabDropdown(element, "EffectPrefab", $"Effect {i} Prefab", typeof(SkillEffectObject));
+        }
+
         if (GUILayout.Button("Add Effect Module", GUILayout.Height(25)))
         {
-            ShowTypeMenu(typeof(EffectModule), (selectedType) =>
-            {
+            ShowTypeMenu(typeof(EffectModule), (selectedType) => {
                 m_effectModesProp.arraySize++;
-                SerializedProperty newElement = m_effectModesProp.GetArrayElementAtIndex(m_effectModesProp.arraySize - 1);
-                newElement.managedReferenceValue = Activator.CreateInstance(selectedType);
-                serializedObject.ApplyModifiedProperties();
+                m_effectModesProp.GetArrayElementAtIndex(m_effectModesProp.arraySize - 1).managedReferenceValue = Activator.CreateInstance(selectedType);
             });
         }
         EditorGUILayout.EndVertical();
@@ -120,6 +133,79 @@ public class SkillBaseEditor : Editor
         }
 
         menu.ShowAsContext();
+    }
+
+    private void DrawIndicatorDropdown(SerializedProperty moduleProp, string fieldName, string label)
+    {
+        SerializedProperty prop = moduleProp.FindPropertyRelative(fieldName);
+
+        string[] guids = AssetDatabase.FindAssets("t:Prefab");
+        List<string> names = new List<string> { "None" };
+        List<IndicatorObject> objects = new List<IndicatorObject> { null };
+
+        foreach (var guid in guids)
+        {
+            string path = AssetDatabase.GUIDToAssetPath(guid);
+            GameObject go = AssetDatabase.LoadAssetAtPath<GameObject>(path);
+            IndicatorObject comp = go.GetComponent<IndicatorObject>();
+
+            if (comp != null)
+            {
+                names.Add(go.name);
+                objects.Add(comp);
+            }
+        }
+
+        int currentIndex = objects.IndexOf((IndicatorObject)prop.objectReferenceValue);
+        if (currentIndex == -1) currentIndex = 0;
+
+        int newIndex = EditorGUILayout.Popup(label, currentIndex, names.ToArray());
+        if (newIndex != currentIndex)
+        {
+            prop.objectReferenceValue = objects[newIndex];
+            serializedObject.ApplyModifiedProperties();
+        }
+    }
+
+    private void DrawPrefabDropdown(SerializedProperty parentProp, string fieldName, string label, Type componentType)
+    {
+        if (parentProp == null) return;
+
+        SerializedProperty prop = parentProp.FindPropertyRelative(fieldName);
+
+        if (prop == null)
+        {
+            return;
+        }
+
+        string[] guids = AssetDatabase.FindAssets("t:Prefab");
+        List<string> names = new List<string> { "None" };
+        List<UnityEngine.Object> objects = new List<UnityEngine.Object> { null };
+
+        foreach (var guid in guids)
+        {
+            string path = AssetDatabase.GUIDToAssetPath(guid);
+            GameObject go = AssetDatabase.LoadAssetAtPath<GameObject>(path);
+
+            var comp = go.GetComponent(componentType);
+
+            if (comp != null)
+            {
+                names.Add(go.name);
+                objects.Add(comp);
+            }
+        }
+
+        int currentIndex = objects.IndexOf(prop.objectReferenceValue);
+        if (currentIndex == -1) currentIndex = 0;
+
+        int newIndex = EditorGUILayout.Popup(label, currentIndex, names.ToArray());
+
+        if (newIndex != currentIndex)
+        {
+            prop.objectReferenceValue = objects[newIndex];
+            serializedObject.ApplyModifiedProperties(); // 변경사항 적용
+        }
     }
 }
 #endif
